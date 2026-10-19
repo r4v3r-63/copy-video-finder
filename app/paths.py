@@ -6,6 +6,7 @@
 """
 
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -54,6 +55,23 @@ def cache_dir() -> Path:
     path = data_dir() / "cache"
     path.mkdir(exist_ok=True)
     return path
+
+
+def default_download_dir() -> Path:
+    return data_dir() / "Видео"
+
+
+def ffmpeg_tool(name: str) -> Path | None:
+    """FFmpeg из папки программы («ffmpeg» рядом с exe или в корне проекта), иначе из PATH."""
+    exe = name + (".exe" if sys.platform == "win32" else "")
+    candidates = [app_dir() / "ffmpeg" / exe]
+    if not is_frozen():
+        candidates.append(app_dir().parent / "ffmpeg" / exe)
+    for path in candidates:
+        if path.is_file():
+            return path
+    found = shutil.which(name)
+    return Path(found) if found else None
 
 
 def log_file() -> Path:

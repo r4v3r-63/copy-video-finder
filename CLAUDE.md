@@ -98,8 +98,10 @@ python -m venv .venv
 pip install -r requirements.txt
 python -m app.main
 pytest
-pyinstaller build.spec
+pyinstaller build.spec --noconfirm
 ```
+
+Выпуск версии: обновить `app/__version__`, затем `git tag vX.Y.Z && git push origin vX.Y.Z` — GitHub Actions соберёт ZIP и опубликует его в Releases.
 
 ## Git и GitHub
 

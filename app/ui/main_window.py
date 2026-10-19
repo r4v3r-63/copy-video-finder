@@ -2,8 +2,10 @@
 
 from html import escape
 
+from pathlib import Path
+
 from PyQt6.QtCore import QSize, QStringListModel, Qt, QUrl
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import (
     QCompleter,
@@ -22,6 +24,7 @@ from PyQt6.QtWidgets import (
 
 from app import paths, processes, query
 from app.cache import Cache
+from app.downloader import DownloadJob, DownloadQueue
 from app.search import SearchWorker
 from app.settings import Settings
 from app.sources.base import SearchFilters, Source, VideoResult
@@ -58,6 +61,13 @@ class MainWindow(QMainWindow):
         self.worker: SearchWorker | None = None
         self.sources: list[Source] = []
         self.problems: list[str] = []
+        self.plan: query.SearchPlan | None = None
+        self.plan_text = ""
+        self.downloads = DownloadQueue(self)
+        self.downloads.progress.connect(self._on_download_progress)
+        self.downloads.done.connect(self._on_download_done)
+        self.downloads.failed.connect(self._on_download_failed)
+        self.download_state: dict[tuple[str, str], tuple[str, str, bool]] = {}  # ключ ролика → (текст, путь, идёт)
         self.sources_seen: dict[str, str] = {}
         self.network = QNetworkAccessManager(self)
         self.network.finished.connect(self._on_thumbnail)
@@ -110,6 +120,9 @@ class MainWindow(QMainWindow):
         self.results.currentItemChanged.connect(self._on_current)
 
         self.player = PlayerPanel()
+        self.player.allow_4k = settings.allow_4k
+        self.player.download_requested.connect(self.download)
+        self.player.open_folder_requested.connect(self._open_folder)
 
         splitter = QSplitter()
         splitter.addWidget(self.results)
@@ -186,6 +199,8 @@ class MainWindow(QMainWindow):
         if skipped:
             info += f" (без ключа пропущены: {', '.join(skipped)})"
         self.query_info.setText(info)
+        self.plan = plan
+        self.plan_text = self.query.text().strip()
         self.results.clear()
         self.player.show_result(None)
         self.problems = []
@@ -253,7 +268,51 @@ class MainWindow(QMainWindow):
         reply.deleteLater()
 
     def _on_current(self, item: QListWidgetItem | None, _previous):
-        self.player.show_result(item.data(Qt.ItemDataRole.UserRole) if item else None)
+        result = item.data(Qt.ItemDataRole.UserRole) if item else None
+        self.player.show_result(result)
+        if result and result.key in self.download_state:
+            self.player.set_download_state(*self.download_state[result.key])
+
+    def download_dir(self) -> Path:
+        return Path(self.settings.download_dir) if self.settings.download_dir else paths.default_download_dir()
+
+    def download(self, result: VideoResult, file):
+        plan = self.plan
+        job = DownloadJob(result=result, file=file, process=plan.process if plan else None,
+                          query_text=self.plan_text, base_dir=self.download_dir(),
+                          convert=self.settings.convert_to_mp4)
+        self.downloads.add(job)
+        self._set_download_state(result.key, "В очереди на скачивание…", "", True)
+
+    def _set_download_state(self, key, text: str, path: str, busy: bool):
+        self.download_state[key] = (text, path, busy)
+        current = self.player.result
+        if current and current.key == key:
+            self.player.set_download_state(text, path, busy)
+
+    def _job_key(self, job_id: int):
+        return self.downloads.jobs[job_id].result.key
+
+    def _on_download_progress(self, job_id: int, done: int, total: int):
+        if done < 0:
+            text = "Конвертация в MP4…"
+        elif total:
+            text = f"Скачивается: {done * 100 // total}% ({done / 1e6:.1f} из {total / 1e6:.1f} МБ)"
+        else:
+            text = f"Скачивается: {done / 1e6:.1f} МБ"
+        self._set_download_state(self._job_key(job_id), text, "", True)
+
+    def _on_download_done(self, job_id: int, path: str, note: str):
+        text = f"Скачано: {path}" + (f" ({note})" if note else "") + ". Рядом — файл с лицензией."
+        self._set_download_state(self._job_key(job_id), text, path, False)
+        self.statusBar().showMessage(f"Скачано: {Path(path).name}")
+
+    def _on_download_failed(self, job_id: int, message: str):
+        self._set_download_state(self._job_key(job_id), f"Не скачано: {message}", "", False)
+
+    def _open_folder(self, path: str):
+        if path:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(path).parent)))
 
     def _on_problem(self, message: str):
         if message not in self.problems:
@@ -282,9 +341,11 @@ class MainWindow(QMainWindow):
 
     def open_settings(self):
         if SettingsDialog(self.settings, self).exec():
+            self.player.allow_4k = self.settings.allow_4k
             self._show_hint()
 
     def closeEvent(self, event):
         self.stop_search()
+        self.downloads.stop()
         self.player.player.stop()
         super().closeEvent(event)

@@ -2,13 +2,14 @@
 
 from html import escape
 
-from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSlider, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QSlider, QVBoxLayout, QWidget
 
 from app import licenses
+from app.downloader import choose_file
 from app.search import preview_file
 from app.sources.base import VideoResult
 
@@ -21,9 +22,14 @@ def format_duration(seconds: float | None) -> str:
 
 
 class PlayerPanel(QWidget):
+    download_requested = pyqtSignal(object, object)  # VideoResult, VideoFile
+    open_folder_requested = pyqtSignal(str)  # путь к скачанному файлу
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.result: VideoResult | None = None
+        self.allow_4k = False
+        self.downloaded_path = ""
 
         self.video = QVideoWidget()
         self.video.setMinimumSize(320, 180)
@@ -47,6 +53,20 @@ class PlayerPanel(QWidget):
         controls.addWidget(self.play_button)
         controls.addWidget(self.position, 1)
 
+        self.quality = QComboBox()
+        self.quality.setToolTip("Качество файла для скачивания")
+        self.download_button = QPushButton("Скачать")
+        self.download_button.clicked.connect(self._download)
+        self.folder_button = QPushButton("Показать в папке")
+        self.folder_button.clicked.connect(lambda: self.open_folder_requested.emit(self.downloaded_path))
+        self.download_status = QLabel()
+        self.download_status.setWordWrap(True)
+        self.download_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        download_row = QHBoxLayout()
+        download_row.addWidget(self.quality, 1)
+        download_row.addWidget(self.download_button)
+        download_row.addWidget(self.folder_button)
+
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setOpenExternalLinks(True)
@@ -57,6 +77,8 @@ class PlayerPanel(QWidget):
         layout.addWidget(self.video, 1)
         layout.addLayout(controls)
         layout.addWidget(self.info)
+        layout.addLayout(download_row)
+        layout.addWidget(self.download_status)
         layout.addWidget(self.open_page)
         self.show_result(None)
 
@@ -65,6 +87,8 @@ class PlayerPanel(QWidget):
         self.player.stop()
         self.open_page.setEnabled(result is not None)
         self.play_button.setEnabled(result is not None)
+        self._fill_qualities(result)
+        self.set_download_state("", "")
         if result is None:
             self.info.setText("Выберите ролик в списке, чтобы посмотреть его.")
             return
@@ -105,6 +129,32 @@ class PlayerPanel(QWidget):
         if qualities:
             lines.append(f"Качество: {escape(qualities)}")
         return "<br>".join(lines)
+
+    def _fill_qualities(self, result: VideoResult | None):
+        self.quality.clear()
+        files = result.files if result else []
+        for f in files:
+            size = f" ({f.width}×{f.height})" if f.width and f.height else ""
+            kind = f", {f.mime.split('/')[-1].upper()}" if f.mime and "mp4" not in f.mime else ""
+            self.quality.addItem(f"{f.quality}{size}{kind}", f)
+        preferred = choose_file(result, self.allow_4k) if result else None
+        if preferred in files:
+            self.quality.setCurrentIndex(files.index(preferred))
+        self.quality.setEnabled(bool(files))
+        self.download_button.setEnabled(bool(files))
+
+    def set_download_state(self, text: str, path: str, busy: bool = False):
+        """Состояние скачивания для показанного ролика."""
+        self.download_status.setText(text)
+        self.downloaded_path = path
+        self.folder_button.setVisible(bool(path))
+        if self.result and self.result.files:
+            self.download_button.setEnabled(not busy and not path)
+
+    def _download(self):
+        file = self.quality.currentData()
+        if self.result and file:
+            self.download_requested.emit(self.result, file)
 
     def toggle(self):
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:

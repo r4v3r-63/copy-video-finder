@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -14,6 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from app import paths
 from app.settings import Settings
 
 
@@ -80,6 +82,23 @@ class SettingsDialog(QDialog):
         self.no_attribution.setChecked(settings.only_without_attribution)
         form.addRow("", self.no_attribution)
 
+        self.download_dir = QLineEdit(settings.download_dir)
+        self.download_dir.setPlaceholderText(str(paths.default_download_dir()))
+        browse = QPushButton("Выбрать…")
+        browse.clicked.connect(self._browse)
+        folder = QWidget()
+        folder_layout = QHBoxLayout(folder)
+        folder_layout.setContentsMargins(0, 0, 0, 0)
+        folder_layout.addWidget(self.download_dir, 1)
+        folder_layout.addWidget(browse)
+        form.addRow("Папка для роликов:", folder)
+        self.allow_4k = QCheckBox("Скачивать 4K, если есть (по умолчанию — максимум Full HD)")
+        self.allow_4k.setChecked(settings.allow_4k)
+        form.addRow("", self.allow_4k)
+        self.convert = QCheckBox("Конвертировать WebM/OGV в MP4 (нужен FFmpeg в папке программы)")
+        self.convert.setChecked(settings.convert_to_mp4)
+        form.addRow("", self.convert)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
@@ -92,6 +111,12 @@ class SettingsDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(buttons)
 
+    def _browse(self):
+        start = self.download_dir.text() or str(paths.default_download_dir())
+        chosen = QFileDialog.getExistingDirectory(self, "Папка для роликов", start)
+        if chosen:
+            self.download_dir.setText(chosen)
+
     def accept(self):
         low, high = self.min_duration.value(), self.max_duration.value()
         self._settings.pexels_api_key = self.pexels_key.text().strip()
@@ -99,5 +124,8 @@ class SettingsDialog(QDialog):
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()
+        self._settings.download_dir = self.download_dir.text().strip()
+        self._settings.allow_4k = self.allow_4k.isChecked()
+        self._settings.convert_to_mp4 = self.convert.isChecked()
         self._settings.save()
         super().accept()
