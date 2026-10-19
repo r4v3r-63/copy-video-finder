@@ -33,15 +33,18 @@ jobs:
       - name: FFmpeg в папку программы
         shell: pwsh
         run: |
-          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-win64-gpl-7.1.zip"
+          # FFmpeg 7.1.1 essentials (gyan.dev), версия и контрольная сумма закреплены.
+          $url = "https://github.com/GyanD/codexffmpeg/releases/download/7.1.1/ffmpeg-7.1.1-essentials_build.zip"
+          $sha256 = "04861d3339c5ebe38b56c19a15cf2c0cc97f5de4fa8910e4d47e5e6404e4a2d4"
           Invoke-WebRequest $url -OutFile ffmpeg.zip
+          $actual = (Get-FileHash ffmpeg.zip -Algorithm SHA256).Hash.ToLower()
+          if ($actual -ne $sha256) { throw "Контрольная сумма FFmpeg не совпала: $actual" }
           Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-tmp
-          $bin = (Get-ChildItem ffmpeg-tmp -Recurse -Filter ffmpeg.exe | Select-Object -First 1).DirectoryName
+          $root = "ffmpeg-tmp/ffmpeg-7.1.1-essentials_build"
           $target = "dist/CopyVideoFinder/ffmpeg"
           New-Item -ItemType Directory -Force $target | Out-Null
-          Copy-Item "$bin/ffmpeg.exe", "$bin/ffprobe.exe" $target
-          $license = Get-ChildItem ffmpeg-tmp -Recurse -Filter LICENSE.txt | Select-Object -First 1
-          if ($license) { Copy-Item $license.FullName "$target/LICENSE.txt" }
+          Copy-Item "$root/bin/ffmpeg.exe", "$root/bin/ffprobe.exe" $target
+          Copy-Item "$root/LICENSE" "$target/LICENSE.txt"
 
       - name: Проверка запуска
         shell: pwsh
