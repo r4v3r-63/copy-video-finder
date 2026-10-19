@@ -16,9 +16,15 @@ from app.sources.base import VideoResult
 from app.ui import theme
 
 
+def video_facts(r: VideoResult) -> list[str]:
+    """Длительность, размер и площадка — только то, что известно (Videezy их не сообщает)."""
+    parts = [format_duration(r.duration) if r.duration else "", f"{r.width}×{r.height}" if r.width and r.height else ""]
+    return [p for p in parts if p] + [r.source]
+
+
 def format_duration(seconds: float | None) -> str:
     if seconds is None:
-        return "?"
+        return "—"
     seconds = int(round(seconds))
     return f"{seconds // 60}:{seconds % 60:02d}"
 
@@ -137,8 +143,7 @@ class PlayerPanel(QWidget):
         lines = []
         if r.title:
             lines.append(f"<b>{escape(r.title)}</b>")
-        size = f"{r.width}×{r.height}" if r.width and r.height else "?"
-        lines.append(f"{format_duration(r.duration)} · {size} · {escape(r.source)}")
+        lines.append(" · ".join(escape(part) for part in video_facts(r)))
         if r.found_by:
             hint = f" — подсказка: {escape(r.match_hint)}" if r.match_hint and r.match_hint != "точное" else ""
             lines.append(f"Найден по запросу «{escape(r.found_by)}»{hint}")

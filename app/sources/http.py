@@ -90,8 +90,12 @@ class HttpSource(Source):
         return resp.text
 
     def _wait_for_limit(self, seconds: float, label: str) -> None:
-        """Подождать, пока лимит освободится, или сообщить об исчерпанном лимите."""
-        if seconds > self.max_wait or self.stop.wait(seconds + 0.5):
+        """Подождать, пока лимит освободится, или сообщить об исчерпанном лимите.
+
+        Секундную паузу (лимит «1 запрос в секунду», одновременные запросы) ждём всегда;
+        дольше — только если разрешено (`max_wait`, пакетный поиск).
+        """
+        if seconds > max(self.max_wait, SHORT_WAIT) or self.stop.wait(seconds + 0.5):
             raise RateLimitError(self.name, f"Исчерпан лимит {self.name} ({label}). {_retry_text(seconds)}")
 
     def _after_response(self, resp) -> None:
@@ -114,6 +118,9 @@ class HttpSource(Source):
         if code == 429:
             return RateLimitError(self.name, f"{self.name}: лимит запросов исчерпан. Повторите позже.")
         return SourceError(self.name, f"{self.name}: ошибка {code}.")
+
+
+SHORT_WAIT = 3  # секунды: такую паузу перед запросом ждём и в обычном поиске
 
 
 def _retry_text(seconds: float) -> str:

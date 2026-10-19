@@ -32,7 +32,7 @@ from app import licenses, similar
 from app.processes import Category, Process
 from app.ui import theme
 from app.ui.coverage_view import level_brush
-from app.ui.player import format_duration
+from app.ui.player import format_duration, video_facts
 
 ALL = "__all__"
 NO_SERVICE = "__none__"
@@ -154,9 +154,9 @@ class VideoCard(QWidget):
             self.links.setRowCount(0)
             return
         r, lic = entry.result, entry.result.license
-        size = f"{r.width}×{r.height}" if r.width and r.height else "?"
-        lines = [f"<b>№ {entry.id}</b> · {escape(r.source)} · ID {escape(r.source_id)} · "
-                 f"{format_duration(r.duration)} · {size}"]
+        facts = video_facts(r)[:-1]  # площадка уже в начале строки
+        lines = [f"<b>№ {entry.id}</b> · {escape(r.source)} · ID {escape(r.source_id)}"
+                 + "".join(f" · {escape(f)}" for f in facts)]
         name = escape(lic.name or "не указана")
         if lic.url:
             name = f'<a href="{escape(lic.url)}">{name}</a>'

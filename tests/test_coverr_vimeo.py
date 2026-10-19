@@ -198,3 +198,23 @@ def test_batch_problem_shown_once():
     worker._on_problem("Исчерпан лимит Vimeo (50 запросов в минуту). Повторите через 12 с.")
     worker._on_problem("Исчерпан лимит Vimeo (50 запросов в минуту). Повторите через 3 с.")
     assert worker.problems == ["Исчерпан лимит Vimeo (50 запросов в минуту)."]
+
+
+def test_one_second_limit_is_waited_in_normal_search(cache, clock):
+    """Лимит «1 запрос в секунду» (Tavily) при одновременных запросах — короткая пауза, а не ошибка."""
+    src = vimeo(cache, clock, FakeResponse(text='{"data": []}'))
+    src.limits = []
+    from app.cache import RateLimiter
+    src.limiter = RateLimiter(cache, src.name, [(1, 1.0, "в секунду")], now=clock)
+    waited = []
+
+    class Stop:
+        def wait(self, seconds):
+            waited.append(seconds)
+            clock.t += seconds
+            return False
+
+    src.stop = Stop()
+    src.search("a", SearchFilters())
+    src.search("b", SearchFilters())  # max_wait = 0, но пауза в секунду — ждём
+    assert waited and waited[0] <= 1.5
