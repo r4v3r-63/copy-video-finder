@@ -61,7 +61,7 @@ def test_europeana_request_and_key(cache, clock):
     assert params["start"] == 21
     keys = [row[0] for row in cache._db.execute("SELECT key FROM responses")]
     assert keys and all("ekey" not in k for k in keys)
-    assert EuropeanaSource.languages == {"en"}
+    assert EuropeanaSource.languages == {"en", "de", "fr"}  # без русского
     with pytest.raises(AuthError):
         europeana(cache, clock, key="").search("x", SearchFilters())
 

@@ -80,7 +80,7 @@ class ArchiveSource(HttpSource):
     limits = [(30, 60, "в минуту"), (500, 3600, "в час")]
     max_parallel = 1
     topic_in_description = False  # описания длинные и случайные; тема — по названию
-    languages = frozenset({"en"})
+    languages = frozenset({"en", "de", "fr"})
 
     def __init__(self, cache: Cache, session: requests.Session | None = None, now=time.time):
         super().__init__(cache, session, now)

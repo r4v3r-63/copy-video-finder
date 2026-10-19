@@ -67,6 +67,7 @@ class CoverrSource(HttpSource):
     homepage = "https://coverr.co"
     limits = [(50, 3600, "в час")]  # статус Demo; Production — 2000 в час по платной подписке
     languages = frozenset({"en"})
+    max_level = 1  # 50 запросов в час: только название и оборудование, без дальнейшего расширения
 
     def __init__(self, api_key: str, cache: Cache, session: requests.Session | None = None, now=time.time):
         super().__init__(cache, session, now)

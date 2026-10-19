@@ -450,9 +450,12 @@ class MainWindow(QMainWindow):
         else:
             lines.append("Произвольный запрос")
         for lang, title in ((query.RU, "по-русски"), (query.EN, "по-английски")):
-            texts = plan.texts(lang)
+            texts = [q.text for q in plan.queries if q.lang == lang and q.level == 0]
             if texts:
                 lines.append(f"Ищем {title}: {', '.join(texts)}")
+        if len(plan.levels) > 1:
+            lines.append("Если роликов мало, поиск расширится: " + " → ".join(plan.levels[1:]) +
+                         " (в том числе по-немецки и по-французски)")
         if plan.note:
             lines.append(plan.note)
         return "\n".join(lines)
@@ -465,6 +468,8 @@ class MainWindow(QMainWindow):
             text = " · ".join(i for i in info if i) + f"\n{r.source} · {r.license.status}"
             if not r.files:
                 text += "\nскачать на сайте"
+            if r.match_hint and r.match_hint != cat.EXACT:
+                text += f"\n{r.match_hint}"
             if statuses.get(r.key) == cat.SELECTED:
                 text += "\nв каталоге"
             if off_topic:
@@ -655,10 +660,12 @@ class MainWindow(QMainWindow):
     def add_to_catalog(self, result: VideoResult):
         """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""
         process = self.plan.process if self.plan else None
-        video_id = self.catalog.select(result, process.id if process else None)
+        match = result.match_hint or cat.EXACT  # найден по похожим операциям — «смежный процесс»
+        video_id = self.catalog.select(result, process.id if process else None, match)
         self.player.set_catalog_state(cat.SELECTED, video_id)
         if process:
-            self.statusBar().showMessage(f"Ролик № {video_id} добавлен в каталог: {process.name}.")
+            self.statusBar().showMessage(f"Ролик № {video_id} добавлен в каталог: {process.name} ({match}). "
+                                         "Степень соответствия можно поменять во вкладке «Каталог».")
         else:
             self.statusBar().showMessage(f"Ролик № {video_id} добавлен в каталог. Привяжите его к услуге "
                                          "во вкладке «Каталог».")
@@ -753,6 +760,8 @@ class MainWindow(QMainWindow):
                 if r.key in new:
                     self._mark_item(r, "новый")
         message = f"Найдено подходящих роликов: {count}"
+        if self.worker.levels_used and self.plan and len(self.plan.levels) > self.worker.levels_used:
+            message += f" (поиск расширен до уровня «{self.plan.levels[self.worker.levels_used]}»)"
         if had_history and new:
             message += f" (новых с прошлого поиска: {len(new)})"
         counts = self.worker.rejection_counts()

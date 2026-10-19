@@ -69,6 +69,10 @@ class VideoResult:
     relevance: int = 0  # близость к теме поиска и к полиграфии; по ней сортируется выдача
     # Отдельная ссылка для просмотра, если площадка даёт её отдельно от файлов скачивания (Coverr).
     preview_video: str | None = None
+    # Степень соответствия, которую подсказывает уровень запроса, нашедшего ролик
+    # («смежный процесс» — нашёлся только по похожим операциям). Пусто — «точное».
+    match_hint: str = ""
+    found_by: str = ""  # запрос, по которому ролик нашёлся первым
 
     @property
     def key(self) -> tuple[str, str]:
@@ -89,7 +93,9 @@ class Source(ABC):
     # Искать ли слова темы и в описании ролика, а не только в названии/тегах.
     topic_in_description: bool = True
     # Языки, на которых площадка ищет: запросы на других языках ей не отправляются.
-    languages: frozenset[str] = frozenset({"ru", "en"})
+    languages: frozenset[str] = frozenset({"ru", "en", "de", "fr"})
+    # До какого уровня расширения поиска площадке отправлять запросы (у Coverr лимит 50 в час).
+    max_level: int = 99
 
     def is_configured(self) -> bool:
         """Есть ли всё нужное для запросов (например, ключ API)."""
@@ -97,7 +103,7 @@ class Source(ABC):
 
     @abstractmethod
     def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
-        """Поиск по фразе; lang — язык фразы ("ru" или "en") для параметра языка API."""
+        """Поиск по фразе; lang — язык фразы ("ru", "en", "de", "fr") для параметра языка API."""
         ...
 
     @abstractmethod

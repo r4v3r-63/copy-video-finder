@@ -65,7 +65,7 @@ class EuropeanaSource(HttpSource):
     name = "Europeana"
     homepage = "https://www.europeana.eu"
     limits = [(100, 60, "в минуту")]
-    languages = frozenset({"en"})  # английские названия и описания есть у большинства роликов
+    languages = frozenset({"en", "de", "fr"})  # европейский архив: много немецких и французских названий
 
     def __init__(self, api_key: str, cache: Cache, session: requests.Session | None = None, now=time.time):
         super().__init__(cache, session, now)

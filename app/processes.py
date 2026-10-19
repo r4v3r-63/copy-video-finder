@@ -6,6 +6,24 @@ from pathlib import Path
 
 from app import paths
 
+LANGS = ("en", "ru", "de", "fr")
+
+
+# Степени соответствия (те же, что в каталоге).
+EXACT, PARTIAL, RELATED = "точное", "частичное", "смежный процесс"
+
+
+@dataclass
+class Level:
+    """Уровень расширения поиска: если по прежним уровням роликов мало, ищем по этим фразам.
+
+    Например: оборудование → действие → отдельные этапы → похожие операции. match —
+    степень соответствия, которую подсказывает ролик, найденный только на этом уровне.
+    """
+    name: str
+    match: str = EXACT
+    phrases: dict[str, list[str]] = field(default_factory=dict)  # язык → фразы
+
 
 @dataclass
 class Process:
@@ -21,6 +39,7 @@ class Process:
     key_en: list[str] = field(default_factory=list)
     # Слова, при которых ролик точно не про эту услугу (для лазерной печати — «3d»).
     exclude: list[str] = field(default_factory=list)
+    levels: list[Level] = field(default_factory=list)  # расширение поиска, от узкого к общему
 
     @property
     def display(self) -> str:
@@ -54,6 +73,9 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                 key_ru=list(p.get("key_ru", [])),
                 key_en=list(p.get("key_en", [])),
                 exclude=list(p.get("exclude", [])),
+                levels=[Level(name=lv["name"], match=lv.get("match", EXACT),
+                              phrases={lang: list(lv[lang]) for lang in LANGS if lv.get(lang)})
+                        for lv in p.get("levels", [])],
             )
             for p in cat["processes"]
         ]

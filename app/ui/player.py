@@ -132,6 +132,9 @@ class PlayerPanel(QWidget):
             lines.append(f"<b>{escape(r.title)}</b>")
         size = f"{r.width}×{r.height}" if r.width and r.height else "?"
         lines.append(f"{format_duration(r.duration)} · {size} · {escape(r.source)}")
+        if r.found_by:
+            hint = f" — подсказка: {escape(r.match_hint)}" if r.match_hint and r.match_hint != "точное" else ""
+            lines.append(f"Найден по запросу «{escape(r.found_by)}»{hint}")
         if r.author:
             author = escape(r.author)
             if r.author_url:

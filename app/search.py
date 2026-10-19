@@ -13,7 +13,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
-from app.topic import AMBIGUOUS, WORD as _WORD, domain_words, in_print_domain, phrase_stems, stem as _stem, topic_stems
+from app.topic import AMBIGUOUS, NOT_PRINT, WORD as _WORD, domain_words, in_print_domain, phrase_stems, stem as _stem, topic_stems
 from app.sources.base import AuthError, NotFoundError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
 
 log = logging.getLogger(__name__)
@@ -60,8 +60,9 @@ _PRINT_WORDS = {
 
 def print_stems(processes) -> set[str]:
     """Основы слов полиграфии: из всех 43 услуг справочника и общих терминов."""
-    texts = [t for p in processes for t in (p.name, *p.aliases, *p.phrases_ru, *p.phrases_en)]
-    return topic_stems(texts) | {_stem(w) for w in _PRINT_WORDS}
+    texts = [t for p in processes for t in (p.name, *p.aliases, *p.phrases_ru, *p.phrases_en, *p.key_ru, *p.key_en,
+                                             *(t for level in p.levels for ts in level.phrases.values() for t in ts))]
+    return (topic_stems(texts) - {_stem(w) for w in NOT_PRINT}) | {_stem(w) for w in _PRINT_WORDS}
 
 
 def _tokens(result: VideoResult) -> set[str]:
@@ -86,7 +87,8 @@ def is_excluded(result: VideoResult, exclude) -> bool:
 
 _AMBIGUOUS = {_stem(w) for w in AMBIGUOUS}
 
-def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True) -> bool:
+def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True,
+                domain=frozenset()) -> bool:
     """Есть ли в названии или тегах ролика ВСЕ значимые слова хотя бы одной фразы поиска.
 
     Поиск площадок нечёткий: Wikimedia находит слово где угодно, вплоть до категорий,
@@ -100,7 +102,7 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
     if not tokens:
         return True
     # Только полиграфия и сувенирка: слово этой области и никаких слов стройки, еды, природы.
-    if not in_print_domain(tokens):
+    if not in_print_domain(tokens, domain):
         return False
     if not phrases:
         return True
@@ -110,7 +112,7 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
     # Совпало только многозначное слово («plotter», «scanner») — нужно ещё слово полиграфии рядом.
     if any(len(p) > 1 or next(iter(p)) not in _AMBIGUOUS for p in matched):
         return True
-    return domain_words(tokens) >= 2
+    return domain_words(tokens, domain) >= 2
 
 
 def preview_file(result: VideoResult):
@@ -123,6 +125,10 @@ def preview_file(result: VideoResult):
             return f
     return files[-1] if files else None
 
+
+# Сколько подходящих роликов достаточно, чтобы не расширять поиск дальше
+# (на оборудование, действие, этапы, похожие операции).
+ENOUGH = 12
 
 class SearchWorker(QThread):
     found = pyqtSignal(list)  # list[VideoResult] — новые подходящие ролики
@@ -145,6 +151,7 @@ class SearchWorker(QThread):
         self.hidden = hidden or set()  # ролики, отклонённые пользователем, — не показываются
         self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         self.printing = printing or set()
+        self.levels_used = 0  # до какого уровня расширения дошёл поиск
 
     def cancel(self):
         self._cancel.set()
@@ -168,61 +175,75 @@ class SearchWorker(QThread):
         return sorted(found, key=lambda r: -r.relevance)
 
     def run(self):
-        tasks = [(s, q) for s in self.sources for q in self.plan.queries if q.lang in s.languages]
-        total = len(tasks)
-        done = 0
+        levels = sorted({q.level for q in self.plan.queries})
         failed_sources: set[str] = set()
-        self.progress.emit(0, total)
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            futures = {pool.submit(self._run_one, s, q): (s, q) for s, q in tasks}
-            for future in as_completed(futures):
-                done += 1
-                if self._cancel.is_set():
-                    pool.shutdown(cancel_futures=True)
-                    return
-                source, query = futures[future]
-                try:
-                    results = future.result()
-                except (AuthError, RateLimitError) as exc:
-                    # Одной ошибки по ключу или лимиту достаточно — не повторяем сообщение.
-                    if source.name not in failed_sources:
-                        failed_sources.add(source.name)
-                        self.problem.emit(exc.message)
-                    results = []
-                except NotFoundError:
-                    # На поисковый запрос 404 — разовый сбой площадки, а не «ролик удалён».
-                    log.info("%s: 404 на поиск «%s»", source.name, query.text)
-                    results = []
-                except SourceError as exc:
-                    self.problem.emit(exc.message)
-                    results = []
-                except Exception:  # noqa: BLE001 — ошибка одной площадки не должна ронять поиск
-                    log.exception("Ошибка поиска на %s", source.name)
-                    self.problem.emit(f"Непредвиденная ошибка при поиске на {source.name}, подробности в журнале.")
-                    results = []
-                fresh = []
-                for r in results:
-                    if r.key in self.seen:
-                        continue
-                    reason = REJECTED_BEFORE if r.key in self.hidden else \
-                        rejection_reason(r, self.filters, self.only_without_attribution)
-                    if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description)
-                                           or is_excluded(r, self.plan.exclude)):
-                        reason = OFF_TOPIC
-                    if reason:
-                        # Ролик, не подошедший по одной фразе, может подойти по другой.
-                        self.rejections[r.key] = reason
-                        if reason == OFF_TOPIC:
-                            self.off_topic[r.key] = r
-                        continue
-                    self.seen.add(r.key)
-                    r.relevance = relevance(r, self.stems, self.printing)
-                    if not r.files:
-                        r.relevance -= NO_FILES_PENALTY  # скачать можно только на сайте — ниже в выдаче
-                    fresh.append(r)
-                if fresh:
-                    self.found.emit(fresh)
-                self.progress.emit(done, total)
+        done = 0
+        for level in levels:
+            if self._cancel.is_set():
+                return
+            # Следующий уровень (оборудование, действие, похожие операции) — только если роликов мало.
+            if level > 0 and len(self.seen) >= ENOUGH:
+                break
+            tasks = [(s, q) for s in self.sources for q in self.plan.queries
+                     if q.level == level and q.lang in s.languages and level <= s.max_level]
+            self.levels_used = level
+            total = done + len(tasks)
+            self.progress.emit(done, total)
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                futures = {pool.submit(self._run_one, s, q): (s, q) for s, q in tasks}
+                for future in as_completed(futures):
+                    done += 1
+                    if self._cancel.is_set():
+                        pool.shutdown(cancel_futures=True)
+                        return
+                    source, query = futures[future]
+                    self._take(future, source, query, failed_sources)
+                    self.progress.emit(done, total)
+
+    def _take(self, future, source: Source, query, failed_sources: set[str]):
+        """Разобрать ответ одной площадки на один запрос: отсеять и показать подходящие ролики."""
+        try:
+            results = future.result()
+        except (AuthError, RateLimitError) as exc:
+            # Одной ошибки по ключу или лимиту достаточно — не повторяем сообщение.
+            if source.name not in failed_sources:
+                failed_sources.add(source.name)
+                self.problem.emit(exc.message)
+            results = []
+        except NotFoundError:
+            # На поисковый запрос 404 — разовый сбой площадки, а не «ролик удалён».
+            log.info("%s: 404 на поиск «%s»", source.name, query.text)
+            results = []
+        except SourceError as exc:
+            self.problem.emit(exc.message)
+            results = []
+        except Exception:  # noqa: BLE001 — ошибка одной площадки не должна ронять поиск
+            log.exception("Ошибка поиска на %s", source.name)
+            self.problem.emit(f"Непредвиденная ошибка при поиске на {source.name}, подробности в журнале.")
+            results = []
+        fresh = []
+        for r in results:
+            if r.key in self.seen:
+                continue
+            reason = REJECTED_BEFORE if r.key in self.hidden else \
+                rejection_reason(r, self.filters, self.only_without_attribution)
+            if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description, self.printing)
+                                   or is_excluded(r, self.plan.exclude)):
+                reason = OFF_TOPIC
+            if reason:
+                # Ролик, не подошедший по одной фразе, может подойти по другой.
+                self.rejections[r.key] = reason
+                if reason == OFF_TOPIC:
+                    self.off_topic[r.key] = r
+                continue
+            self.seen.add(r.key)
+            r.match_hint, r.found_by = query.match, query.text
+            r.relevance = relevance(r, self.stems, self.printing)
+            if not r.files:
+                r.relevance -= NO_FILES_PENALTY  # скачать можно только на сайте — ниже в выдаче
+            fresh.append(r)
+        if fresh:
+            self.found.emit(fresh)
 
     def _run_one(self, source: Source, query) -> list[VideoResult]:
         if self._cancel.is_set():

@@ -1,9 +1,13 @@
-"""Построение поисковых запросов на русском и английском.
+"""Построение поисковых запросов на русском и английском (и уровни расширения на немецком и французском).
 
 Для услуги из справочника берутся её русские и английские фразы. Свободный
 русский текст ищется как есть и в переводе по встроенному словарю, свободный
 английский — как есть и с русскими фразами услуги, если он совпал с её
 английской фразой. Внешние сервисы перевода не используются.
+
+У услуги из справочника, кроме фраз по названию (уровень 0), есть уровни расширения:
+оборудование, действие, отдельные этапы, похожие операции. Поиск переходит к следующему
+уровню, только если роликов по прежним мало (`search.ENOUGH`).
 """
 
 import json
@@ -12,22 +16,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app import paths
-from app.processes import Process, find_by_display, normalize, suggest
+from app.processes import LANGS, Process, find_by_display, normalize, suggest
 from app.topic import key_words
 
 RU = "ru"
 EN = "en"
+DE = "de"
+FR = "fr"
+BASE_LEVEL = "Название услуги"
 MAX_GROUP = 4  # больше услуг на один запрос — слишком много запросов к площадкам
 
 _CYRILLIC = re.compile(r"[а-яё]", re.IGNORECASE)
-_TOKEN = re.compile(r"[a-zа-яё0-9]+", re.IGNORECASE)
+_TOKEN = re.compile(r"[a-zа-яё0-9äöüßàâæçéèêëîïôœùûÿ]+", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
 class SearchQuery:
     text: str
-    lang: str  # RU или EN; площадки передают его в параметр языка API
+    lang: str  # RU, EN, DE или FR; площадки передают его в параметр языка API
     key: bool = False  # ключевое слово услуги из справочника (подтверждает тему даже одним словом)
+    level: int = 0  # уровень расширения поиска: 0 — название услуги
+    match: str = ""  # степень соответствия, которую подсказывает уровень («» — точное)
 
 
 @dataclass
@@ -36,6 +45,11 @@ class SearchPlan:
     queries: list[SearchQuery]
     note: str = ""
     exclude: frozenset[str] = frozenset()  # слова-исключения услуг плана
+    levels: list[str] = None  # названия уровней: [0] — название услуги, дальше — расширение
+
+    def __post_init__(self):
+        if self.levels is None:
+            self.levels = [BASE_LEVEL]
 
     def texts(self, lang: str) -> list[str]:
         return [q.text for q in self.queries if q.lang == lang]
@@ -130,7 +144,12 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
     proc = find_by_display(processes, text)
     if proc:
         queries = [SearchQuery(p, RU) for p in proc.phrases_ru] + [SearchQuery(p, EN) for p in proc.phrases_en]
-        return SearchPlan(proc, _unique(with_key_words(queries, [proc])), exclude=frozenset(proc.exclude))
+        queries = with_key_words(queries, [proc])
+        for i, level in enumerate(proc.levels, 1):
+            queries += [SearchQuery(t, lang, level=i, match=level.match)
+                        for lang in LANGS for t in level.phrases.get(lang, [])]
+        return SearchPlan(proc, _unique(queries), exclude=frozenset(proc.exclude),
+                          levels=[BASE_LEVEL] + [lv.name for lv in proc.levels])
 
     # В первую очередь — полиграфические услуги справочника: точное совпадение с категорией
     # или синонимом, иначе услуги, в названии которых есть все слова запроса.

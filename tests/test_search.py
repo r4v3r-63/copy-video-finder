@@ -258,7 +258,7 @@ def test_curated_key_word_confirms_topic_even_if_broad():
 def test_service_exclude_words():
     from app import paths, processes
     from app.query import Dictionary, build_plan
-    from app.search import is_excluded
+    from app.search import is_excluded, is_relevant
     procs = processes.all_processes(processes.load_catalog(paths.resources_dir() / "processes.json"))
     plan = build_plan("Цифровая цветная лазерная печать", procs, Dictionary.load())
     assert is_excluded(tagged("1", "принтер, 3д печать, 3d"), plan.exclude)
@@ -270,7 +270,7 @@ def test_service_exclude_words():
     assert not is_excluded(tagged("5", "Paper cutting process in a press"), guillotine.exclude)
     perforation = build_plan("Перфорация", procs, Dictionary.load())
     assert is_excluded(tagged("6", "Tectonic Penetrating Keratoplasty for Corneal Perforation"), perforation.exclude)
-    assert is_excluded(tagged("7", "пощечина, перфоратор, бить, драка"), perforation.exclude)
+    assert not is_relevant(tagged("7", "пощечина, перфоратор, бить, драка"), [])
     eyelets = build_plan("Установка пикколо / люверсов", procs, Dictionary.load())
     assert is_excluded(tagged("8", "Car Air Box Grommet Assembly"), eyelets.exclude)
     assert not is_excluded(tagged("9", "Heavy_Duty_Grommet_Press"), eyelets.exclude)

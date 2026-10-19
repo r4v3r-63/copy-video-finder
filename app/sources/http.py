@@ -1,4 +1,4 @@
-"""Общая часть площадок с HTTP API: кэш ответов, лимиты, понятные ошибки."""
+"""Общая часть HTTP-площадок (API и страницы сайтов): кэш ответов, лимиты, понятные ошибки."""
 
 import json
 import logging
@@ -41,11 +41,25 @@ class HttpSource(Source):
 
     def _fetch(self, url: str, params: dict, headers: dict | None = None, secret_params: tuple = ()) -> dict:
         """GET с кэшем на 24 часа. Параметры из secret_params (ключи API) в ключ кэша не попадают."""
+        text = self._fetch_text(url, params, headers, secret_params)
+        try:
+            return json.loads(text)
+        except ValueError as exc:
+            raise SourceError(self.name, f"{self.name}: непонятный ответ площадки.") from exc
+
+    def _fetch_text(self, url: str, params: dict | None = None, headers: dict | None = None,
+                    secret_params: tuple = (), method: str = "GET", check=None) -> str:
+        """Запрос с кэшем на 24 часа и учётом лимитов; ответ — текст (JSON или HTML-страница).
+
+        check(resp) может вернуть ошибку площадки для ответа с кодом 200 (например, капчу поисковика).
+        """
+        params = params or {}
         public = {k: v for k, v in params.items() if k not in secret_params}
-        cache_key = f"{self.name.lower()}:{url}?{urlencode(sorted(public.items()))}"
+        verb = "" if method == "GET" else f"{method}:"  # ключи GET — как раньше, кэш пользователя цел
+        cache_key = f"{self.name.lower()}:{verb}{url}?{urlencode(sorted(public.items()))}"
         cached = self.cache.get(cache_key, CACHE_TTL)
         if cached is not None:
-            return json.loads(cached)
+            return cached
         if not self.is_configured():
             raise AuthError(self.name, self.missing_key_message())
         while True:
@@ -54,7 +68,10 @@ class HttpSource(Source):
                 if not wait:
                     self.limiter.record()
                     try:
-                        resp = self.session.get(url, params=params, headers=headers or {}, timeout=20)
+                        if method == "POST":
+                            resp = self.session.post(url, data=params, headers=headers or {}, timeout=20)
+                        else:
+                            resp = self.session.get(url, params=params, headers=headers or {}, timeout=20)
                     except requests.RequestException as exc:
                         raise NetworkError(self.name, f"Нет связи с {self.name}: {_short(exc)}") from exc
             if wait:
@@ -64,15 +81,11 @@ class HttpSource(Source):
             if resp.status_code == 429 and self.max_wait and self.limiter.wait_seconds():
                 continue  # площадка назвала время (Retry-After) — подождём его
             break
-        error = self._status_error(resp)
+        error = self._status_error(resp) or (check(resp) if check else None)
         if error:
             raise error
-        try:
-            data = json.loads(resp.text)
-        except ValueError as exc:
-            raise SourceError(self.name, f"{self.name}: непонятный ответ площадки.") from exc
         self.cache.put(cache_key, resp.text)
-        return data
+        return resp.text
 
     def _wait_for_limit(self, seconds: float, label: str) -> None:
         """Подождать, пока лимит освободится, или сообщить об исчерпанном лимите."""

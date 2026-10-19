@@ -98,7 +98,7 @@ class PixabaySource(HttpSource):
     def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
         params = {
             "q": query[:100],  # ограничение API
-            "lang": "ru" if lang == "ru" else "en",
+            "lang": lang if lang in ("ru", "de", "fr") else "en",
             "video_type": "film",
             "safesearch": "true",
             "per_page": PER_PAGE,

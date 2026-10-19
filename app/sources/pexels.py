@@ -93,7 +93,7 @@ class PexelsSource(HttpSource):
             "query": query,
             "per_page": PER_PAGE,
             "page": page,
-            "locale": "ru-RU" if lang == "ru" else "en-US",
+            "locale": {"ru": "ru-RU", "de": "de-DE", "fr": "fr-FR"}.get(lang, "en-US"),
         }
         if filters.orientation in ("landscape", "portrait"):
             params["orientation"] = filters.orientation
