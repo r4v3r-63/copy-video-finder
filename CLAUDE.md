@@ -57,6 +57,9 @@ app/
 resources/
   processes.json       # 11 категорий, 43 техпроцесса, фразы на русском и английском
   terms_ru_en.json     # словарь для перевода запросов
+  logo.svg             # логотип Copy.ru; logo.png — значок окна и «О программе», logo.ico — значок exe
+docs/
+  screenshots/         # снимки окна для README
 tests/
   fixtures/            # сохранённые ответы API
 ```

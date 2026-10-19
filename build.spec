@@ -18,6 +18,7 @@ exe = EXE(
     exclude_binaries=True,
     name="CopyVideoFinder",
     console=False,
+    icon="resources/logo.ico",
     upx=False,
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="CopyVideoFinder", upx=False)

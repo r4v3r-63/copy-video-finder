@@ -334,9 +334,13 @@ class MainWindow(QMainWindow):
         self._exported(path, f"Плейлист из {count} роликов сохранён")
 
     def _about(self):
-        QMessageBox.about(self, "О программе",
-                          f"Поиск видео для копицентров Copy.ru\nВерсия {__version__}\n\n"
-                          f"Новые версии: {updater.RELEASES_PAGE}")
+        box = QMessageBox(self)
+        box.setWindowTitle("О программе")
+        box.setIconPixmap(QPixmap(str(paths.resources_dir() / "logo.png")).scaled(
+            64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        box.setText(f"<b>Поиск видео для копицентров Copy.ru</b><br>Версия {__version__}")
+        box.setInformativeText(f'Новые версии: <a href="{updater.RELEASES_PAGE}">{updater.RELEASES_PAGE}</a>')
+        box.exec()
 
     def downloads_busy(self) -> bool:
         return any(busy for _, _, busy in self.download_state.values())
@@ -431,7 +435,8 @@ class MainWindow(QMainWindow):
         self._remove_placeholder()
         statuses = self.catalog.statuses()
         for r in results:
-            text = f"{format_duration(r.duration)} · {r.width}×{r.height}\n{r.source} · {r.license.status}"
+            info = [format_duration(r.duration) if r.duration else "", f"{r.width}×{r.height}" if r.width and r.height else ""]
+            text = " · ".join(i for i in info if i) + f"\n{r.source} · {r.license.status}"
             if not r.files:
                 text += "\nскачать на сайте"
             if statuses.get(r.key) == cat.SELECTED:

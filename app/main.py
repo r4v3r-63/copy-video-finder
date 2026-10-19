@@ -5,6 +5,7 @@ import sys
 
 from PyQt6.QtCore import QLibraryInfo, QLocale, QLockFile, QTranslator
 from PyQt6.QtNetwork import QNetworkProxyFactory
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from app import paths, processes
@@ -30,6 +31,7 @@ def main() -> int:
     setup_logging()
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
+    app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.png")))
     QNetworkProxyFactory.setUseSystemConfiguration(True)
     # Стандартные кнопки и окна Qt («Подробнее…», выбор папки) — на русском.
     translator = QTranslator(app)
