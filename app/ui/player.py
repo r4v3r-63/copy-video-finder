@@ -9,6 +9,7 @@ from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QSlider, QVBoxLayout, QWidget
 
 from app import licenses
+from app.catalog import REJECTED, SELECTED
 from app.downloader import choose_file
 from app.search import preview_file
 from app.sources.base import VideoResult
@@ -24,6 +25,8 @@ def format_duration(seconds: float | None) -> str:
 class PlayerPanel(QWidget):
     download_requested = pyqtSignal(object, object)  # VideoResult, VideoFile
     open_folder_requested = pyqtSignal(str)  # путь к скачанному файлу
+    select_requested = pyqtSignal(object)  # VideoResult — «В каталог», лицензию проверил
+    reject_requested = pyqtSignal(object)  # VideoResult — «Не подходит»
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -62,6 +65,17 @@ class PlayerPanel(QWidget):
         self.download_status = QLabel()
         self.download_status.setWordWrap(True)
         self.download_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.select_button = QPushButton("В каталог — лицензию проверил")
+        self.select_button.setToolTip("Добавить ролик в каталог услуги. Нажимайте, когда посмотрели ролик "
+                                      "и условия лицензии.")
+        self.select_button.clicked.connect(lambda: self.result and self.select_requested.emit(self.result))
+        self.reject_button = QPushButton("Не подходит")
+        self.reject_button.setToolTip("Больше не показывать этот ролик в поиске")
+        self.reject_button.clicked.connect(lambda: self.result and self.reject_requested.emit(self.result))
+        self.catalog_status = QLabel()
+        catalog_row = QHBoxLayout()
+        catalog_row.addWidget(self.select_button, 1)
+        catalog_row.addWidget(self.reject_button)
         download_row = QHBoxLayout()
         download_row.addWidget(self.quality, 1)
         download_row.addWidget(self.download_button)
@@ -77,6 +91,8 @@ class PlayerPanel(QWidget):
         layout.addWidget(self.video, 1)
         layout.addLayout(controls)
         layout.addWidget(self.info)
+        layout.addLayout(catalog_row)
+        layout.addWidget(self.catalog_status)
         layout.addLayout(download_row)
         layout.addWidget(self.download_status)
         layout.addWidget(self.open_page)
@@ -89,6 +105,7 @@ class PlayerPanel(QWidget):
         self.play_button.setEnabled(result is not None)
         self._fill_qualities(result)
         self.set_download_state("", "")
+        self.set_catalog_state("")
         if result is None:
             self.info.setText("Выберите ролик в списке, чтобы посмотреть его.")
             return
@@ -142,6 +159,18 @@ class PlayerPanel(QWidget):
             self.quality.setCurrentIndex(files.index(preferred))
         self.quality.setEnabled(bool(files))
         self.download_button.setEnabled(bool(files))
+
+    def set_catalog_state(self, status: str, catalog_id: int | None = None):
+        """Отметка ролика в каталоге: «выбрано», «отклонено» или пусто."""
+        has = self.result is not None
+        self.select_button.setEnabled(has and status != SELECTED)
+        self.reject_button.setEnabled(has and status != REJECTED)
+        if status == SELECTED:
+            self.catalog_status.setText(f"В каталоге, № {catalog_id}." if catalog_id else "В каталоге.")
+        elif status == REJECTED:
+            self.catalog_status.setText("Отклонён — в поиске больше не появится.")
+        else:
+            self.catalog_status.setText("")
 
     def set_download_state(self, text: str, path: str, busy: bool = False):
         """Состояние скачивания для показанного ролика."""

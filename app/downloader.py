@@ -52,6 +52,7 @@ class DownloadJob:
     query_text: str
     base_dir: Path
     convert: bool = True
+    catalog_id: int | None = None
     id: int = 0
     cancel: threading.Event = field(default_factory=threading.Event)
 
@@ -90,16 +91,18 @@ def extension(f: VideoFile) -> str:
     return _EXT_BY_MIME.get((f.mime or "").split(";")[0].strip(), ".mp4")
 
 
-def file_stem(process: Process | None, result: VideoResult) -> str:
-    """Имя файла: техпроцесс_площадка_IDролика (ID в каталоге добавится на этапе 5)."""
+def file_stem(process: Process | None, result: VideoResult, catalog_id: int | None = None) -> str:
+    """Имя файла: IDвкаталоге_техпроцесс_площадка_IDролика."""
     source = re.sub(r"[^a-z0-9]+", "", result.source.lower())
-    return safe_name(f"{process.id if process else 'zapros'}_{source}_{result.source_id}", 120)
+    prefix = f"{catalog_id}_" if catalog_id else ""
+    return safe_name(f"{prefix}{process.id if process else 'zapros'}_{source}_{result.source_id}", 120)
 
 
 def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, probe: dict | None) -> str:
     r, lic = job.result, job.result.license
     lines = [
         f"Файл: {video_path.name}",
+        f"Номер в каталоге: {job.catalog_id}" if job.catalog_id else "Номер в каталоге: —",
         f"Название: {r.title or '—'}",
         f"Услуга: {job.process.name + ' (' + job.process.category + ')' if job.process else job.query_text}",
         f"Площадка: {r.source}, ID ролика: {r.source_id}",
@@ -227,7 +230,7 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     """Скачать ролик; вернуть путь к итоговому файлу и примечание для пользователя."""
     folder = target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
-    stem = file_stem(job.process, job.result)
+    stem = file_stem(job.process, job.result, job.catalog_id)
     ext = extension(job.file)
     want_mp4 = job.convert and ext != ".mp4"
     final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))

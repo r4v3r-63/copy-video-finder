@@ -172,3 +172,12 @@ def test_short_429_waited_long_429_reported(tmp_path, monkeypatch):
     with pytest.raises(DownloadError, match="Повторите через 10 мин"):
         fetch("u", tmp_path / "b.mp4", session)
     assert len(session.calls) == 1
+
+
+def test_file_name_starts_with_catalog_id(tmp_path):
+    v = video(FILES)
+    assert file_stem(PROC, v, 42) == "42_lam_roll_pixabay_125"
+    job = DownloadJob(result=v, file=FILES[1], process=PROC, query_text="", base_dir=tmp_path, catalog_id=42)
+    path, _ = run_job(job, StreamSession(StreamResponse(b"x")))
+    assert path.name == "42_lam_roll_pixabay_125.mp4"
+    assert "Номер в каталоге: 42" in path.with_suffix(".txt").read_text(encoding="utf-8")

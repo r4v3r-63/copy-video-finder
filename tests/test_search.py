@@ -280,3 +280,16 @@ def test_service_exclude_words():
 def test_only_printing_domain(tags, ok):
     from app.search import is_relevant
     assert is_relevant(tagged("1", tags), []) is ok
+
+
+def test_rejected_before_are_hidden():
+    from app.search import REJECTED_BEFORE
+    plan = SearchPlan(None, [SearchQuery("laminator", EN)])
+    src = FakeSource({"laminator": [tagged("1", "laminator, office"), tagged("2", "laminator, paper")]})
+    QCoreApplication.instance() or QCoreApplication([])
+    worker = SearchWorker(plan, [src], SearchFilters(), hidden={("Pixabay", "1")})
+    found = []
+    worker.found.connect(found.extend)
+    worker.run()
+    assert [r.source_id for r in found] == ["2"]
+    assert worker.rejection_counts() == {REJECTED_BEFORE: 1}

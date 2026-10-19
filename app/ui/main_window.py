@@ -19,11 +19,13 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSplitter,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from app import __version__, paths, processes, query, updater
+from app import catalog as cat
 from app.cache import Cache
 from app.downloader import DownloadJob, DownloadQueue
 from app.search import SearchWorker, print_stems
@@ -36,6 +38,7 @@ from app.sources.europeana import EuropeanaSource
 from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
+from app.ui.catalog_view import CatalogView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
 from app.ui.update import UpdateController
@@ -62,10 +65,12 @@ def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[s
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, settings: Settings, catalog: list[processes.Category], cache: Cache | None = None):
+    def __init__(self, settings: Settings, categories: list[processes.Category], cache: Cache | None = None,
+                 store: cat.Catalog | None = None):
         super().__init__()
         self.settings = settings
-        self.processes = processes.all_processes(catalog)
+        self.processes = processes.all_processes(categories)
+        self.catalog = store or cat.Catalog()
         self.printing = print_stems(self.processes)
         self._thumb_items: dict[str, QListWidgetItem] = {}
         self.dictionary = query.Dictionary.load()
@@ -124,7 +129,7 @@ class MainWindow(QMainWindow):
         self.results = QListWidget()
         self.results.setViewMode(QListView.ViewMode.IconMode)
         self.results.setIconSize(THUMB)
-        self.results.setGridSize(QSize(THUMB.width() + 16, THUMB.height() + 56))
+        self.results.setGridSize(QSize(THUMB.width() + 16, THUMB.height() + 76))
         self.results.setResizeMode(QListView.ResizeMode.Adjust)
         self.results.setMovement(QListView.Movement.Static)
         self.results.setWordWrap(True)
@@ -135,6 +140,8 @@ class MainWindow(QMainWindow):
         self.player.allow_4k = settings.allow_4k
         self.player.download_requested.connect(self.download)
         self.player.open_folder_requested.connect(self._open_folder)
+        self.player.select_requested.connect(self.add_to_catalog)
+        self.player.reject_requested.connect(self.reject_result)
 
         splitter = QSplitter()
         splitter.addWidget(self.results)
@@ -147,9 +154,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.query_info)
         layout.addWidget(self.source_links)
         layout.addWidget(splitter, 1)
-        central = QWidget()
-        central.setLayout(layout)
-        self.setCentralWidget(central)
+        search_tab = QWidget()
+        search_tab.setLayout(layout)
+        self.catalog_view = CatalogView(self.catalog, categories)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(search_tab, "Поиск")
+        self.tabs.addTab(self.catalog_view, "Каталог")
+        self.tabs.currentChanged.connect(lambda i: i == 1 and self.catalog_view.refresh())
+        self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
         self.show_rejected.setFlat(True)
@@ -253,8 +265,10 @@ class MainWindow(QMainWindow):
         self.source_links.setText("")
 
         self._thumb_items = {}
+        hidden = {key for key, status in self.catalog.statuses().items() if status == cat.REJECTED}
         self.worker = SearchWorker(plan, self.sources, self.filters(),
-                                   self.settings.only_without_attribution, self, printing=self.printing)
+                                   self.settings.only_without_attribution, self, printing=self.printing,
+                                   hidden=hidden)
         self.worker.found.connect(self._add_results)
         self.worker.problem.connect(self._on_problem)
         self.worker.progress.connect(self._on_progress)
@@ -285,10 +299,13 @@ class MainWindow(QMainWindow):
 
     def _add_results(self, results: list[VideoResult], off_topic: bool = False):
         self._remove_placeholder()
+        statuses = self.catalog.statuses()
         for r in results:
             text = f"{format_duration(r.duration)} · {r.width}×{r.height}\n{r.source} · {r.license.status}"
             if not r.files:
                 text += "\nскачать на сайте"
+            if statuses.get(r.key) == cat.SELECTED:
+                text += "\nв каталоге"
             if off_topic:
                 r.relevance = -1  # в конец выдачи
                 text = "Не по теме · " + text
@@ -297,7 +314,7 @@ class MainWindow(QMainWindow):
                 item.setForeground(self.palette().placeholderText())
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setToolTip(r.title or r.page_url)
-            item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 56))
+            item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 76))
             # Ближе к теме и к полиграфии — выше в выдаче.
             row = next((i for i in range(self.results.count())
                         if self.results.item(i).data(Qt.ItemDataRole.UserRole) is not None
@@ -331,17 +348,55 @@ class MainWindow(QMainWindow):
     def _on_current(self, item: QListWidgetItem | None, _previous):
         result = item.data(Qt.ItemDataRole.UserRole) if item else None
         self.player.show_result(result)
+        if result:
+            entry = self.catalog.find(result.key)
+            if entry:
+                self.player.set_catalog_state(entry.status, entry.id)
         if result and result.key in self.download_state:
             self.player.set_download_state(*self.download_state[result.key])
+
+    def add_to_catalog(self, result: VideoResult):
+        """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""
+        process = self.plan.process if self.plan else None
+        video_id = self.catalog.select(result, process.id if process else None)
+        self.player.set_catalog_state(cat.SELECTED, video_id)
+        if process:
+            self.statusBar().showMessage(f"Ролик № {video_id} добавлен в каталог: {process.name}.")
+        else:
+            self.statusBar().showMessage(f"Ролик № {video_id} добавлен в каталог. Привяжите его к услуге "
+                                         "во вкладке «Каталог».")
+        self._mark_item(result, "в каталоге")
+
+    def reject_result(self, result: VideoResult):
+        """«Не подходит»: ролик убирается из выдачи и больше в поиске не появится."""
+        self.catalog.reject(result)
+        row = next((i for i in range(self.results.count())
+                    if (self.results.item(i).data(Qt.ItemDataRole.UserRole) or None) is result), -1)
+        if row >= 0:
+            self.results.takeItem(row)
+        self.statusBar().showMessage("Ролик отклонён и больше не появится в поиске.")
+
+    def _mark_item(self, result: VideoResult, mark: str):
+        for i in range(self.results.count()):
+            item = self.results.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) is result and mark not in item.text():
+                item.setText(f"{item.text()}\n{mark}")
 
     def download_dir(self) -> Path:
         return Path(self.settings.download_dir) if self.settings.download_dir else paths.default_download_dir()
 
     def download(self, result: VideoResult, file):
         plan = self.plan
-        job = DownloadJob(result=result, file=file, process=plan.process if plan else None,
+        process = plan.process if plan else None
+        # Скачанный ролик попадает в каталог; номер в каталоге — в имени файла.
+        # Лицензию это не подтверждает: для этого кнопка «В каталог — лицензию проверил».
+        entry = self.catalog.find(result.key)
+        video_id = self.catalog.select(result, process.id if process else None,
+                                       license_confirmed=bool(entry and entry.license_confirmed))
+        self.player.set_catalog_state(cat.SELECTED, video_id)
+        job = DownloadJob(result=result, file=file, process=process,
                           query_text=self.plan_text, base_dir=self.download_dir(),
-                          convert=self.settings.convert_to_mp4)
+                          convert=self.settings.convert_to_mp4, catalog_id=video_id)
         self.downloads.add(job)
         self._set_download_state(result.key, "В очереди на скачивание…", "", True)
 
@@ -365,6 +420,9 @@ class MainWindow(QMainWindow):
 
     def _on_download_done(self, job_id: int, path: str, note: str):
         text = f"Скачано: {path}" + (f" ({note})" if note else "") + ". Рядом — файл с лицензией."
+        job = self.downloads.jobs[job_id]
+        if job.catalog_id:
+            self.catalog.set_downloaded(job.catalog_id, path)
         self._set_download_state(self._job_key(job_id), text, path, False)
         self.statusBar().showMessage(f"Скачано: {Path(path).name}")
 

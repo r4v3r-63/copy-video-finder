@@ -23,6 +23,7 @@ DURATION = "длительность"
 SIZE = "размер или ориентация"
 LICENSE = "лицензия"
 OFF_TOPIC = "не по теме"
+REJECTED_BEFORE = "отклонён ранее"
 NO_FILES_PENALTY = 100  # ролики без ссылки на файл — после всех, которые можно скачать
 
 
@@ -121,7 +122,8 @@ class SearchWorker(QThread):
     progress = pyqtSignal(int, int)  # выполнено запросов, всего
 
     def __init__(self, plan: SearchPlan, sources: list[Source], filters: SearchFilters,
-                 only_without_attribution: bool = False, parent=None, printing: set[str] | None = None):
+                 only_without_attribution: bool = False, parent=None, printing: set[str] | None = None,
+                 hidden: set[tuple[str, str]] | None = None):
         super().__init__(parent)
         self.plan = plan
         self.sources = sources
@@ -132,6 +134,7 @@ class SearchWorker(QThread):
         self.rejections: dict[tuple[str, str], str] = {}  # ролик → причина отсева
         self.off_topic: dict[tuple[str, str], VideoResult] = {}  # отсеянные «не по теме» — можно показать
         self.stems = topic_stems([q.text for q in plan.queries])
+        self.hidden = hidden or set()  # ролики, отклонённые пользователем, — не показываются
         self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         self.printing = printing or set()
 
@@ -193,7 +196,8 @@ class SearchWorker(QThread):
                 for r in results:
                     if r.key in self.seen:
                         continue
-                    reason = rejection_reason(r, self.filters, self.only_without_attribution)
+                    reason = REJECTED_BEFORE if r.key in self.hidden else \
+                        rejection_reason(r, self.filters, self.only_without_attribution)
                     if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description)
                                            or is_excluded(r, self.plan.exclude)):
                         reason = OFF_TOPIC

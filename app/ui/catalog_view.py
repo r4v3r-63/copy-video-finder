@@ -1,0 +1,368 @@
+"""Вкладка «Каталог»: дерево услуг, список роликов, карточка ролика."""
+
+from datetime import datetime
+from html import escape
+from pathlib import Path
+
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QSplitter,
+    QTableWidget,
+    QTableWidgetItem,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from app import catalog as cat
+from app import licenses
+from app.processes import Category, Process
+from app.ui.player import format_duration
+
+ALL = "__all__"
+NO_SERVICE = "__none__"
+STATUS_FILTERS = [("Все отметки", None), ("Выбранные", cat.SELECTED), ("Отклонённые", cat.REJECTED),
+                  ("Без отметки", cat.NEW)]
+STATUS_NAMES = {cat.SELECTED: "выбрано", cat.REJECTED: "отклонено", cat.NEW: "—"}
+
+
+def _date(ts: float | None) -> str:
+    return datetime.fromtimestamp(ts).strftime("%d.%m.%Y") if ts else "—"
+
+
+class VideoCard(QWidget):
+    """Карточка ролика в каталоге: редактируемые отметки, услуги и степень соответствия."""
+
+    changed = pyqtSignal()
+
+    def __init__(self, catalog: cat.Catalog, processes: list[Process], parent=None):
+        super().__init__(parent)
+        self.catalog = catalog
+        self.processes = {p.id: p for p in processes}
+        self.entry: cat.Entry | None = None
+
+        self.header = QLabel()
+        self.header.setWordWrap(True)
+        self.header.setOpenExternalLinks(True)
+        self.header.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+
+        self.title = QLineEdit()
+        self.title.editingFinished.connect(self._save_title)
+        self.status = QComboBox()
+        for value, name in STATUS_NAMES.items():
+            self.status.addItem(name, value)
+        self.status.activated.connect(self._save_status)
+        self.confirmed = QCheckBox("Лицензию проверил(а)")
+        self.confirmed.toggled.connect(self._save_confirmed)
+        self.comment = QPlainTextEdit()
+        self.comment.setPlaceholderText("Комментарий")
+        self.comment.setMaximumHeight(70)
+        save_comment = QPushButton("Сохранить комментарий")
+        save_comment.clicked.connect(self._save_comment)
+
+        self.links = QTableWidget(0, 3)
+        self.links.setHorizontalHeaderLabels(["Услуга", "Соответствие", ""])
+        self.links.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.links.verticalHeader().hide()
+        self.links.setMaximumHeight(140)
+        self.add_process = QComboBox()
+        for p in processes:
+            self.add_process.addItem(p.display, p.id)
+        self.add_match = QComboBox()
+        self.add_match.addItems(cat.MATCHES)
+        link_button = QPushButton("Привязать")
+        link_button.clicked.connect(self._add_link)
+        add_row = QHBoxLayout()
+        add_row.addWidget(self.add_process, 1)
+        add_row.addWidget(self.add_match)
+        add_row.addWidget(link_button)
+
+        self.open_page = QPushButton("Открыть страницу ролика")
+        self.open_page.clicked.connect(lambda: self.entry and QDesktopServices.openUrl(QUrl(self.entry.result.page_url)))
+        self.open_file = QPushButton("Показать файл")
+        self.open_file.clicked.connect(self._show_file)
+        self.delete = QPushButton("Удалить из каталога")
+        self.delete.clicked.connect(self._delete)
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.open_page)
+        buttons.addWidget(self.open_file)
+        buttons.addWidget(self.delete)
+
+        form = QFormLayout()
+        form.addRow("Название:", self.title)
+        form.addRow("Отметка:", self.status)
+        form.addRow("", self.confirmed)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.header)
+        layout.addLayout(form)
+        layout.addWidget(QLabel("Услуги и степень соответствия:"))
+        layout.addWidget(self.links)
+        layout.addLayout(add_row)
+        layout.addWidget(self.comment)
+        layout.addWidget(save_comment)
+        layout.addLayout(buttons)
+        layout.addStretch()
+        self.show_entry(None)
+
+    def show_entry(self, entry: cat.Entry | None):
+        self.entry = entry
+        for w in (self.title, self.status, self.confirmed, self.comment, self.links, self.add_process,
+                  self.add_match, self.open_page, self.delete):
+            w.setEnabled(entry is not None)
+        self.open_file.setEnabled(bool(entry and entry.downloaded_path))
+        if entry is None:
+            self.header.setText("Выберите ролик в списке.")
+            self.title.clear()
+            self.comment.clear()
+            self.links.setRowCount(0)
+            return
+        r, lic = entry.result, entry.result.license
+        size = f"{r.width}×{r.height}" if r.width and r.height else "?"
+        lines = [f"<b>№ {entry.id}</b> · {escape(r.source)} · ID {escape(r.source_id)} · "
+                 f"{format_duration(r.duration)} · {size}"]
+        name = escape(lic.name or "не указана")
+        if lic.url:
+            name = f'<a href="{escape(lic.url)}">{name}</a>'
+        lines.append(f"Лицензия: {name} — {escape(lic.status)}")
+        if lic.note:
+            lines.append(escape(lic.note))
+        if lic.status == licenses.ATTRIBUTION:
+            lines.append("Атрибуция: " + escape(licenses.attribution_text(r.author, r.title, lic.name, r.page_url)))
+        if r.author:
+            lines.append(f"Автор: {escape(r.author)}")
+        lines.append(f"Добавлен: {_date(entry.added_at)} · лицензия проверена: {_date(entry.checked_at)}")
+        if entry.downloaded_path:
+            lines.append(f"Скачан: {escape(entry.downloaded_path)}")
+        if not entry.counts_for_coverage:
+            lines.append("<i>В покрытие не засчитывается: нужна подходящая подтверждённая лицензия "
+                         "и отметка не «отклонено».</i>")
+        self.header.setText("<br>".join(lines))
+        self.title.setText(r.title)
+        self.status.setCurrentIndex(max(self.status.findData(entry.status), 0))
+        self.confirmed.blockSignals(True)
+        self.confirmed.setChecked(entry.license_confirmed)
+        self.confirmed.blockSignals(False)
+        self.comment.setPlainText(entry.comment)
+        self._fill_links()
+
+    def _fill_links(self):
+        self.links.setRowCount(0)
+        for process_id, match in sorted(self.entry.links.items()):
+            row = self.links.rowCount()
+            self.links.insertRow(row)
+            proc = self.processes.get(process_id)
+            self.links.setItem(row, 0, QTableWidgetItem(proc.display if proc else process_id))
+            combo = QComboBox()
+            combo.addItems(cat.MATCHES)
+            combo.setCurrentText(match)
+            combo.activated.connect(lambda _i, pid=process_id, c=combo: self._relink(pid, c.currentText()))
+            self.links.setCellWidget(row, 1, combo)
+            remove = QPushButton("Отвязать")
+            remove.clicked.connect(lambda _c=False, pid=process_id: self._unlink(pid))
+            self.links.setCellWidget(row, 2, remove)
+
+    def _reload(self):
+        self.show_entry(self.catalog.get(self.entry.id))
+        self.changed.emit()
+
+    def _save_title(self):
+        if self.entry and self.title.text().strip() and self.title.text() != self.entry.result.title:
+            self.catalog.set_title(self.entry.id, self.title.text().strip())
+            self._reload()
+
+    def _save_status(self):
+        if self.entry:
+            self.catalog.set_status(self.entry.id, self.status.currentData())
+            self._reload()
+
+    def _save_confirmed(self, checked: bool):
+        if self.entry:
+            self.catalog.confirm_license(self.entry.id, checked)
+            self._reload()
+
+    def _save_comment(self):
+        if self.entry:
+            self.catalog.set_comment(self.entry.id, self.comment.toPlainText().strip())
+            self._reload()
+
+    def _add_link(self):
+        if self.entry:
+            self.catalog.link(self.entry.id, self.add_process.currentData(), self.add_match.currentText())
+            self._reload()
+
+    def _relink(self, process_id: str, match: str):
+        self.catalog.link(self.entry.id, process_id, match)
+        self._reload()
+
+    def _unlink(self, process_id: str):
+        self.catalog.unlink(self.entry.id, process_id)
+        self._reload()
+
+    def _show_file(self):
+        if self.entry and self.entry.downloaded_path:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(self.entry.downloaded_path).parent)))
+
+    def _delete(self):
+        if not self.entry:
+            return
+        answer = QMessageBox.question(self, "Удалить из каталога",
+                                      f"Удалить ролик № {self.entry.id} из каталога? Скачанный файл останется.")
+        if answer == QMessageBox.StandardButton.Yes:
+            self.catalog.delete(self.entry.id)
+            self.show_entry(None)
+            self.changed.emit()
+
+
+class CatalogView(QWidget):
+    def __init__(self, catalog: cat.Catalog, categories: list[Category], parent=None):
+        super().__init__(parent)
+        self.catalog = catalog
+        self.categories = categories
+        self.processes = [p for c in categories for p in c.processes]
+
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(["Услуга", "Роликов", "В покрытии"])
+        header = self.tree.header()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.tree.setMinimumWidth(320)
+        self.tree.currentItemChanged.connect(lambda *_: self.refresh_list())
+
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Поиск по названию, описанию, площадке, комментарию")
+        self.search.setClearButtonEnabled(True)
+        self.search.textChanged.connect(lambda _t: self.refresh_list())
+        self.status_filter = QComboBox()
+        for name, value in STATUS_FILTERS:
+            self.status_filter.addItem(name, value)
+        self.status_filter.activated.connect(lambda _i: self.refresh_list())
+        filters = QHBoxLayout()
+        filters.addWidget(self.search, 1)
+        filters.addWidget(self.status_filter)
+
+        self.table = QTableWidget(0, 7)
+        self.table.setHorizontalHeaderLabels(["№", "Название", "Площадка", "Длит.", "Лицензия", "Отметка", "Скачан"])
+        columns = self.table.horizontalHeader()
+        for col, width in {0: 44, 2: 120, 3: 52, 4: 170, 5: 80, 6: 60}.items():
+            columns.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)
+            self.table.setColumnWidth(col, width)
+        columns.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.table.setMinimumWidth(420)
+        self.table.verticalHeader().hide()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.currentCellChanged.connect(lambda row, *_: self._show_row(row))
+
+        self.card = VideoCard(catalog, self.processes)
+        self.card.changed.connect(self.refresh)
+
+        middle = QWidget()
+        middle_layout = QVBoxLayout(middle)
+        middle_layout.setContentsMargins(0, 0, 0, 0)
+        middle_layout.addLayout(filters)
+        middle_layout.addWidget(self.table)
+
+        splitter = QSplitter()
+        splitter.addWidget(self.tree)
+        splitter.addWidget(middle)
+        splitter.addWidget(self.card)
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 4)
+        splitter.setStretchFactor(2, 3)
+        splitter.setSizes([400, 600, 480])
+        layout = QVBoxLayout(self)
+        layout.addWidget(splitter)
+        self.refresh()
+
+    def selected_process(self) -> str:
+        item = self.tree.currentItem()
+        return item.data(0, Qt.ItemDataRole.UserRole) if item else ALL
+
+    def refresh(self):
+        """Обновить дерево с числами и список (после изменений в каталоге)."""
+        current = self.selected_process()
+        entries = self.catalog.entries()
+        coverage = self.catalog.coverage()
+        totals: dict[str, int] = {}
+        for e in entries:
+            for pid in e.links:
+                totals[pid] = totals.get(pid, 0) + 1
+        self.tree.blockSignals(True)
+        self.tree.clear()
+        all_item = QTreeWidgetItem(["Все ролики", str(len(entries)), ""])
+        all_item.setData(0, Qt.ItemDataRole.UserRole, ALL)
+        none_item = QTreeWidgetItem(["Без услуги", str(sum(1 for e in entries if not e.links)), ""])
+        none_item.setData(0, Qt.ItemDataRole.UserRole, NO_SERVICE)
+        self.tree.addTopLevelItems([all_item, none_item])
+        restore = all_item
+        for c in self.categories:
+            cat_item = QTreeWidgetItem([c.name, str(sum(totals.get(p.id, 0) for p in c.processes)),
+                                        str(sum(coverage.get(p.id, 0) for p in c.processes))])
+            cat_item.setData(0, Qt.ItemDataRole.UserRole, None)
+            for p in c.processes:
+                item = QTreeWidgetItem([p.name, str(totals.get(p.id, 0)), f"{coverage.get(p.id, 0)} из {p.target}"])
+                item.setData(0, Qt.ItemDataRole.UserRole, p.id)
+                cat_item.addChild(item)
+                if p.id == current:
+                    restore = item
+            self.tree.addTopLevelItem(cat_item)
+        self.tree.expandAll()
+        if current == NO_SERVICE:
+            restore = none_item
+        self.tree.setCurrentItem(restore)
+        self.tree.blockSignals(False)
+        self.refresh_list()
+
+    def refresh_list(self):
+        selected_id = self.card.entry.id if self.card.entry else None
+        pid = self.selected_process()
+        if pid is None:  # выбрана категория — все её услуги
+            item = self.tree.currentItem()
+            ids = {item.child(i).data(0, Qt.ItemDataRole.UserRole) for i in range(item.childCount())}
+            entries = [e for e in self.catalog.entries(status=self.status_filter.currentData(),
+                                                       text=self.search.text()) if ids & set(e.links)]
+        else:
+            entries = self.catalog.entries(process_id=None if pid in (ALL, NO_SERVICE) else pid,
+                                           status=self.status_filter.currentData(), text=self.search.text())
+            if pid == NO_SERVICE:
+                entries = [e for e in entries if not e.links]
+        self.entries = entries
+        self.table.blockSignals(True)
+        self.table.setRowCount(0)
+        restore = -1
+        for e in entries:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            lic = e.result.license
+            license_text = f"{lic.status}{'' if e.license_confirmed else ' (не проверена)'}"
+            for col, text in enumerate([str(e.id), e.result.title, e.result.source, format_duration(e.result.duration),
+                                        license_text, STATUS_NAMES.get(e.status, e.status),
+                                        "да" if e.downloaded_path else ""]):
+                self.table.setItem(row, col, QTableWidgetItem(text))
+            if e.id == selected_id:
+                restore = row
+        self.table.blockSignals(False)
+        if restore >= 0:
+            self.table.selectRow(restore)
+            self.card.show_entry(entries[restore])
+        else:
+            self.card.show_entry(None)
+
+    def _show_row(self, row: int):
+        self.card.show_entry(self.entries[row] if 0 <= row < len(self.entries) else None)
