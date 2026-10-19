@@ -30,7 +30,9 @@ from app.search import SearchWorker, print_stems
 from app.settings import Settings
 from app.sources.base import SearchFilters, Source, VideoResult
 from app.sources.pexels import PexelsSource
+from app.sources.coverr import CoverrSource
 from app.sources.pixabay import PixabaySource
+from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
@@ -42,6 +44,8 @@ THUMB = QSize(256, 144)
 def all_sources(settings: Settings, cache: Cache) -> list[Source]:
     return [
         PixabaySource(settings.pixabay_api_key, cache),
+        CoverrSource(settings.coverr_api_key, cache),
+        VimeoSource(settings.vimeo_token, cache),
         WikimediaSource(cache),
         PexelsSource(settings.pexels_api_key, cache),
     ]

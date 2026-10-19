@@ -32,7 +32,7 @@ def evaluate(name: str | None) -> tuple[str, str]:
     text, words = _tokens(name)
     if _REJECT_WORDS & set(words) or any(p in text for p in _REJECT_PHRASES):
         return REJECTED, "Запрет коммерческого использования, изменений или ограниченная лицензия."
-    if text in ("PEXELS LICENSE", "PEXELS") or text.startswith("PIXABAY"):
+    if text in ("PEXELS LICENSE", "PEXELS", "COVERR LICENSE", "COVERR") or text.startswith("PIXABAY"):
         return ALLOWED, ""
     if "CC0" in words or "PUBLIC DOMAIN" in text or (words and words[0] in ("PD", "PDM")):
         return ALLOWED, ""

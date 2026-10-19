@@ -1,0 +1,31 @@
+{
+  "_comment": "Составлено по структуре объекта видео Vimeo API v3.4 (поля из запроса fields); ссылки не настоящие.",
+  "total": 3, "page": 1, "per_page": 20,
+  "data": [
+    {
+      "uri": "/videos/111", "name": "Screen printing workshop", "description": "Printing posters by hand",
+      "link": "https://vimeo.com/111", "duration": 30, "width": 1920, "height": 1080, "license": "by",
+      "pictures": {"sizes": [{"width": 100, "height": 75, "link": "https://i.vimeocdn.com/video/111_100x75"},
+                             {"width": 640, "height": 360, "link": "https://i.vimeocdn.com/video/111_640x360"},
+                             {"width": 1920, "height": 1080, "link": "https://i.vimeocdn.com/video/111_1920x1080"}]},
+      "user": {"name": "Print Studio", "link": "https://vimeo.com/printstudio"},
+      "tags": [{"name": "screen printing"}, {"name": "posters"}],
+      "download": [
+        {"quality": "hd", "type": "video/mp4", "width": 1920, "height": 1080, "link": "https://player.vimeo.com/play/111/hd1080"},
+        {"quality": "sd", "type": "video/mp4", "width": 640, "height": 360, "link": "https://player.vimeo.com/play/111/sd360"},
+        {"quality": "source", "type": "source", "width": 3840, "height": 2160, "link": "https://player.vimeo.com/play/111/source"}
+      ]
+    },
+    {
+      "uri": "/videos/222", "name": "Bookbinding by hand", "description": "", "link": "https://vimeo.com/222",
+      "duration": 25, "width": 1280, "height": 720, "license": "by-sa",
+      "pictures": {"sizes": [{"width": 640, "height": 360, "link": "https://i.vimeocdn.com/video/222_640x360"}]},
+      "user": {"name": "Binder", "link": "https://vimeo.com/binder"}, "tags": []
+    },
+    {
+      "uri": "/videos/333", "name": "Offset press", "description": "", "link": "https://vimeo.com/333",
+      "duration": 20, "width": 1920, "height": 1080, "license": "by-nc-nd",
+      "pictures": {"sizes": []}, "user": {"name": "Someone", "link": "https://vimeo.com/someone"}, "tags": []
+    }
+  ]
+}

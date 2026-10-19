@@ -1,0 +1,133 @@
+import pytest
+from PyQt6.QtCore import QCoreApplication
+
+from app import licenses
+from app.cache import Cache
+from app.query import EN, RU, SearchPlan, SearchQuery
+from app.search import SearchWorker, preview_file
+from app.sources.base import AuthError, RateLimitError, SearchFilters
+from app.sources.coverr import CoverrSource
+from app.sources.vimeo import NO_FILES_NOTE, VimeoSource
+from tests.fakes import Clock, FakeResponse, FakeSession, fixture_text
+
+
+@pytest.fixture
+def clock():
+    return Clock()
+
+
+@pytest.fixture
+def cache(tmp_path, clock):
+    c = Cache(tmp_path / "cache.sqlite", now=clock)
+    yield c
+    c.close()
+
+
+def coverr(cache, clock, *responses, key="ckey"):
+    return CoverrSource(key, cache, session=FakeSession(*responses), now=clock)
+
+
+def vimeo(cache, clock, *responses, token="vtoken"):
+    return VimeoSource(token, cache, session=FakeSession(*responses), now=clock)
+
+
+# --- Coverr ---
+
+def test_coverr_parse(cache, clock):
+    src = coverr(cache, clock, FakeResponse(text=fixture_text("coverr_search.json")))
+    press, portrait = src.search("printing press", SearchFilters())
+    assert press.key == ("Coverr", "Ab12Cd34")
+    assert press.title.startswith("Printing press in a print shop") and "print shop" in press.title
+    assert (press.width, press.height, press.duration) == (1920, 1080, 18.5)
+    assert press.license.name == "Coverr License" and press.license.status == licenses.ALLOWED
+    assert "обучения ИИ" in press.license.note
+    # Скачивание — только через mp4_download (так Coverr учитывает скачивания), просмотр — mp4_preview.
+    assert [f.url for f in press.files] == ["https://storage.coverr.co/videos/ab12/download?token=x"]
+    assert preview_file(press).url == "https://storage.coverr.co/videos/ab12/preview.mp4"
+    assert portrait.files[0].quality == "Full HD"  # 1080×1920 — Full HD по короткой стороне
+    assert portrait.preview_video is None and preview_file(portrait).url.endswith("/download")
+
+
+def test_coverr_request(cache, clock):
+    src = coverr(cache, clock, FakeResponse(text='{"hits": []}'))
+    src.search("printer", SearchFilters(), page=2)
+    call = src.session.calls[0]
+    assert call["url"] == "https://api.coverr.co/videos"
+    assert call["headers"] == {"Authorization": "Bearer ckey"}
+    assert call["params"] == {"query": "printer", "page": 1, "page_size": 20, "urls": "true"}
+    keys = [row[0] for row in cache._db.execute("SELECT key FROM responses")]
+    assert all("ckey" not in k for k in keys)
+
+
+def test_coverr_hourly_limit_50(cache, clock):
+    src = coverr(cache, clock, FakeResponse(text='{"hits": []}'))
+    for i in range(50):
+        src.search(f"q{i}", SearchFilters())
+    with pytest.raises(RateLimitError, match="50 запросов в час"):
+        src.search("more", SearchFilters())
+
+
+def test_coverr_english_only_and_key_required(cache, clock):
+    assert CoverrSource.languages == {"en"}
+    src = coverr(cache, clock, key="")
+    assert not src.is_configured()
+    with pytest.raises(AuthError):
+        src.search("x", SearchFilters())
+
+
+def test_worker_sends_only_supported_languages(cache, clock):
+    QCoreApplication.instance() or QCoreApplication([])
+    src = coverr(cache, clock, FakeResponse(text='{"hits": []}'))
+    plan = SearchPlan(None, [SearchQuery("ламинатор", RU), SearchQuery("laminator", EN)])
+    SearchWorker(plan, [src], SearchFilters()).run()
+    assert [c["params"]["query"] for c in src.session.calls] == ["laminator"]
+
+
+# --- Vimeo ---
+
+def test_vimeo_parse_and_licenses(cache, clock):
+    src = vimeo(cache, clock, FakeResponse(text=fixture_text("vimeo_search.json")))
+    by, by_sa, nc_nd = src.search("printing", SearchFilters())
+    assert by.key == ("Vimeo", "111")
+    assert by.title == "Screen printing workshop, screen printing, posters"
+    assert by.page_url == "https://vimeo.com/111" and by.author == "Print Studio"
+    assert by.preview_url == "https://i.vimeocdn.com/video/111_640x360"
+    assert by.license.name == "CC BY" and by.license.status == licenses.ATTRIBUTION
+    assert by.license.url == "https://creativecommons.org/licenses/by/3.0/"
+    assert [f.quality for f in by.files] == ["Full HD", "SD"]  # исходник не предлагается
+    assert by_sa.license.status == licenses.ATTRIBUTION and licenses.SHARE_ALIKE_NOTE in by_sa.license.note
+    assert nc_nd.license.status == licenses.REJECTED
+
+
+def test_vimeo_without_download_links(cache, clock):
+    src = vimeo(cache, clock, FakeResponse(text=fixture_text("vimeo_search.json")))
+    by_sa = src.search("x", SearchFilters())[1]
+    assert by_sa.files == [] and NO_FILES_NOTE in by_sa.license.note
+
+
+def test_vimeo_request(cache, clock):
+    src = vimeo(cache, clock, FakeResponse(text='{"data": []}'))
+    src.search("bookbinding", SearchFilters())
+    call = src.session.calls[0]
+    assert call["url"] == "https://api.vimeo.com/videos"
+    assert call["headers"]["Authorization"] == "bearer vtoken"
+    assert "version=3.4" in call["headers"]["Accept"]
+    assert call["params"]["filter"] == "CC" and "license" in call["params"]["fields"]
+
+
+def test_vimeo_rate_limit_headers(cache, clock):
+    from datetime import datetime, timezone
+    reset = datetime.fromtimestamp(clock.t + 120, timezone.utc).isoformat()
+    headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
+    src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers))
+    src.search("a", SearchFilters())
+    with pytest.raises(RateLimitError):
+        src.search("b", SearchFilters())
+    clock.t += 121
+    src.search("b", SearchFilters())
+
+
+def test_vimeo_token_required(cache, clock):
+    src = vimeo(cache, clock, token="")
+    with pytest.raises(AuthError, match="Токен Vimeo не задан"):
+        src.search("x", SearchFilters())

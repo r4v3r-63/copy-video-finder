@@ -58,6 +58,13 @@ class SettingsDialog(QDialog):
         pixabay_row, self.pixabay_key = _key_field(settings.pixabay_api_key)
         form.addRow("Ключ API Pixabay:", pixabay_row)
         form.addRow("", _link("Получить ключ Pixabay", "https://pixabay.com/api/docs/"))
+        coverr_row, self.coverr_key = _key_field(settings.coverr_api_key)
+        form.addRow("Ключ API Coverr:", coverr_row)
+        form.addRow("", _link("Получить ключ Coverr (бесплатно — 50 запросов в час)", "https://coverr.co/developers"))
+        vimeo_row, self.vimeo_token = _key_field(settings.vimeo_token)
+        form.addRow("Токен Vimeo:", vimeo_row)
+        form.addRow("", _link("Создать приложение и личный токен Vimeo (права public)",
+                              "https://developer.vimeo.com/apps"))
         form.addRow("", QLabel("Wikimedia Commons работает без ключа."))
 
         self.min_duration = QSpinBox()
@@ -124,6 +131,8 @@ class SettingsDialog(QDialog):
         low, high = self.min_duration.value(), self.max_duration.value()
         self._settings.pexels_api_key = self.pexels_key.text().strip()
         self._settings.pixabay_api_key = self.pixabay_key.text().strip()
+        self._settings.coverr_api_key = self.coverr_key.text().strip()
+        self._settings.vimeo_token = self.vimeo_token.text().strip()
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

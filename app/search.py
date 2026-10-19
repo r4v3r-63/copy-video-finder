@@ -14,7 +14,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 from app import licenses
 from app.query import SearchPlan
 from app.topic import WORD as _WORD, phrase_stems, stem as _stem, topic_stems
-from app.sources.base import AuthError, RateLimitError, SearchFilters, Source, SourceError, VideoResult
+from app.sources.base import AuthError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,9 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
 
 
 def preview_file(result: VideoResult):
-    """Файл для просмотра: самый лёгкий из вариантов не ниже 360p, иначе любой."""
+    """Файл для просмотра: отдельная ссылка площадки или самый лёгкий вариант не ниже 360p."""
+    if result.preview_video:
+        return VideoFile("просмотр", result.preview_video)
     files = sorted(result.files, key=lambda f: f.height or 0)
     for f in files:
         if (f.height or 0) >= 360:
@@ -141,7 +143,7 @@ class SearchWorker(QThread):
         return sorted(found, key=lambda r: -r.relevance)
 
     def run(self):
-        tasks = [(s, q) for s in self.sources for q in self.plan.queries]
+        tasks = [(s, q) for s in self.sources for q in self.plan.queries if q.lang in s.languages]
         total = len(tasks)
         done = 0
         failed_sources: set[str] = set()

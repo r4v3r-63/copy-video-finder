@@ -1,0 +1,23 @@
+{
+  "_comment": "Составлено по схеме объекта видео из документации Coverr API (api.coverr.co/docs/videos); ссылки не настоящие.",
+  "hits": [
+    {
+      "id": "Ab12Cd34", "created_at": "2024-01-10T10:00:00Z", "updated_at": "2024-01-10T10:00:00Z",
+      "title": "Printing press in a print shop", "poster": "https://cdn.coverr.co/videos/ab12/poster.jpg",
+      "thumbnail": "https://cdn.coverr.co/videos/ab12/thumbnail.jpg", "description": "Close up of an offset printing press",
+      "is_vertical": false, "tags": ["printing", "press", "print shop", "paper"], "downloads": 120, "views": 3400,
+      "published_at": "2024-01-10T10:00:00Z", "aspect_ratio": "16:9", "duration": 18.5,
+      "max_height": 1080, "max_width": 1920,
+      "urls": {"mp4": "https://storage.coverr.co/videos/ab12/1080p.mp4",
+               "mp4_preview": "https://storage.coverr.co/videos/ab12/preview.mp4",
+               "mp4_download": "https://storage.coverr.co/videos/ab12/download?token=x"}
+    },
+    {
+      "id": "Ef56Gh78", "title": "Office worker at a laser printer", "poster": "", "thumbnail": "https://cdn.coverr.co/videos/ef56/thumbnail.jpg",
+      "description": "", "is_vertical": true, "tags": ["office", "laser printer"], "duration": 9,
+      "max_height": 1920, "max_width": 1080,
+      "urls": {"mp4": "https://storage.coverr.co/videos/ef56/1080p.mp4", "mp4_preview": "", "mp4_download": "https://storage.coverr.co/videos/ef56/download"}
+    }
+  ],
+  "page": 0, "pages": 1, "page_size": 20, "total": 2
+}

@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 class Settings:
     pexels_api_key: str = ""
     pixabay_api_key: str = ""
+    coverr_api_key: str = ""
+    vimeo_token: str = ""  # личный токен доступа Vimeo (права public)
     min_duration: int = 5
     max_duration: int = 45
     only_without_attribution: bool = False
