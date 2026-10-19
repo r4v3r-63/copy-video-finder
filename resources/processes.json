@@ -97,7 +97,7 @@
         {"id": "lam_roll", "name": "Рулонная ламинация листовой продукции", "aliases": ["ламинирование"],
          "phrases_ru": ["рулонный ламинатор", "ламинирование листов"],
          "phrases_en": ["roll laminator", "thermal laminating machine", "sheet lamination"],
-         "key_ru": ["ламинатор"], "key_en": ["laminator"]},
+         "key_ru": ["ламинатор"], "key_en": ["laminator"], "exclude": ["magnetic", "магнитн"]},
         {"id": "lam_wide", "name": "Широкоформатная ламинация", "aliases": ["ламинирование"],
          "phrases_ru": ["широкоформатный ламинатор", "холодная ламинация"],
          "phrases_en": ["wide format laminator", "cold laminator", "large format lamination"],
