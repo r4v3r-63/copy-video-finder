@@ -13,8 +13,8 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
-from app.topic import WORD as _WORD, phrase_stems, stem as _stem, topic_stems
-from app.sources.base import AuthError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
+from app.topic import WORD as _WORD, in_print_domain, phrase_stems, stem as _stem, topic_stems
+from app.sources.base import AuthError, NotFoundError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
 
 log = logging.getLogger(__name__)
 
@@ -94,7 +94,12 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
     """
     text = f"{result.title} {result.description}" if use_description else result.title
     tokens = {w.lower().replace("ё", "е") for w in _WORD.findall(text or "")}
-    if not phrases or not tokens:
+    if not tokens:
+        return True
+    # Только полиграфия и сувенирка: слово этой области и никаких слов стройки, еды, природы.
+    if not in_print_domain(tokens):
+        return False
+    if not phrases:
         return True
     return any(all(any(t.startswith(s) for t in tokens) for s in phrase) for phrase in phrases)
 
@@ -172,6 +177,10 @@ class SearchWorker(QThread):
                     if source.name not in failed_sources:
                         failed_sources.add(source.name)
                         self.problem.emit(exc.message)
+                    results = []
+                except NotFoundError:
+                    # На поисковый запрос 404 — разовый сбой площадки, а не «ролик удалён».
+                    log.info("%s: 404 на поиск «%s»", source.name, query.text)
                     results = []
                 except SourceError as exc:
                     self.problem.emit(exc.message)

@@ -263,3 +263,18 @@ def test_service_exclude_words():
     assert is_excluded(tagged("1", "принтер, 3д печать, 3d"), plan.exclude)
     assert not is_excluded(tagged("2", "printer, office, paper"), plan.exclude)
     assert build_plan("3D-печать", procs, Dictionary.load()).exclude == frozenset()
+
+
+@pytest.mark.parametrize("tags, ok", [
+    # Настоящий промах Coverr: пневмостеплер на стройке помечен «stapler».
+    ("Stapling wood, staple gun, stapling, stapler, machine, plank, wood, construction, carpenter", False),
+    ("stapler, office, office supplies, paper", True),
+    ("принтер, распечатать, компьютер, бумага, офис", True),
+    ("chopping, cutting, ingredients, kitchen, garlic", False),
+    ("sydney, city, aerial", False),  # ни одного слова полиграфии
+    ("mug, sublimation, heat press, souvenir", True),
+    ("printing 3d, printer 3d, close 3d printing", True),
+])
+def test_only_printing_domain(tags, ok):
+    from app.search import is_relevant
+    assert is_relevant(tagged("1", tags), []) is ok

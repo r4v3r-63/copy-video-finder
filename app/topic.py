@@ -90,3 +90,40 @@ def key_words(phrases: list[str], limit: int = 1) -> list[str]:
     """Самые частые значимые слова фраз — короткие запросы, которые площадки понимают лучше длинных."""
     counts = Counter(w for p in phrases for w in dict.fromkeys(words(p)) if is_significant(w))
     return [w for w, _ in counts.most_common(limit)]
+
+
+# Полиграфия и сувенирка: у ролика должно быть хотя бы одно такое слово (начало слова).
+PRINT_DOMAIN = (
+    "print", "paper", "office", "document", "book", "brochure", "page", "poster", "flyer", "leaflet", "card",
+    "label", "sticker", "banner", "typograph", "ink", "toner", "cmyk", "copier", "copy", "xerox", "photocop",
+    "bind", "lamin", "plotter", "scanner", "stapl", "folder", "envelope", "calendar", "notebook", "magazine",
+    "newspaper", "catalog", "packag", "cardboard", "foam", "vinyl", "graphic", "mug", "shirt", "tshirt",
+    "textile", "fabric", "apparel", "engrav", "laser", "magnet", "badge", "stamp", "souvenir", "3d", "filament",
+    "photo", "camera", "passport", "portrait", "grommet", "eyelet", "guillotine", "cutter", "emboss", "foil",
+    "punch", "perforat", "creas", "sublimat", "dtf", "signage", "roll-up", "rollup",
+    "печат", "бумаг", "офис", "документ", "книг", "брошюр", "буклет", "плакат", "листовк", "визитк", "открытк",
+    "этикет", "наклейк", "стикер", "баннер", "типограф", "полиграф", "чернил", "тонер", "копир", "ксерокс",
+    "переплет", "ламин", "плоттер", "сканер", "степлер", "календар", "блокнот", "журнал", "газет", "каталог",
+    "упаковк", "картон", "пенокартон", "винил", "кружк", "футболк", "текстил", "ткан", "гравир", "лазер",
+    "магнит", "значк", "штамп", "сувенир", "3д", "фото", "камер", "паспорт", "портрет", "люверс", "гильотин",
+    "резак", "тиснен", "фольг", "перфор", "биговк", "сублимац", "принтер", "роллап",
+)
+
+# Чужие области: ролик с такими словами — не про полиграфию, даже если совпало слово услуги
+# (пневмостеплер на стройке помечен «stapler», ценник — «этикетка»).
+FOREIGN = (
+    "wood", "lumber", "plank", "carpent", "joiner", "construction", "builder", "roof", "brick", "concrete",
+    "cement", "timber", "kitchen", "cooking", "food", "vegetable", "meat", "garlic", "recipe", "beach", "ocean",
+    "coast", "mountain", "forest", "wildlife", "animal", "bird", "music", "musician", "guitar", "concert",
+    "turntable", "automobile", "garden", "farm", "tractor",
+    "дерев", "древесин", "доски", "стройк", "строител", "плотник", "крыш", "кирпич", "бетон", "кухн", "еда",
+    "готовк", "овощ", "мясо", "пляж", "океан", "горы", "лес", "животн", "птиц", "музык", "гитар", "концерт",
+    "проигрыват", "автомобил", "сад", "ферм", "трактор",
+)
+
+
+def in_print_domain(tokens: set[str]) -> bool:
+    """Ролик про полиграфию или сувенирку: есть слово этой области и нет слов чужих областей."""
+    if any(t.startswith(f) for t in tokens for f in FOREIGN):
+        return False
+    return any(t.startswith(d) for t in tokens for d in PRINT_DOMAIN)
