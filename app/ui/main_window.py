@@ -26,14 +26,26 @@ from app.search import SearchWorker
 from app.settings import Settings
 from app.sources.base import SearchFilters, Source, VideoResult
 from app.sources.pexels import PexelsSource
+from app.sources.pixabay import PixabaySource
+from app.sources.wikimedia import WikimediaSource
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
 
 THUMB = QSize(256, 144)
 
 
-def make_sources(settings: Settings, cache: Cache) -> list[Source]:
-    return [PexelsSource(settings.pexels_api_key, cache)]
+def all_sources(settings: Settings, cache: Cache) -> list[Source]:
+    return [
+        PixabaySource(settings.pixabay_api_key, cache),
+        WikimediaSource(cache),
+        PexelsSource(settings.pexels_api_key, cache),
+    ]
+
+
+def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[str]]:
+    """Площадки для поиска и названия пропущенных из-за отсутствия ключа."""
+    sources = all_sources(settings, cache)
+    return [s for s in sources if s.is_configured()], [s.name for s in sources if not s.is_configured()]
 
 
 class MainWindow(QMainWindow):
@@ -131,9 +143,10 @@ class MainWindow(QMainWindow):
         menu.addAction(quit_action)
 
     def _show_hint(self):
-        if not (self.settings.pexels_api_key or self.settings.pixabay_api_key):
+        _, skipped = make_sources(self.settings, self.cache)
+        if skipped:
             self.query_info.setText(
-                "Ключи API Pexels и Pixabay не заданы — укажите их в меню «Файл → Настройки». "
+                f"Без ключа API пропускаются: {', '.join(skipped)}. Ключи вводятся в меню «Файл → Настройки». "
                 "Wikimedia Commons работает без ключа."
             )
         else:
@@ -167,14 +180,18 @@ class MainWindow(QMainWindow):
         if not plan.queries:
             return
         self.stop_search()
-        self.query_info.setText(self._describe_plan(plan))
+        self.sources, skipped = make_sources(self.settings, self.cache)
+        info = self._describe_plan(plan)
+        info += "\nПлощадки: " + ", ".join(src.name for src in self.sources)
+        if skipped:
+            info += f" (без ключа пропущены: {', '.join(skipped)})"
+        self.query_info.setText(info)
         self.results.clear()
         self.player.show_result(None)
         self.problems = []
         self.sources_seen = {}
         self.source_links.setText("")
 
-        self.sources = make_sources(self.settings, self.cache)
         self.worker = SearchWorker(plan, self.sources, self.filters(),
                                    self.settings.only_without_attribution, self)
         self.worker.found.connect(self._add_results)

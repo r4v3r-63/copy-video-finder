@@ -1,0 +1,39 @@
+{
+  "_comment": "Составлено по формату ответа GET /api/videos/ из документации Pixabay API; ссылки не настоящие.",
+  "total": 2,
+  "totalHits": 2,
+  "hits": [
+    {
+      "id": 125,
+      "pageURL": "https://pixabay.com/videos/id-125/",
+      "type": "film",
+      "tags": "laminator, office, paper",
+      "duration": 12,
+      "videos": {
+        "large": {"url": "https://cdn.pixabay.com/video/2020/01/01/125-1_large.mp4", "width": 1920, "height": 1080, "size": 6615235, "thumbnail": "https://cdn.pixabay.com/video/2020/01/01/125-1_large.jpg"},
+        "medium": {"url": "https://cdn.pixabay.com/video/2020/01/01/125-1_medium.mp4", "width": 1280, "height": 720, "size": 3562083, "thumbnail": "https://cdn.pixabay.com/video/2020/01/01/125-1_medium.jpg"},
+        "small": {"url": "https://cdn.pixabay.com/video/2020/01/01/125-1_small.mp4", "width": 960, "height": 540, "size": 2016733, "thumbnail": "https://cdn.pixabay.com/video/2020/01/01/125-1_small.jpg"},
+        "tiny": {"url": "https://cdn.pixabay.com/video/2020/01/01/125-1_tiny.mp4", "width": 640, "height": 360, "size": 1500000, "thumbnail": "https://cdn.pixabay.com/video/2020/01/01/125-1_tiny.jpg"}
+      },
+      "views": 4462, "downloads": 1464, "likes": 18, "comments": 0,
+      "user_id": 1281706, "user": "Example-User",
+      "userImageURL": "https://cdn.pixabay.com/user/2015/10/16/09-28-45-303_250x250.png"
+    },
+    {
+      "id": 126,
+      "pageURL": "https://pixabay.com/videos/id-126/",
+      "type": "film",
+      "tags": "printer, print shop",
+      "duration": 25,
+      "videos": {
+        "large": {"url": "", "width": 0, "height": 0, "size": 0, "thumbnail": ""},
+        "medium": {"url": "https://cdn.pixabay.com/video/2020/01/02/126-2_medium.mp4", "width": 1280, "height": 720, "size": 3000000, "thumbnail": "https://cdn.pixabay.com/video/2020/01/02/126-2_medium.jpg"},
+        "small": {"url": "https://cdn.pixabay.com/video/2020/01/02/126-2_small.mp4", "width": 960, "height": 540, "size": 1800000, "thumbnail": "https://cdn.pixabay.com/video/2020/01/02/126-2_small.jpg"},
+        "tiny": {"url": "https://cdn.pixabay.com/video/2020/01/02/126-2_tiny.mp4", "width": 640, "height": 360, "size": 900000, "thumbnail": "https://cdn.pixabay.com/video/2020/01/02/126-2_tiny.jpg"}
+      },
+      "views": 100, "downloads": 10, "likes": 1, "comments": 0,
+      "user_id": 42, "user": "Second",
+      "userImageURL": ""
+    }
+  ]
+}

@@ -4,47 +4,22 @@
 обязательна заметная ссылка на Pexels.
 """
 
-import json
 import logging
 import re
 import time
-from urllib.parse import urlencode
 
 import requests
 
 from app import licenses
-from app.cache import CACHE_TTL, Cache, RateLimiter
-from app.sources.base import (
-    AuthError,
-    LicenseInfo,
-    NetworkError,
-    NotFoundError,
-    RateLimitError,
-    SearchFilters,
-    Source,
-    SourceError,
-    VideoFile,
-    VideoResult,
-)
+from app.cache import Cache
+from app.sources.base import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.sources.http import HttpSource, quality_label
 
 log = logging.getLogger(__name__)
 
 API = "https://api.pexels.com/videos"
 LICENSE_URL = "https://www.pexels.com/license/"
 PER_PAGE = 20
-LIMITS = [(200, 3600, "в час"), (20000, 30 * 24 * 3600, "в месяц")]
-
-
-def quality_label(height: int | None) -> str:
-    if not height:
-        return "?"
-    if height >= 2160:
-        return "4K"
-    if height >= 1080:
-        return "Full HD"
-    if height >= 720:
-        return "HD"
-    return "SD"
 
 
 def _title_from_url(url: str) -> str:
@@ -88,53 +63,25 @@ def parse_video(v: dict) -> VideoResult:
     return result
 
 
-class PexelsSource(Source):
+class PexelsSource(HttpSource):
     name = "Pexels"
     homepage = "https://www.pexels.com"
+    limits = [(200, 3600, "в час"), (20000, 30 * 24 * 3600, "в месяц")]
 
     def __init__(self, api_key: str, cache: Cache, session: requests.Session | None = None, now=time.time):
+        super().__init__(cache, session, now)
         self.api_key = api_key
-        self.cache = cache
-        self.session = session or requests.Session()
-        self.limiter = RateLimiter(cache, self.name, LIMITS, now=now)
-        self._now = now
+
+    def is_configured(self) -> bool:
+        return bool(self.api_key)
 
     def _get(self, path: str, params: dict) -> dict:
-        key = f"pexels:{path}?{urlencode(sorted(params.items()))}"
-        cached = self.cache.get(key, CACHE_TTL)
-        if cached is not None:
-            return json.loads(cached)
-        if not self.api_key:
-            raise AuthError(self.name, "Ключ API Pexels не задан — укажите его в настройках.")
-        wait = self.limiter.wait_seconds()
-        if wait:
-            seconds, label = wait
-            raise RateLimitError(
-                self.name, f"Исчерпан лимит Pexels ({label}). Повторите через {max(int(seconds // 60), 1)} мин."
-            )
-        self.limiter.record()
-        try:
-            resp = self.session.get(
-                API + path, params=params, headers={"Authorization": self.api_key}, timeout=15
-            )
-        except requests.RequestException as exc:
-            raise NetworkError(self.name, f"Нет связи с Pexels: {exc}") from exc
-        self._remember_limit(resp.headers)
-        if resp.status_code in (401, 403):
-            raise AuthError(self.name, "Pexels отклонил ключ API — проверьте его в настройках.")
-        if resp.status_code == 404:
-            raise NotFoundError(self.name, "Ролик удалён с Pexels.")
-        if resp.status_code == 429:
-            raise RateLimitError(self.name, "Pexels сообщил, что лимит запросов исчерпан.")
-        if resp.status_code != 200:
-            raise SourceError(self.name, f"Pexels вернул ошибку {resp.status_code}.")
-        body = resp.text
-        self.cache.put(key, body)
-        return json.loads(body)
+        return self._fetch(API + path, params, headers={"Authorization": self.api_key})
 
-    def _remember_limit(self, headers) -> None:
-        remaining = headers.get("X-Ratelimit-Remaining")
-        reset = headers.get("X-Ratelimit-Reset")
+    def _after_response(self, resp) -> None:
+        super()._after_response(resp)
+        remaining = resp.headers.get("X-Ratelimit-Remaining")
+        reset = resp.headers.get("X-Ratelimit-Reset")  # время сброса, Unix
         if remaining is not None and reset and str(remaining).strip() == "0":
             try:
                 self.cache.block_until(self.name, float(reset))

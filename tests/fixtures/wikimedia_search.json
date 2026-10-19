@@ -1,0 +1,670 @@
+{
+ "_comment": "Настоящий ответ Wikimedia Commons API (generator=search, filetype:video laminator), 2026-10-19.",
+ "batchcomplete": true,
+ "continue": {
+  "gsroffset": 5,
+  "continue": "gsroffset||"
+ },
+ "query": {
+  "pages": [
+   {
+    "pageid": 12837266,
+    "ns": 6,
+    "title": "File:Knitting needle.ogv",
+    "index": 1,
+    "imagerepository": "local",
+    "videoinfo": [
+     {
+      "size": 17330181,
+      "width": 1008,
+      "height": 1008,
+      "duration": 10,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Knitting_needle.ogv/330px--Knitting_needle.ogv.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo",
+      "thumbwidth": 320,
+      "thumbheight": 320,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Knitting_needle.ogv/960px--Knitting_needle.ogv.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo"
+      },
+      "thumbattribs": [],
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/54/Knitting_needle.ogv?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Knitting_needle.ogv",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=12837266",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2011-01-28 15:20:20",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Knitting needle",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "GFDL|License migration redundant|Self-published work|Computed tomography videos|Videos of 2011|Laminated wood",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Flight through µCT image stack (sections) of a laminated wooden knitting needle. Image acquisition done using \"CT Alpha\" device by \"Procon X-Rays\", Garbsen, Germany. Wodden layers can be differentiated by direction of vessels.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2011-01-28",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:SecretDisc\" title=\"User:SecretDisc\">SecretDisc</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "application/ogg",
+      "derivatives": [
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/5/54/Knitting_needle.ogv?utm_source=commons.wikimedia.org&utm_campaign=api&utm_content=original",
+        "type": "video/ogg; codecs=\"theora\"",
+        "width": 1008,
+        "height": 1008,
+        "bandwidth": 13864144
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/5/54/Knitting_needle.ogv/Knitting_needle.ogv.240p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "240p.vp9.webm",
+        "width": 240,
+        "height": 240,
+        "bandwidth": 321280
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/5/54/Knitting_needle.ogv/Knitting_needle.ogv.480p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "480p.vp9.webm",
+        "width": 480,
+        "height": 480,
+        "bandwidth": 1278432
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "pageid": 26290472,
+    "ns": 6,
+    "title": "File:-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv",
+    "index": 3,
+    "imagerepository": "local",
+    "videoinfo": [
+     {
+      "size": 941110,
+      "width": 200,
+      "height": 150,
+      "duration": 14.333333333333334,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv/120px---Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo",
+      "thumbwidth": 200,
+      "thumbheight": 150,
+      "thumbattribs": [],
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=26290472",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2013-05-24 22:32:22",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Videos of Muridae|Media from PLOS ONE|Pattern formation|Signaling pathways|Molecular cell biology|Uploaded with Open Access Media Importer|Ogv videos|Uploaded with Open Access Media Importer and needing category review|Videos of 2013|Video display resolution 200 x 150|Videos from open-access scholarly articles|Videos of cell signaling|Neural circuit formation|Neuroglial development|Catenin signal transduction|Beta-catenin signaling",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Ataxic movement of the hGFAP-Cre, β-cateninfl/fl mouse. A P18 mutant mouse and its control littermate are shown. The mutant mouse was unable to keep balance during walking.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2013",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "Movie S1 from <cite style=\"font-style:normal\">Jing Wen, Hong-Bin Yang, Bing Zhou, Hui-Fang Lou, Shumin Duan (<span class=\"mw-formatted-date\" title=\"2013-05-17\">2013-05-17</span>). \"<a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3656863\">β-Catenin Is Critical for Cerebellar Foliation and Lamination</a>\". <i>PLOS ONE</i>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Digital_object_identifier\" class=\"extiw\" title=\"en:Digital object identifier\">DOI</a></span>:<a rel=\"nofollow\" class=\"external text\" href=\"https://doi.org/10.1371/journal.pone.0064451\">10.1371/journal.pone.0064451</a>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/PubMed\" class=\"extiw\" title=\"en:PubMed\"><span lang=\"en\" dir=\"ltr\">PMID</span></a></span> <a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pubmed/23691221\">23691221</a>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/PubMed_Central\" class=\"extiw\" title=\"en:PubMed Central\"><span lang=\"en\" dir=\"ltr\">PMC</span></a></span>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3656863\">3656863</a>.</cite>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Jing Wen, Hong-Bin Yang, Bing Zhou, Hui-Fang Lou, Shumin Duan",
+        "source": "commons-desc-page"
+       },
+       "Permission": {
+        "value": "<i>This file was published in a <b><a href=\"https://en.wikipedia.org/wiki/Public_Library_of_Science\" class=\"extiw\" title=\"en:Public Library of Science\">Public Library of Science</a></b> journal. <a rel=\"nofollow\" class=\"external text\" href=\"http://www.plos.org\">Their website</a> <a rel=\"nofollow\" class=\"external text\" href=\"https://www.plos.org/terms-of-use\">states</a> that the content of all PLOS journals is published under the Creative Commons Attribution 4.0 license (or its previous version depending on the publication date), unless indicated otherwise.</i><br>",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "CC BY 2.5",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution 2.5",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.5",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-2.5",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "application/ogg",
+      "derivatives": [
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/4/4c/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv?utm_source=commons.wikimedia.org&utm_campaign=api&utm_content=original",
+        "type": "video/ogg; codecs=\"theora\"",
+        "width": 200,
+        "height": 150,
+        "bandwidth": 525270
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/4c/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv.240p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "240p.vp9.webm",
+        "width": 200,
+        "height": 150,
+        "bandwidth": 199832
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/4c/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv/-Catenin-Is-Critical-for-Cerebellar-Foliation-and-Lamination-pone.0064451.s001.ogv.360p.mpeg4.mov",
+        "type": "video/quicktime; codecs=\"mp4v\"",
+        "transcodekey": "360p.mpeg4.mov",
+        "width": 200,
+        "height": 150,
+        "bandwidth": 811120
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "pageid": 39820820,
+    "ns": 6,
+    "title": "File:Heated Roll Lamination Machine.webm",
+    "index": 2,
+    "imagerepository": "local",
+    "videoinfo": [
+     {
+      "size": 12477549,
+      "width": 640,
+      "height": 480,
+      "duration": 91.269,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Heated_Roll_Lamination_Machine.webm/330px--Heated_Roll_Lamination_Machine.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo",
+      "thumbwidth": 320,
+      "thumbheight": 240,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Heated_Roll_Lamination_Machine.webm/500px--Heated_Roll_Lamination_Machine.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo"
+      },
+      "thumbattribs": [],
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Heated_Roll_Lamination_Machine.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Heated_Roll_Lamination_Machine.webm",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=39820820",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2015-04-27 18:27:10",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Heated Roll Lamination Machine",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "WebM videos|Self-published work|Video display resolution 640 x 480|Videos by Alverno College Advanced Media Studies|Videos of 2015",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Woman laminating signs and small cards using heated roll lamination machine.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2015-04-21",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:ReginaDew\" title=\"User:ReginaDew\">ReginaDew</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "video/webm",
+      "derivatives": [
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Heated_Roll_Lamination_Machine.webm?utm_source=commons.wikimedia.org&utm_campaign=api&utm_content=original",
+        "type": "video/webm; codecs=\"vp8, vorbis\"",
+        "width": 640,
+        "height": 480,
+        "bandwidth": 1093694
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/4a/Heated_Roll_Lamination_Machine.webm/Heated_Roll_Lamination_Machine.webm.240p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "240p.vp9.webm",
+        "width": 320,
+        "height": 240,
+        "bandwidth": 132280
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/4a/Heated_Roll_Lamination_Machine.webm/Heated_Roll_Lamination_Machine.webm.360p.mpeg4.mov",
+        "type": "video/quicktime; codecs=\"mp4v\"",
+        "transcodekey": "360p.mpeg4.mov",
+        "width": 480,
+        "height": 360,
+        "bandwidth": 1125552
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/4/4a/Heated_Roll_Lamination_Machine.webm/Heated_Roll_Lamination_Machine.webm.480p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "480p.vp9.webm",
+        "width": 640,
+        "height": 480,
+        "bandwidth": 460584
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "pageid": 55678200,
+    "ns": 6,
+    "title": "File:Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv",
+    "index": 5,
+    "imagerepository": "local",
+    "videoinfo": [
+     {
+      "size": 711845,
+      "width": 600,
+      "height": 450,
+      "duration": 12.2,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv/330px--Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo",
+      "thumbwidth": 320,
+      "thumbheight": 240,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv/500px--Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo"
+      },
+      "thumbattribs": [],
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=55678200",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2017-01-31 23:15:18",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Uploaded with Open Access Media Importer|Uploaded with Open Access Media Importer and needing category review|Videos from open-access scholarly articles|Videos from studies uploaded with Open Access Media Importer|Media from Scientific Reports",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Supplementary Movie S3",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2017-01-04",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5209672/bin/srep39816-s4.mov\">Video file</a> from <cite style=\"font-style:normal\">Tanaka H, Suga K, Iwata N, Shibutani Y (2017). \"<a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5209672\">Orthotropic Laminated Open-cell Frameworks Retaining Strong Auxeticity under Large Uniaxial Loading</a>\". <i>Scientific Reports</i>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Digital_object_identifier\" class=\"extiw\" title=\"en:Digital object identifier\">DOI</a></span>:<a rel=\"nofollow\" class=\"external text\" href=\"https://doi.org/10.1038/srep39816\">10.1038/srep39816</a>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/PubMed\" class=\"extiw\" title=\"en:PubMed\"><span lang=\"en\" dir=\"ltr\">PMID</span></a></span> <a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pubmed/28051133\">28051133</a>. <span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/PubMed_Central\" class=\"extiw\" title=\"en:PubMed Central\"><span lang=\"en\" dir=\"ltr\">PMC</span></a></span>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5209672\">5209672</a>.</cite>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Tanaka H, Suga K, Iwata N, Shibutani Y",
+        "source": "commons-desc-page"
+       },
+       "Permission": {
+        "value": "<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by/4.0/deed.en\" class=\"extiw\" title=\"creativecommons:by/4.0/deed.en\">Attribution 4.0 International</a> license.</div><div class=\"rlicense-desc\" style=\"text-align:start;\" dir=\"ltr\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li></ul></dd></dl>\n</div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by/4.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY 4.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution 4.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseShortName": {
+        "value": "CC BY 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "application/ogg",
+      "derivatives": [
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv?utm_source=commons.wikimedia.org&utm_campaign=api&utm_content=original",
+        "type": "video/ogg; codecs=\"theora\"",
+        "width": 600,
+        "height": 450,
+        "bandwidth": 466783
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv.240p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "240p.vp9.webm",
+        "width": 320,
+        "height": 240,
+        "bandwidth": 52392
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/a/ae/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv/Orthotropic-Laminated-Open-cell-Frameworks-Retaining-Strong-Auxeticity-under-Large-Uniaxial-Loading-srep39816-s4.ogv.360p.mpeg4.mov",
+        "type": "video/quicktime; codecs=\"mp4v\"",
+        "transcodekey": "360p.mpeg4.mov",
+        "width": 480,
+        "height": 360,
+        "bandwidth": 537808
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "pageid": 69230277,
+    "ns": 6,
+    "title": "File:Solid State Delayed Lenz Effect in laminated steel core proved with the VRM measurement.webm",
+    "index": 4,
+    "imagerepository": "local",
+    "videoinfo": [
+     {
+      "size": 31683572,
+      "width": 1280,
+      "height": 720,
+      "duration": 163.309,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm/330px--Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo",
+      "thumbwidth": 320,
+      "thumbheight": 180,
+      "responsiveUrls": {
+       "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm/960px--Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo"
+      },
+      "thumbattribs": [],
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm",
+      "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=69230277",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2018-05-18 13:41:43",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Solid State Delayed Lenz Effect in laminated steel core proved with the VRM measurement",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Media from YouTube|Videos of 2013|Uploaded with video2commons|Videos of physics|License reviewed by YouTubeReviewBot|Unidentified physics",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Here an experiment about the measurement of the VRM (Viscous Remanent Magnetization) delay in a laminated steel core demonstrates easily that the Lenz effect can be fully delayed (180° phase shifted).\nMore infos at : www.jlnlab.com",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2013-04-02",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<bdi lang=\"en\" dir=\"ltr\"><a href=\"//commons.wikimedia.org/wiki/Commons:YouTube_files\" title=\"Commons:YouTube files\">YouTube</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=NQ5xnyj7xe4\"><bdi lang=\"\">Solid State Delayed Lenz Effect in laminated steel core proved with the VRM measurement</bdi></a> – View/save archived versions on <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/https://www.youtube.com/watch?v=NQ5xnyj7xe4\">archive.org</a></bdi>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/channel/UCWBgBvRQ0nJkotHljpyrvGQ\">Jean-Louis Naudin</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution 3.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Attribution": {
+        "value": "Jean-Louis Naudin",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/3.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "video/webm",
+      "derivatives": [
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm?utm_source=commons.wikimedia.org&utm_campaign=api&utm_content=original",
+        "type": "video/webm; codecs=\"vp8, vorbis\"",
+        "width": 1280,
+        "height": 720,
+        "bandwidth": 1552080
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm.240p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "240p.vp9.webm",
+        "width": 426,
+        "height": 240,
+        "bandwidth": 257840
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm.360p.mpeg4.mov",
+        "type": "video/quicktime; codecs=\"mp4v\"",
+        "transcodekey": "360p.mpeg4.mov",
+        "width": 640,
+        "height": 360,
+        "bandwidth": 970104
+       },
+       {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/transcoded/1/12/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm/Solid_State_Delayed_Lenz_Effect_in_laminated_steel_core_proved_with_the_VRM_measurement.webm.480p.vp9.webm",
+        "type": "video/webm; codecs=\"vp9, opus\"",
+        "transcodekey": "480p.vp9.webm",
+        "width": 854,
+        "height": 480,
+        "bandwidth": 696008
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -121,7 +121,7 @@ def test_missing_key(cache, clock):
 
 
 def test_bad_key_and_not_found(cache, clock):
-    with pytest.raises(AuthError, match="отклонил"):
+    with pytest.raises(AuthError, match="отклонён"):
         source(cache, clock, FakeResponse(401)).search("x", SearchFilters())
     with pytest.raises(NotFoundError):
         source(cache, clock, FakeResponse(404)).get_details("5")

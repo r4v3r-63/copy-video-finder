@@ -84,6 +84,10 @@ class Source(ABC):
     name: str = ""
     homepage: str = ""  # ссылка на площадку показывается рядом с её результатами
 
+    def is_configured(self) -> bool:
+        """Есть ли всё нужное для запросов (например, ключ API)."""
+        return True
+
     @abstractmethod
     def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
         """Поиск по фразе; lang — язык фразы ("ru" или "en") для параметра языка API."""

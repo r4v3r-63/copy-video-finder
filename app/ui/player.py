@@ -100,7 +100,8 @@ class PlayerPanel(QWidget):
                 lines.append(f"Атрибуция: {escape(text)}")
         if r.has_audio:
             lines.append("Есть звук — проверить права на музыку.")
-        qualities = ", ".join(dict.fromkeys(f.quality for f in r.files))
+        qualities = ", ".join(dict.fromkeys(
+            f"{f.quality} ({f.width}×{f.height})" if f.width and f.height else f.quality for f in r.files))
         if qualities:
             lines.append(f"Качество: {escape(qualities)}")
         return "<br>".join(lines)
