@@ -53,6 +53,8 @@ jobs:
           Start-Sleep -Seconds 15
           if ($p.HasExited) { throw "Программа завершилась сразу после запуска (код $($p.ExitCode))" }
           Stop-Process -Id $p.Id
+          Wait-Process -Id $p.Id -Timeout 30 -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
           if (-not (Test-Path "dist/CopyVideoFinder/Данные/app.log")) { throw "Не создана папка Данные" }
           Get-Content "dist/CopyVideoFinder/Данные/app.log"
           Remove-Item -Recurse -Force "dist/CopyVideoFinder/Данные"
