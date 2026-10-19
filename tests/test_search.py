@@ -113,16 +113,36 @@ def test_topic_stems_skip_generic_words():
 
 
 def test_pixabay_beaches_rejected_for_lamination():
-    from app.search import is_relevant, topic_stems
-    stems = topic_stems(["широкоформатный ламинатор", "wide format laminator", "cold laminator"])
-    assert not is_relevant(tagged("1", "beach, sea, ocean, coast"), stems)
-    assert not is_relevant(tagged("2", "sydney, city, aerial, large"), stems)
-    assert is_relevant(tagged("3", "laminating, office, document"), stems)
+    from app.search import is_relevant
+    from app.topic import phrase_stems
+    phrases = phrase_stems(["широкоформатный ламинатор", "wide format laminator", "cold laminator"])
+    assert not is_relevant(tagged("1", "beach, sea, ocean, coast"), phrases)
+    assert not is_relevant(tagged("2", "sydney, city, aerial, large"), phrases)
+    assert is_relevant(tagged("3", "laminating, office, document"), phrases)
+
+
+@pytest.mark.parametrize("phrase, tags, ok", [
+    # Настоящие промахи из выдачи Pixabay: одного совпавшего слова мало.
+    ("vinyl cutter", "record, record player, vinyl, turntable, retro", False),
+    ("sticker cutting", "chopping, cutting, ingredients, mortar, garlic", False),
+    ("spiral binding", "beach, waves, ocean, spiral, sand, water", False),
+    ("hole punch", "woodpecker, bird, nature, hole, tree", False),
+    ("heat press", "embers, glow, fire, heat, campfire, hot", False),
+    ("laser printer", "disco, laser, discotheque, light show", False),
+    ("vinyl cutter", "vinyl cutter, plotter, sticker", True),
+    ("hole punch", "office, hole punch, paper", True),
+    ("3d printer", "printing 3d, printer 3d, close 3d printing", True),
+])
+def test_all_significant_words_of_a_phrase_required(phrase, tags, ok):
+    from app.search import is_relevant
+    from app.topic import phrase_stems
+    assert is_relevant(tagged("1", tags), phrase_stems([phrase])) is ok
 
 
 def test_wikimedia_checked_by_title_only(tmp_path):
     from app.cache import Cache
-    from app.search import is_relevant, topic_stems
+    from app.search import is_relevant
+    from app.topic import phrase_stems
     from app.sources.wikimedia import WikimediaSource
     from tests.fakes import FakeResponse, FakeSession, fixture_text
     session = FakeSession(FakeResponse(text=fixture_text("wikimedia_search.json")))
@@ -131,7 +151,7 @@ def test_wikimedia_checked_by_title_only(tmp_path):
     src = WikimediaSource(cache, session=session)
     found = {r.title: r for r in src.search("laminator", SearchFilters())}
     cache.close()
-    stems = topic_stems(["roll laminator", "lamination"])
+    stems = phrase_stems(["roll laminator", "lamination"])
     assert is_relevant(found["Heated Roll Lamination Machine"], stems, use_description=False)
     # В описании есть «laminated», но ролик о спицах — по названию он не проходит.
     assert not is_relevant(found["Knitting needle"], stems, use_description=False)

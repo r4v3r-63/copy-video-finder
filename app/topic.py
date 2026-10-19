@@ -43,6 +43,25 @@ def topic_stems(texts: list[str]) -> set[str]:
     return {stem(w) for text in texts for w in words(text) if is_significant(w)}
 
 
+# Слова, которые в фразе необязательны: служебные и уточняющие. Существительные
+# вроде printer, press, paper здесь не стоят: без них «laser printer» — это дискотека.
+OPTIONAL = {
+    "and", "the", "for", "with", "of", "on", "in", "wide", "large", "format", "cold", "hot", "small", "big",
+    "professional", "automatic", "manual", "modern", "taking", "making", "process", "production", "output",
+    "video", "equipment", "machine", "machines", "close",
+    "на", "для", "и", "с", "в", "широкоформатный", "широкоформатная", "холодная", "горячая", "большой",
+    "рулонный", "листовой", "установка", "сборка", "изготовление", "машина", "станок", "оборудование", "видео",
+}
+
+
+def phrase_stems(texts: list[str]) -> list[frozenset[str]]:
+    """Для каждой фразы — основы её обязательных слов; фразы без таких слов пропускаются."""
+    def required(w: str) -> bool:
+        return w not in OPTIONAL and not w.isdigit() and (len(w) >= 3 or is_significant(w))
+    sets = {frozenset(stem(w) for w in words(t) if required(w)) for t in texts}
+    return [s for s in sets if s]
+
+
 def key_words(phrases: list[str], limit: int = 1) -> list[str]:
     """Самые частые значимые слова фраз — короткие запросы, которые площадки понимают лучше длинных."""
     counts = Counter(w for p in phrases for w in dict.fromkeys(words(p)) if is_significant(w))

@@ -13,7 +13,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
-from app.topic import WORD as _WORD, stem as _stem, topic_stems
+from app.topic import WORD as _WORD, phrase_stems, stem as _stem, topic_stems
 from app.sources.base import AuthError, RateLimitError, SearchFilters, Source, SourceError, VideoResult
 
 log = logging.getLogger(__name__)
@@ -74,18 +74,20 @@ def relevance(result: VideoResult, stems: set[str], printing: set[str]) -> int:
     return topic * 10 + domain
 
 
-def is_relevant(result: VideoResult, stems: set[str], use_description: bool = True) -> bool:
-    """Есть ли в названии или тегах ролика значимое слово поиска.
+def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True) -> bool:
+    """Есть ли в названии или тегах ролика ВСЕ значимые слова хотя бы одной фразы поиска.
 
     Поиск площадок нечёткий: Wikimedia находит слово где угодно, вплоть до категорий,
-    Pixabay — по любому слову фразы. Если судить не по чему (нет значимых слов
-    в запросе или у ролика нет названия) — ролик не отсеивается.
+    Pixabay — по любому слову фразы. Одного слова мало: по «vinyl» находятся
+    проигрыватели, по «hole» — дятел; для «vinyl cutter» нужны оба слова.
+    Если судить не по чему (у фраз нет значимых слов или у ролика нет названия) —
+    ролик не отсеивается.
     """
     text = f"{result.title} {result.description}" if use_description else result.title
-    title = {w.lower().replace("ё", "е") for w in _WORD.findall(text or "")}
-    if not stems or not title:
+    tokens = {w.lower().replace("ё", "е") for w in _WORD.findall(text or "")}
+    if not phrases or not tokens:
         return True
-    return any(t.startswith(stem) for t in title for stem in stems)
+    return any(all(any(t.startswith(s) for t in tokens) for s in phrase) for phrase in phrases)
 
 
 def preview_file(result: VideoResult):
@@ -114,6 +116,7 @@ class SearchWorker(QThread):
         self.rejections: dict[tuple[str, str], str] = {}  # ролик → причина отсева
         self.off_topic: dict[tuple[str, str], VideoResult] = {}  # отсеянные «не по теме» — можно показать
         self.stems = topic_stems([q.text for q in plan.queries])
+        self.phrases = phrase_stems([q.text for q in plan.queries])
         self.printing = printing or set()
 
     def cancel(self):
@@ -171,7 +174,7 @@ class SearchWorker(QThread):
                     if r.key in self.seen:
                         continue
                     reason = rejection_reason(r, self.filters, self.only_without_attribution)
-                    if reason is None and not is_relevant(r, self.stems, source.topic_in_description):
+                    if reason is None and not is_relevant(r, self.phrases, source.topic_in_description):
                         reason = OFF_TOPIC
                     if reason:
                         # Ролик, не подошедший по одной фразе, может подойти по другой.

@@ -7,7 +7,7 @@
       "processes": [
         {"id": "photo_id", "name": "Фотосъёмка на документы", "aliases": ["фото на паспорт", "фото на документы"],
          "phrases_ru": ["фото на документы", "фото на паспорт"],
-         "phrases_en": ["passport photo studio", "taking id photo", "passport photo camera"],
+         "phrases_en": ["passport photo studio", "id photo booth", "passport photo camera"],
          "key_ru": ["фото на паспорт"], "key_en": ["passport photo"]},
         {"id": "photo_kiosk", "name": "Фотопечать через фотокиоск", "aliases": ["печать фото", "фотокиоск"],
          "phrases_ru": ["печать фотографий", "фотокиоск"],
@@ -180,7 +180,7 @@
         {"id": "banner_finishing", "name": "Обработка баннеров", "aliases": ["баннер", "проварка баннера"],
          "phrases_ru": ["проварка баннера", "люверсы на баннер"],
          "phrases_en": ["banner welding", "banner hemming", "banner grommets"],
-         "key_ru": ["баннер"], "key_en": ["banner"]},
+         "key_ru": ["печать баннеров"], "key_en": ["banner printing"]},
         {"id": "rollup", "name": "Сборка роллапов", "aliases": ["роллап", "мобильный стенд"],
          "phrases_ru": ["сборка роллапа", "мобильный стенд роллап"],
          "phrases_en": ["roll up banner stand assembly", "roll up banner", "pull up banner"],
