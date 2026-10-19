@@ -70,6 +70,8 @@ class HttpSource(Source):
                     try:
                         if method == "POST":
                             resp = self.session.post(url, data=params, headers=headers or {}, timeout=20)
+                        elif method == "POST_JSON":
+                            resp = self.session.post(url, json=params, headers=headers or {}, timeout=20)
                         else:
                             resp = self.session.get(url, params=params, headers=headers or {}, timeout=20)
                     except requests.RequestException as exc:

@@ -85,7 +85,8 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         PexelsSource(settings.key("pexels_api_key"), cache),
     ]
     # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
-    return sources + [WebSource(settings.key("brave_api_key"), cache, delegates=sources)]
+    return sources + [WebSource(cache, delegates=sources, tavily_key=settings.key("tavily_api_key"),
+                                brave_key=settings.key("brave_api_key"))]
 
 
 def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[str]]:

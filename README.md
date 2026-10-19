@@ -97,7 +97,7 @@
 | [Europeana](https://www.europeana.eu/) | архивные ролики с открытыми лицензиями |
 | [Internet Archive](https://archive.org/) | CC и общественное достояние, скачивание на странице ролика |
 | [Videezy](https://www.videezy.com/) | бесплатные ролики Videezy Free License — с указанием Videezy.com в титрах |
-| Интернет | поиск через Brave Search (по ключу) или DuckDuckGo: ролики с любых сайтов, если на странице есть файл и открытая лицензия Creative Commons |
+| Интернет | поиск через Tavily (бесплатный ключ) или DuckDuckGo: ролики с любых сайтов, если на странице есть файл и открытая лицензия Creative Commons |
 | [Pexels](https://www.pexels.com/) | включится, когда Pexels снова начнёт выдавать ключи |
 
 | Лицензия | Статус |
@@ -124,7 +124,8 @@
 | Coverr | https://coverr.co/developers |
 | Vimeo | https://developer.vimeo.com/apps — создать приложение, затем личный токен с правами public |
 | Europeana | https://pro.europeana.eu/page/get-api |
-| Brave Search (поиск по интернету, необязательно) | https://brave.com/search/api/ — платный ($5 за 1000 запросов), но $5 в месяц бесплатно; программа тратит не больше 900 запросов в месяц и за бесплатный кредит не выходит. Без ключа поиск идёт через DuckDuckGo, который может временно ограничивать частые запросы |
+| Tavily (поиск по интернету) | https://app.tavily.com — бесплатно, без карты, 1000 запросов в месяц; программа тратит не больше 900. Без ключа поиск идёт через DuckDuckGo, который иногда временно ограничивает частые запросы |
+| Brave Search (необязательно) | https://brave.com/search/api/ — платный, но $5 в месяц бесплатно; программа за бесплатный кредит не выходит |
 | Wikimedia Commons, Internet Archive, Videezy | ключ не нужен |
 | Pexels | https://www.pexels.com/api/ (выдача новых ключей сейчас приостановлена) |
 

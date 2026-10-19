@@ -73,10 +73,14 @@ class SettingsDialog(QDialog):
         europeana_row, self.europeana_key = _key_field(settings.europeana_api_key, "europeana_api_key" in built)
         form.addRow("Ключ API Europeana:", europeana_row)
         form.addRow("", _link("Получить ключ Europeana (бесплатно)", "https://pro.europeana.eu/page/get-api"))
+        tavily_row, self.tavily_key = _key_field(settings.tavily_api_key, "tavily_api_key" in built)
+        form.addRow("Ключ Tavily:", tavily_row)
+        form.addRow("", _link("Поиск по интернету надёжнее с ключом Tavily: бесплатно, без карты, 1000 запросов "
+                              "в месяц (программа тратит не больше 900). Без ключа — DuckDuckGo, он иногда ограничивает частые запросы",
+                              "https://app.tavily.com"))
         brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
         form.addRow("Ключ Brave Search:", brave_row)
-        form.addRow("", _link("Поиск по интернету надёжнее с ключом Brave (необязательно; платный, но $5 в месяц "
-                              "бесплатно — программа тратит не больше 900 запросов в месяц); без ключа — DuckDuckGo", "https://brave.com/search/api/"))
+        form.addRow("", QLabel("Brave — платный, необязательно (программа не выходит за бесплатные $5 в месяц)."))
         form.addRow("", QLabel("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
 
         self.min_duration = QSpinBox()
@@ -158,6 +162,7 @@ class SettingsDialog(QDialog):
         self._settings.vimeo_token = self.vimeo_token.text().strip()
         self._settings.europeana_api_key = self.europeana_key.text().strip()
         self._settings.brave_api_key = self.brave_key.text().strip()
+        self._settings.tavily_api_key = self.tavily_key.text().strip()
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

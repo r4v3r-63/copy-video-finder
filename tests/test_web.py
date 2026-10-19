@@ -25,7 +25,7 @@ def cache(tmp_path, clock):
 
 
 class PostSession(FakeSession):
-    def post(self, url, data=None, headers=None, timeout=None):
+    def post(self, url, data=None, json=None, headers=None, timeout=None):
         self.calls.append({"url": url, "params": dict(data or {}), "headers": dict(headers or {}), "post": True})
         return self.responses.pop(0) if len(self.responses) > 1 else self.responses[0]
 
@@ -142,36 +142,65 @@ def test_generic_page_needs_file_and_license():
     assert parse_page(PAGE.format(lic="by").replace("wire-binding.mp4", "player"), "https://example.org/x") is None
 
 
+def web(cache, clock, ddg=None, tavily_key="", tavily=None, page=None):
+    src = WebSource(cache, now=clock, tavily_key=tavily_key)
+    sessions = {"DuckDuckGo": ddg, "Tavily": tavily}
+    for engine in src.engines:
+        engine.session = sessions.get(engine.name) or PostSession(FakeResponse(500, ""))
+    src.pages.session = page or FakeSession(FakeResponse(text=PAGE.format(lic="by")))
+    return src
+
+
 def test_web_search_opens_pages(cache, clock):
     ddg = ('<a class="result__a" href="https://www.youtube.com/watch?v=1">YouTube</a>'
            '<a class="result__a" href="https://example.org/clips/7">Wire binding</a>')
-    src = WebSource("", cache, session=PostSession(FakeResponse(text=ddg)), now=clock)
-    src.pages.session = FakeSession(FakeResponse(text=PAGE.format(lic="by")))
+    src = web(cache, clock, ddg=PostSession(FakeResponse(text=ddg)))
     results = src.search("wire binding machine", SearchFilters())
     assert [r.source_id for r in results] == ["https://example.org/clips/7"]
-    call = src.session.calls[0]
+    call = src.engines[0].session.calls[0]
     assert call["post"] and call["params"]["q"] == "wire binding machine free stock video"
     assert len(src.pages.session.calls) == 1  # YouTube не открывался
 
 
-def test_web_search_blocked_by_ddg(cache, clock):
-    src = WebSource("", cache, session=PostSession(FakeResponse(202, fixture_text("ddg_anomaly.html"))), now=clock)
-    with pytest.raises(RateLimitError, match="Brave"):
+def test_ddg_blocked_rests_ten_minutes(cache, clock):
+    src = web(cache, clock, ddg=PostSession(FakeResponse(202, fixture_text("ddg_anomaly.html"))))
+    with pytest.raises(RateLimitError, match="временно недоступен"):
         src.search("wire binding", SearchFilters())
-    with pytest.raises(RateLimitError):  # 10 минут не беспокоим
+    with pytest.raises(RateLimitError):
         src.search("comb binding", SearchFilters())
-    assert len(src.session.calls) == 1
+    assert len(src.engines[0].session.calls) == 1  # блокировку не обходим: 10 минут не беспокоим
 
 
-def test_web_search_brave(cache, clock):
-    data = '{"web": {"results": [{"url": "https://example.org/clips/7", "title": "Wire binding"}]}}'
-    src = WebSource("bkey", cache, session=FakeSession(FakeResponse(text=data)), now=clock)
-    src.pages.session = FakeSession(FakeResponse(text=PAGE.format(lic="by")))
+def test_tavily_blocked_falls_back_to_ddg(cache, clock):
+    ddg = '<a class="result__a" href="https://example.org/clips/7">Wire binding</a>'
+    src = web(cache, clock, tavily_key="tvly-key", tavily=JsonSession(FakeResponse(432, "")),
+              ddg=PostSession(FakeResponse(text=ddg)))
+    assert [r.source_id for r in src.search("wire binding", SearchFilters())] == ["https://example.org/clips/7"]
+
+
+class JsonSession(PostSession):
+    def post(self, url, data=None, json=None, headers=None, timeout=None):
+        self.calls.append({"url": url, "params": dict(json or data or {}), "headers": dict(headers or {})})
+        return self.responses[0]
+
+
+def test_tavily_first_when_key_given(cache, clock):
+    data = '{"results": [{"url": "https://example.org/clips/7", "title": "Wire binding"}]}'
+    src = web(cache, clock, tavily_key="tvly-key", tavily=JsonSession(FakeResponse(text=data)))
+    assert [e.name for e in src.engines] == ["Tavily", "DuckDuckGo"]
     assert len(src.search("wire binding", SearchFilters(), lang="de")) == 1
-    call = src.session.calls[0]
-    assert call["headers"]["X-Subscription-Token"] == "bkey"
-    assert call["params"]["q"] == "wire binding kostenlos Video"
-    assert src.engine == "Brave"
+    call = src.engines[0].session.calls[0]
+    assert call["headers"]["Authorization"] == "Bearer tvly-key"
+    assert call["params"]["query"] == "wire binding kostenlos Video"
+
+
+def test_free_limits_stay_free(cache, clock):
+    from app.sources.web import BRAVE_MONTHLY, TAVILY_MONTHLY, BraveEngine, TavilyEngine
+    for engine, cap, free in ((TavilyEngine("k", cache, now=clock), TAVILY_MONTHLY, 1000),
+                              (BraveEngine("k", cache, now=clock), BRAVE_MONTHLY, 1000)):
+        monthly = [count for count, window, _ in engine.limits if window >= 28 * 86400]
+        assert monthly == [cap] and cap < free
+    assert [e.name for e in WebSource(cache, now=clock).engines] == ["DuckDuckGo"]  # без ключей
 
 
 def test_downloader_takes_file_from_page(tmp_path):
@@ -187,9 +216,3 @@ def test_downloader_takes_file_from_page(tmp_path):
     assert path.suffix == ".mov" and path.read_bytes() == b"movdata"
     assert session.calls[0]["url"] == url
 
-
-def test_brave_stays_within_free_credit(cache, clock):
-    from app.sources.web import BRAVE_MONTHLY
-    src = WebSource("bkey", cache, session=FakeSession(), now=clock)
-    monthly = [count for count, window, _ in src.limits if window >= 28 * 86400]
-    assert monthly == [BRAVE_MONTHLY] and BRAVE_MONTHLY < 1000  # $5 бесплатно = 1000 запросов

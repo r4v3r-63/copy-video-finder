@@ -1,7 +1,9 @@
 """Поиск роликов по всему интернету (разрешено пользователем): поисковик → страницы роликов.
 
-Поисковик — Brave Search API, если задан ключ, иначе DuckDuckGo (его HTML-выдача; без ключа,
-но при частых запросах он временно блокирует — тогда программа просит ключ Brave).
+Поисковики по очереди: Tavily (бесплатный ключ, 1000 запросов в месяц), Brave (если есть ключ),
+затем без ключа — DuckDuckGo (его HTML-выдача). Заблокировал один — пробуем следующий;
+блокировку не обходим: заблокировавший поисковик отдыхает 10 минут. Bing не используется:
+программам он отдаёт подменённую выдачу (на «binding machine» — дверные замки).
 
 Найденная страница разбирается так:
 - известная площадка (Pexels, Pixabay, Vimeo, Wikimedia, Internet Archive, Videezy) — через
@@ -26,6 +28,8 @@ from app.sources.http import HttpSource
 from app.sources.videezy import BROWSER_UA
 
 DDG_URL = "https://html.duckduckgo.com/html/"
+TAVILY_URL = "https://api.tavily.com/search"
+TAVILY_MONTHLY = 900  # бесплатно 1000 в месяц
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
 BRAVE_MONTHLY = 900
 MAX_PAGES = 8  # страниц из выдачи поисковика на один запрос
@@ -197,32 +201,104 @@ class PageReader(HttpSource):
         return result.license
 
 
+class Engine(HttpSource):
+    """Поисковик: find(text) → [(ссылка, заголовок)]. У каждого свои лимиты и пауза после блокировки."""
+    homepage = ""
+
+    def __init__(self, cache: Cache, session=None, now=time.time):
+        super().__init__(cache, session, now=now)
+        if hasattr(self.session, "headers"):
+            self.session.headers["User-Agent"] = BROWSER_UA
+
+    def find(self, text: str) -> list[tuple[str, str]]:
+        raise NotImplementedError
+
+    def _blocked(self, resp, test) -> RateLimitError | None:
+        """Капча или «anomaly»: пауза 10 минут, блокировку не обходим."""
+        if test(resp):
+            self.cache.block_until(self.name, self._now() + BLOCK_SECONDS)
+            return RateLimitError(self.name, f"{self.name} временно ограничил поиск из программы.")
+        return None
+
+    def search(self, query, filters, page=1, lang="en"):
+        return []
+
+    def get_details(self, source_id):
+        raise NotImplementedError
+
+    def get_license(self, result):
+        return result.license
+
+
+class TavilyEngine(Engine):
+    """Tavily: бесплатно 1000 запросов в месяц, ключ без карты. Программа тратит не больше TAVILY_MONTHLY."""
+    name = "Tavily"
+    homepage = "https://tavily.com"
+
+    def __init__(self, key: str, cache: Cache, session=None, now=time.time):
+        self.key = key or ""
+        self.limits = [(1, 1.0, "в секунду"), (TAVILY_MONTHLY, 30 * 86400, "в месяц — в пределах бесплатных 1000")]
+        super().__init__(cache, session, now=now)
+
+    def is_configured(self) -> bool:
+        return bool(self.key)
+
+    def find(self, text: str) -> list[tuple[str, str]]:
+        data = json.loads(self._fetch_text(TAVILY_URL, {"query": text, "max_results": 20, "search_depth": "basic"},
+                                           headers={"Authorization": f"Bearer {self.key}"}, method="POST_JSON"))
+        return [(r.get("url", ""), r.get("title", "")) for r in data.get("results", [])]
+
+
+class BraveEngine(Engine):
+    """Brave Search API: платный ($5 за 1000), кредит $5 в месяц — тратим не больше BRAVE_MONTHLY."""
+    name = "Brave"
+    homepage = "https://search.brave.com"
+
+    def __init__(self, key: str, cache: Cache, session=None, now=time.time):
+        self.key = key or ""
+        self.limits = [(1, 1.2, "в секунду"), (BRAVE_MONTHLY, 30 * 86400, "в месяц — в пределах бесплатных $5")]
+        super().__init__(cache, session, now=now)
+
+    def is_configured(self) -> bool:
+        return bool(self.key)
+
+    def find(self, text: str) -> list[tuple[str, str]]:
+        data = json.loads(self._fetch_text(BRAVE_URL, {"q": text, "count": 20}, headers={
+            "X-Subscription-Token": self.key, "Accept": "application/json"}))
+        return [(r.get("url", ""), r.get("title", "")) for r in (data.get("web") or {}).get("results", [])]
+
+
+class DuckDuckGoEngine(Engine):
+    """DuckDuckGo без ключа (HTML-выдача). Частые запросы он блокирует — поэтому редко."""
+    name = "DuckDuckGo"
+    homepage = "https://duckduckgo.com"
+    limits = [(6, 60, "в минуту"), (200, 86400, "в сутки")]
+
+    def find(self, text: str) -> list[tuple[str, str]]:
+        page = self._fetch_text(DDG_URL, {"q": text}, method="POST",
+                                check=lambda r: self._blocked(r, lambda x: ddg_blocked(x.text, x.status_code)))
+        return parse_ddg(page)
+
+
 class WebSource(HttpSource):
+    """Поиск по интернету: поисковики по очереди (Tavily и Brave — если есть ключ, затем DuckDuckGo)."""
     name = "Интернет"
     homepage = "https://duckduckgo.com"
     languages = frozenset({"en", "de", "fr"})
     max_level = 2  # название, оборудование, действие — дальше поисковик расходует лимиты впустую
     max_parallel = 1
 
-    def __init__(self, brave_key: str, cache: Cache, delegates: list[Source] | None = None, session=None,
+    def __init__(self, cache: Cache, delegates: list[Source] | None = None, tavily_key: str = "", brave_key: str = "",
                  now=time.time):
-        self.brave_key = brave_key or ""
-        if self.brave_key:
-            # Brave платный: $5 за 1000 запросов, бесплатного кредита $5 в месяц хватает на 1000.
-            # Не больше 900 в месяц — чтобы никогда не выйти за бесплатный кредит.
-            self.limits = [(1, 1.2, "в секунду"), (BRAVE_MONTHLY, 30 * 86400, "в месяц — в пределах бесплатных $5")]
-            self.homepage = "https://search.brave.com"
-        else:
-            self.limits = [(6, 60, "в минуту"), (200, 86400, "в сутки")]  # реже — DuckDuckGo блокирует
-        super().__init__(cache, session, now=now)
-        if hasattr(self.session, "headers"):
-            self.session.headers["User-Agent"] = BROWSER_UA
+        super().__init__(cache, now=now)
+        self.engines = [e for e in (TavilyEngine(tavily_key, cache, now=now), BraveEngine(brave_key, cache, now=now))
+                        if e.is_configured()] + [DuckDuckGoEngine(cache, now=now)]
         self.delegates = {s.name: s for s in (delegates or [])}
         self.pages = PageReader(cache, now=now)
 
     @property
     def engine(self) -> str:
-        return "Brave" if self.brave_key else "DuckDuckGo"
+        return self.engines[0].name
 
     def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
         words = {"de": "kostenlos Video", "fr": "vidéo gratuite"}.get(lang, "free stock video")
@@ -237,26 +313,23 @@ class WebSource(HttpSource):
         return results
 
     def find_pages(self, text: str) -> list[tuple[str, str]]:
-        """Ссылки из выдачи поисковика без платных стоков, соцсетей, YouTube и Mixkit."""
-        if self.brave_key:
-            data = json.loads(self._fetch_text(BRAVE_URL, {"q": text, "count": 20}, headers={
-                "X-Subscription-Token": self.brave_key, "Accept": "application/json"}))
-            pairs = [(r.get("url", ""), r.get("title", "")) for r in (data.get("web") or {}).get("results", [])]
-        else:
-            pairs = parse_ddg(self._fetch_text(DDG_URL, {"q": text}, method="POST", check=self._ddg_check))
-        seen, result = set(), []
-        for url, title in pairs:
-            if url and url not in seen and not skipped(url):
-                seen.add(url)
-                result.append((url, title))
-        return result
-
-    def _ddg_check(self, resp):
-        if ddg_blocked(resp.text, resp.status_code):
-            self.cache.block_until(self.name, self._now() + BLOCK_SECONDS)
-            return RateLimitError(self.name, "DuckDuckGo временно ограничил поиск из программы. Повторите через "
-                                             "10 минут или укажите ключ Brave Search в настройках.")
-        return None
+        """Ссылки из выдачи первого ответившего поисковика без платных стоков, соцсетей, YouTube и Mixkit."""
+        problems = []
+        for engine in self.engines:
+            engine.max_wait, engine.stop = self.max_wait, self.stop  # пакетный поиск ждёт и здесь
+            try:
+                pairs = engine.find(text)
+            except SourceError as exc:
+                problems.append(exc.message)
+                continue
+            seen, result = set(), []
+            for url, title in pairs:
+                if url and url not in seen and not skipped(url):
+                    seen.add(url)
+                    result.append((url, title))
+            return result
+        raise RateLimitError(self.name, "Поиск по интернету временно недоступен: " + " ".join(problems) +
+                             " Повторите позже.")
 
     def open(self, url: str) -> VideoResult | None:
         """Ролик по ссылке со страницы: известная площадка — через её модуль, иначе разбор страницы."""

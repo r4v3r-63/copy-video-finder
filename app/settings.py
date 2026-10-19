@@ -24,7 +24,8 @@ class Settings:
     coverr_api_key: str = ""
     vimeo_token: str = ""  # личный токен доступа Vimeo (права public)
     europeana_api_key: str = ""
-    brave_api_key: str = ""  # Brave Search API — поиск по интернету; без ключа — DuckDuckGo
+    tavily_api_key: str = ""  # Tavily — бесплатный поиск по интернету (1000 в месяц); без ключа — DuckDuckGo, Bing
+    brave_api_key: str = ""  # Brave Search API — платный, необязательно
     min_duration: int = 5
     max_duration: int = 180  # с версии 0.7.0; раньше 45 — на стоках мало коротких роликов о полиграфии
     only_without_attribution: bool = False
