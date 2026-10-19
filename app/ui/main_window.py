@@ -1,12 +1,13 @@
 """Главное окно: одно поле ввода услуги, сетка результатов и панель просмотра."""
 
+import io
 from html import escape
 
 from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtCore import QSize, QStringListModel, Qt, QTimer, QUrl
-from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QImage, QPixmap
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import (
     QCompleter,
@@ -50,6 +51,22 @@ from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
 THUMB = QSize(256, 144)
+
+
+def load_image(data: bytes) -> QImage:
+    """Картинка превью. Форматы, которых Qt не знает (Coverr отдаёт AVIF), — через Pillow."""
+    image = QImage()
+    if image.loadFromData(data):
+        return image
+    try:
+        from PIL import Image
+        with Image.open(io.BytesIO(data)) as img:
+            png = io.BytesIO()
+            img.convert("RGB").save(png, "PNG")
+        image.loadFromData(png.getvalue())
+    except (OSError, ValueError):
+        pass  # битая картинка — плитка без превью
+    return image
 
 
 def all_sources(settings: Settings, cache: Cache) -> list[Source]:
@@ -472,8 +489,9 @@ class MainWindow(QMainWindow):
     def _on_thumbnail(self, reply: QNetworkReply):
         token = reply.request().attribute(QNetworkRequest.Attribute.User)
         if reply.error() == QNetworkReply.NetworkError.NoError and token is not None:
-            pixmap = QPixmap()
-            if pixmap.loadFromData(reply.readAll()):
+            image = load_image(bytes(reply.readAll()))
+            if not image.isNull():
+                pixmap = QPixmap.fromImage(image)
                 item = self._thumb_items.get(str(token))
                 if item and self.results.row(item) >= 0:
                     item.setIcon(QIcon(pixmap.scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,

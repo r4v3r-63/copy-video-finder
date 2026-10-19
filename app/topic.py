@@ -116,9 +116,14 @@ FOREIGN = (
     "cement", "timber", "kitchen", "cooking", "food", "vegetable", "meat", "garlic", "recipe", "beach", "ocean",
     "coast", "mountain", "forest", "wildlife", "animal", "bird", "music", "musician", "guitar", "concert",
     "turntable", "automobile", "garden", "farm", "tractor", "steel", "physics", "experiment",
+    # металлообработка: плазменная резка, сварка, кузница — не гравировка сувениров
+    "weld", "blacksmith", "forge", "forging", "plasma", "metalwork",
+    "grinder", "grinding", "sparks", "flame", "foundry", "lathe", "cigar", "tobacco",
     "дерев", "древесин", "доски", "стройк", "строител", "плотник", "крыш", "кирпич", "бетон", "кухн", "еда",
     "готовк", "овощ", "мясо", "пляж", "океан", "горы", "лес", "животн", "птиц", "музык", "гитар", "концерт",
     "проигрыват", "автомобил", "сад", "ферм", "трактор",
+    "сталь", "стали", "стальн", "свар", "кузн", "плазм", "металлоконструкц", "металлообработ", "болгарк",
+    "шлифов", "искры", "пламя", "пламен", "литейн", "токарн", "сигар", "табак",
 )
 
 

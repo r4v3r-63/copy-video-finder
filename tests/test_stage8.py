@@ -221,3 +221,17 @@ def test_user_dictionary_overrides_builtin(data_dir):
     paths.terms_file().write_text(json.dumps({"stopwords": [], "terms": {"пенокартон": "foamboard"}},
                                              ensure_ascii=False), encoding="utf-8")
     assert Dictionary.load().translate("пенокартон") == "foamboard"
+
+
+def test_avif_thumbnail_loads():
+    """Coverr отдаёт превью в AVIF, который Qt не читает: плитка должна получить картинку через Pillow."""
+    import io
+    from PIL import Image, features
+    if not features.check("avif"):
+        pytest.skip("Pillow без AVIF")
+    from app.ui.main_window import load_image
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 36), (99, 46, 230)).save(buf, "AVIF")
+    image = load_image(buf.getvalue())
+    assert (image.width(), image.height()) == (64, 36)
+    assert load_image(b"not an image").isNull()

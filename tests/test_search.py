@@ -263,6 +263,10 @@ def test_service_exclude_words():
     assert is_excluded(tagged("1", "принтер, 3д печать, 3d"), plan.exclude)
     assert not is_excluded(tagged("2", "printer, office, paper"), plan.exclude)
     assert build_plan("3D-печать", procs, Dictionary.load()).exclude == frozenset()
+    guillotine = build_plan("Гильотинная резка", procs, Dictionary.load())
+    assert is_excluded(tagged("3", "A man opens the shredder machine after cutting a sheet, paper"), guillotine.exclude)
+    assert is_excluded(tagged("4", "automatic paper tube cutting machine"), guillotine.exclude)
+    assert not is_excluded(tagged("5", "Paper cutting process in a press"), guillotine.exclude)
 
 
 @pytest.mark.parametrize("tags, ok", [
@@ -276,6 +280,14 @@ def test_service_exclude_words():
     ("Solid State Delayed Lenz Effect in laminated steel core proved with the VRM measurement", False),
     ("mug, sublimation, heat press, souvenir", True),
     ("printing 3d, printer 3d, close 3d printing", True),
+    # Настоящий промах Pixabay по «лазерной гравировке»: плазменная резка металла с искрами.
+    ("лазер, вырезать, элемент дизайна, точность, гравировка, пламя, горящий, искры, самодельный, кузнец, "
+     "стали, ремесло, металлический, металлоконструкции, ручной работы", False),
+    ("laser, cut out, design element, accuracy, engraving, flame, burning, sparks, blacksmith, steel, metalwork", False),
+    ("машина лазера, лазерная резка, технология, лазер, плазмы, промышленный, фабрика, стали, металл", False),
+    ("laser engraving, acrylic, souvenir, gift, keychain", True),
+    ("лазерная гравировка, металлическая ручка, сувенир, подарок", True),
+    ("How to Properly Cut a Cigar with a Guillotine Cutter", False),
 ])
 def test_only_printing_domain(tags, ok):
     from app.search import is_relevant

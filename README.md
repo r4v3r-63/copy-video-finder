@@ -14,7 +14,7 @@
 
 **[Скачать для Windows](https://github.com/r4v3r-63/copy-video-finder/releases/latest)** · без установки, работает с флешки
 
-<img src="docs/screenshots/search.png" alt="Поиск роликов по услуге «Лазерная гравировка»" width="100%">
+<img src="docs/screenshots/search.png" alt="Поиск роликов по услуге «Цифровая цветная лазерная печать»" width="100%">
 
 </div>
 

@@ -7,6 +7,7 @@ a = Analysis(
     ["run_app.py"],
     pathex=["."],
     datas=[("resources", "resources")],
+    hiddenimports=["PIL.AvifImagePlugin"],  # превью Coverr приходят в AVIF
     excludes=["tkinter", "pytest", "unittest"],
     noarchive=False,
 )
