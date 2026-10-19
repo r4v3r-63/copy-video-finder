@@ -2,6 +2,7 @@
 
 from html import escape
 
+from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtCore import QSize, QStringListModel, Qt, QTimer, QUrl
@@ -16,6 +17,7 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QFileDialog,
     QMessageBox,
     QPushButton,
     QSplitter,
@@ -39,6 +41,7 @@ from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
 from app.batch import BatchWorker
+from app.export import html_catalog, registry, summary
 from app.ui.catalog_view import CatalogView
 from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
@@ -71,6 +74,7 @@ class MainWindow(QMainWindow):
                  store: cat.Catalog | None = None):
         super().__init__()
         self.settings = settings
+        self.categories = categories
         self.processes = processes.all_processes(categories)
         self.catalog = store or cat.Catalog()
         self.printing = print_stems(self.processes)
@@ -197,6 +201,19 @@ class MainWindow(QMainWindow):
         quit_action = QAction("Выход", self)
         quit_action.triggered.connect(self.close)
         menu.addAction(quit_action)
+
+        catalog_menu = self.menuBar().addMenu("Каталог")
+        for title, handler in (("Экспорт реестра в Excel…", self.export_xlsx),
+                               ("Экспорт реестра в CSV…", self.export_csv),
+                               ("HTML-каталог…", self.export_html),
+                               ("Сводка покрытия…", self.export_summary)):
+            action = QAction(title, self)
+            action.triggered.connect(handler)
+            catalog_menu.addAction(action)
+        catalog_menu.addSeparator()
+        import_action = QAction("Импорт реестра CSV…", self)
+        import_action.triggered.connect(self.import_csv)
+        catalog_menu.addAction(import_action)
 
         help_menu = self.menuBar().addMenu("Справка")
         check = QAction("Проверить обновления…", self)
@@ -362,6 +379,83 @@ class MainWindow(QMainWindow):
                 self.player.set_catalog_state(entry.status, entry.id)
         if result and result.key in self.download_state:
             self.player.set_download_state(*self.download_state[result.key])
+
+    # --- экспорт и импорт каталога ---
+
+    def _save_path(self, title: str, name: str, file_filter: str) -> Path | None:
+        folder = paths.data_dir() / "Экспорт"
+        folder.mkdir(exist_ok=True)
+        stamp = datetime.now().strftime("%Y-%m-%d")
+        chosen, _ = QFileDialog.getSaveFileName(self, title, str(folder / f"{name} {stamp}"), file_filter)
+        return Path(chosen) if chosen else None
+
+    def _exported(self, path: Path, what: str):
+        answer = QMessageBox.question(self, "Экспорт", f"{what}:\n{path}\n\nОткрыть?")
+        if answer == QMessageBox.StandardButton.Yes:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+    def _export_failed(self, exc: Exception):
+        QMessageBox.warning(self, "Экспорт", f"Не удалось сохранить файл: {exc}")
+
+    def export_xlsx(self):
+        path = self._save_path("Реестр в Excel", "Реестр роликов", "Excel (*.xlsx)")
+        if not path:
+            return
+        path = path.with_suffix(".xlsx")
+        try:
+            s = summary.build(self.catalog, self.categories)
+            registry.write_xlsx(path, registry.rows(self.catalog, self.processes), summary.lines(s))
+        except OSError as exc:
+            return self._export_failed(exc)
+        self._exported(path, "Реестр сохранён")
+
+    def export_csv(self):
+        path = self._save_path("Реестр в CSV", "Реестр роликов", "CSV (*.csv)")
+        if not path:
+            return
+        path = path.with_suffix(".csv")
+        try:
+            registry.write_csv(path, registry.rows(self.catalog, self.processes))
+        except OSError as exc:
+            return self._export_failed(exc)
+        self._exported(path, "Реестр сохранён")
+
+    def export_html(self):
+        path = self._save_path("HTML-каталог", "Каталог роликов", "HTML (*.html)")
+        if not path:
+            return
+        path = path.with_suffix(".html")
+        try:
+            html_catalog.write(path, self.catalog, self.categories)
+        except OSError as exc:
+            return self._export_failed(exc)
+        self._exported(path, "HTML-каталог сохранён")
+
+    def export_summary(self):
+        path = self._save_path("Сводка покрытия", "Сводка покрытия", "HTML (*.html)")
+        if not path:
+            return
+        path = path.with_suffix(".html")
+        try:
+            summary.write_html(path, summary.build(self.catalog, self.categories))
+        except OSError as exc:
+            return self._export_failed(exc)
+        summary.mark_done(self.catalog)
+        self._exported(path, "Сводка сохранена")
+
+    def import_csv(self):
+        chosen, _ = QFileDialog.getOpenFileName(self, "Импорт реестра CSV", str(paths.data_dir()), "CSV (*.csv)")
+        if not chosen:
+            return
+        try:
+            videos, links = registry.import_csv(Path(chosen), self.catalog, self.processes)
+        except (OSError, UnicodeDecodeError, ValueError) as exc:
+            QMessageBox.warning(self, "Импорт", f"Не удалось прочитать файл: {exc}")
+            return
+        self.catalog_view.refresh()
+        self.coverage_view.refresh()
+        QMessageBox.information(self, "Импорт", f"Загружено роликов: {videos}, привязок к услугам: {links}.\n"
+                                "Дубли не создаются: ролики, которые уже были в каталоге, обновлены.")
 
     def _on_tab(self, index: int):
         if index == 1:

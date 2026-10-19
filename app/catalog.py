@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS searches (
     found INTEGER NOT NULL,
     new INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS links (
     video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
     process_id TEXT NOT NULL,
@@ -259,6 +260,15 @@ class Catalog:
             self._db.executemany("INSERT INTO seen VALUES (?, ?, ?)", [(*k, now) for k in new])
             self._db.execute("INSERT INTO searches VALUES (?, ?, ?, ?)", (now, query, len(set(keys)), len(new)))
         return set(new)
+
+    def get_meta(self, key: str) -> str | None:
+        with self._lock:
+            row = self._db.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+            return row["value"] if row else None
+
+    def set_meta(self, key: str, value: str) -> None:
+        with self._lock, self._db:
+            self._db.execute("INSERT OR REPLACE INTO meta VALUES (?, ?)", (key, value))
 
     def has_history(self) -> bool:
         with self._lock:
