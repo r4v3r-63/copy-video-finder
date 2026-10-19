@@ -75,8 +75,8 @@ class SettingsDialog(QDialog):
         form.addRow("", _link("Получить ключ Europeana (бесплатно)", "https://pro.europeana.eu/page/get-api"))
         brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
         form.addRow("Ключ Brave Search:", brave_row)
-        form.addRow("", _link("Поиск по интернету надёжнее с ключом Brave (бесплатно ~2000 запросов в месяц); "
-                              "без ключа — через DuckDuckGo", "https://brave.com/search/api/"))
+        form.addRow("", _link("Поиск по интернету надёжнее с ключом Brave (необязательно; платный, но $5 в месяц "
+                              "бесплатно — программа тратит не больше 900 запросов в месяц); без ключа — DuckDuckGo", "https://brave.com/search/api/"))
         form.addRow("", QLabel("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
 
         self.min_duration = QSpinBox()

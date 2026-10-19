@@ -27,6 +27,7 @@ from app.sources.videezy import BROWSER_UA
 
 DDG_URL = "https://html.duckduckgo.com/html/"
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
+BRAVE_MONTHLY = 900
 MAX_PAGES = 8  # страниц из выдачи поисковика на один запрос
 BLOCK_SECONDS = 600  # DuckDuckGo показал «anomaly» — 10 минут не беспокоим
 
@@ -207,7 +208,9 @@ class WebSource(HttpSource):
                  now=time.time):
         self.brave_key = brave_key or ""
         if self.brave_key:
-            self.limits = [(1, 1.2, "в секунду"), (2000, 30 * 86400, "в месяц")]
+            # Brave платный: $5 за 1000 запросов, бесплатного кредита $5 в месяц хватает на 1000.
+            # Не больше 900 в месяц — чтобы никогда не выйти за бесплатный кредит.
+            self.limits = [(1, 1.2, "в секунду"), (BRAVE_MONTHLY, 30 * 86400, "в месяц — в пределах бесплатных $5")]
             self.homepage = "https://search.brave.com"
         else:
             self.limits = [(6, 60, "в минуту"), (200, 86400, "в сутки")]  # реже — DuckDuckGo блокирует

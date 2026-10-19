@@ -124,7 +124,7 @@
 | Coverr | https://coverr.co/developers |
 | Vimeo | https://developer.vimeo.com/apps — создать приложение, затем личный токен с правами public |
 | Europeana | https://pro.europeana.eu/page/get-api |
-| Brave Search (поиск по интернету) | https://brave.com/search/api/ — без ключа поиск идёт через DuckDuckGo, но тот может временно ограничивать частые запросы |
+| Brave Search (поиск по интернету, необязательно) | https://brave.com/search/api/ — платный ($5 за 1000 запросов), но $5 в месяц бесплатно; программа тратит не больше 900 запросов в месяц и за бесплатный кредит не выходит. Без ключа поиск идёт через DuckDuckGo, который может временно ограничивать частые запросы |
 | Wikimedia Commons, Internet Archive, Videezy | ключ не нужен |
 | Pexels | https://www.pexels.com/api/ (выдача новых ключей сейчас приостановлена) |
 

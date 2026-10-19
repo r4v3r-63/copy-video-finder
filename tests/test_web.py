@@ -186,3 +186,10 @@ def test_downloader_takes_file_from_page(tmp_path):
     path, _ = run_job(job, session, now=lambda: datetime(2026, 10, 19))
     assert path.suffix == ".mov" and path.read_bytes() == b"movdata"
     assert session.calls[0]["url"] == url
+
+
+def test_brave_stays_within_free_credit(cache, clock):
+    from app.sources.web import BRAVE_MONTHLY
+    src = WebSource("bkey", cache, session=FakeSession(), now=clock)
+    monthly = [count for count, window, _ in src.limits if window >= 28 * 86400]
+    assert monthly == [BRAVE_MONTHLY] and BRAVE_MONTHLY < 1000  # $5 бесплатно = 1000 запросов
