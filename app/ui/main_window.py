@@ -10,6 +10,7 @@ from PyQt6.QtCore import QSize, QStringListModel, Qt, QTimer, QUrl
 from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QImage, QPixmap
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import (
+    QApplication,
     QCompleter,
     QHBoxLayout,
     QLabel,
@@ -47,6 +48,7 @@ from app.ui.catalog_view import CatalogView
 from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
+from app.ui import theme
 from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
@@ -120,10 +122,7 @@ class MainWindow(QMainWindow):
         self.query = QLineEdit()
         self.query.setPlaceholderText("Название услуги, например «ламинация» или «брошюровка на пружину»")
         self.query.setClearButtonEnabled(True)
-        font = self.query.font()
-        font.setPointSize(font.pointSize() + 3)
-        self.query.setFont(font)
-        self.query.setMinimumHeight(40)
+        self.query.setObjectName("query")  # крупное поле — в стиле темы
 
         self._suggestions = QStringListModel(self)
         self.completer = QCompleter(self._suggestions, self)
@@ -136,7 +135,8 @@ class MainWindow(QMainWindow):
         self.query.returnPressed.connect(self.run_search)
 
         self.search_button = QPushButton("Найти")
-        self.search_button.setMinimumHeight(40)
+        theme.set_role(self.search_button, theme.PRIMARY)
+        self.search_button.setProperty("size", "large")
         self.search_button.clicked.connect(self._search_or_stop)
 
         search_row = QHBoxLayout()
@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
 
         self.query_info = QLabel()
         self.query_info.setWordWrap(True)
+        self.query_info.setProperty("muted", True)
         self.query_info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         self.source_links = QLabel()
@@ -160,7 +161,7 @@ class MainWindow(QMainWindow):
         self.results.setUniformItemSizes(True)
         self.results.currentItemChanged.connect(self._on_current)
 
-        self.player = PlayerPanel()
+        self.player = theme.make_card(PlayerPanel())
         self.player.allow_4k = settings.allow_4k
         self.player.download_requested.connect(self.download)
         self.player.open_folder_requested.connect(self._open_folder)
@@ -206,6 +207,9 @@ class MainWindow(QMainWindow):
         self._show_hint()
 
         self.updates = UpdateController(self, settings)
+        # «Как в системе»: тема переключается вслед за Windows.
+        QApplication.styleHints().colorSchemeChanged.connect(
+            lambda _s: self.settings.theme == theme.SYSTEM and self.apply_theme())
         # Через несколько секунд после запуска: убрать остатки прошлого обновления и проверить новое.
         QTimer.singleShot(4000, self._startup_update_check)
 
@@ -259,6 +263,11 @@ class MainWindow(QMainWindow):
         about = QAction("О программе", self)
         about.triggered.connect(self._about)
         help_menu.addAction(about)
+
+    def apply_theme(self):
+        theme.apply(QApplication.instance(), self.settings.theme)
+        self.catalog_view.refresh()
+        self.coverage_view.refresh()
 
     def _startup_update_check(self):
         updater.cleanup()
@@ -494,8 +503,11 @@ class MainWindow(QMainWindow):
                 pixmap = QPixmap.fromImage(image)
                 item = self._thumb_items.get(str(token))
                 if item and self.results.row(item) >= 0:
-                    item.setIcon(QIcon(pixmap.scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
-                                                     Qt.TransformationMode.SmoothTransformation)))
+                    thumb = pixmap.scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
+                                          Qt.TransformationMode.SmoothTransformation)
+                    icon = QIcon(thumb)
+                    icon.addPixmap(thumb, QIcon.Mode.Selected)  # без синей подкраски у выбранного ролика
+                    item.setIcon(icon)
         reply.deleteLater()
 
     def _on_current(self, item: QListWidgetItem | None, _previous):
@@ -783,6 +795,7 @@ class MainWindow(QMainWindow):
     def open_settings(self):
         if SettingsDialog(self.settings, self).exec():
             self.player.allow_4k = self.settings.allow_4k
+            self.apply_theme()
             self._show_hint()
 
     def closeEvent(self, event):

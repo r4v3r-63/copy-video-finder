@@ -53,11 +53,13 @@ app/
   cache.py             # SQLite-кэш ответов (24 ч) и учёт запросов для лимитов
   updater.py           # автообновление: выпуск на GitHub, SHA-256, замена файлов через update.cmd
   similar.py           # dHash превью: похожие дубли, подсказка зацикливания
+  design.py            # дизайн-токены Copy.ru: палитра, темы, размеры, шрифты, CSS-переменные
   maintenance.py       # плановая проверка ссылок каталога, хеши превью
 resources/
   processes.json       # 11 категорий, 43 техпроцесса, фразы на русском и английском
   terms_ru_en.json     # словарь для перевода запросов
   logo.svg             # логотип Copy.ru; logo.png — значок окна и «О программе», logo.ico — значок exe
+  fonts/               # Inter (OFL), подключается при запуске
 docs/
   screenshots/         # снимки окна для README
 tests/
@@ -95,6 +97,14 @@ tests/
 - Похожие дубли: dHash превью (`videos.phash`), пары с расстоянием до `similar.DUPLICATE_DISTANCE`; в карточке — «похож на № …».
 - Зацикливание: после скачивания FFmpeg сравнивает первый и последний кадр (`downloader.loop_hint` → `videos.loop_hint`); решение пользователя — `videos.loop` в карточке.
 - Новые столбцы `videos` добавляются в старую базу через `ALTER TABLE` (`catalog._ADDED_COLUMNS`).
+
+## Дизайн-система
+
+- Стиль Copy.ru: технологичный минимализм, нейтральные поверхности, синий `#246BEE` — главные действия и активные элементы, фиолетовый `#7B35B5` — редкие акценты, шрифт Inter. Коды ориентировочные (по маркетинг-киту); основную цветовую концепцию без согласования не менять.
+- Все цвета, размеры, скругления и шрифты — только в `app/design.py` (`PALETTES` светлой и тёмной темы). HEX-коды в остальном коде запрещены (тест `test_no_colors_outside_tokens`).
+- `app/ui/theme.py` собирает из токенов стиль Qt с состояниями hover, focus, pressed, disabled. Кнопкам назначается роль `theme.set_role(button, PRIMARY | SECONDARY)` (по умолчанию — tertiary), панелям — `theme.make_card`. Кнопка по умолчанию в диалогах выглядит как primary.
+- HTML-экспорт берёт те же токены: `design.css_variables()`.
+- Тема — `Settings.theme`: `system` (по Windows), `light`, `dark`. Контраст по WCAG AA проверяет `tests/test_design.py`.
 
 ## Интерфейс источника
 

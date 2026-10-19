@@ -2,6 +2,7 @@
 
 from PyQt6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -17,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 from app import paths
 from app.settings import Settings, built_in_keys
+from app.ui import theme
 
 
 def _key_field(value: str, built_in: bool = False) -> tuple[QWidget, QLineEdit]:
@@ -120,6 +122,11 @@ class SettingsDialog(QDialog):
         self.link_check_days.setSpecialValueText("не проверять")
         self.link_check_days.setValue(settings.link_check_days)
         form.addRow("Проверять ссылки каталога раз в:", self.link_check_days)
+        self.theme = QComboBox()
+        for value, name in theme.THEME_NAMES.items():
+            self.theme.addItem(name, value)
+        self.theme.setCurrentIndex(max(self.theme.findData(settings.theme), 0))
+        form.addRow("Оформление:", self.theme)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -154,5 +161,6 @@ class SettingsDialog(QDialog):
         self._settings.convert_to_mp4 = self.convert.isChecked()
         self._settings.check_updates = self.check_updates.isChecked()
         self._settings.link_check_days = self.link_check_days.value()
+        self._settings.theme = self.theme.currentData()
         self._settings.save()
         super().accept()

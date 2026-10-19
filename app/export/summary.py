@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app import __version__
 from app import catalog as cat
+from app import design
 
 LAST_SUMMARY = "last_summary_at"
 
@@ -81,13 +82,14 @@ def write_html(path: Path, s: dict) -> None:
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Сводка покрытия</title>
 <style>
-:root {{ --bg:#fff; --fg:#1d1d1f; --muted:#666; --line:#ddd; --ok:#2e7d32; --bad:#c62828; }}
-@media (prefers-color-scheme: dark) {{ :root {{ --bg:#1e1e1e; --fg:#eee; --muted:#aaa; --line:#444; --ok:#81c784; --bad:#ef9a9a; }} }}
-body {{ background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; max-width:900px; margin:24px auto; padding:0 16px; }}
-h1 {{ font-size:24px; margin-bottom:4px; }} h2 {{ font-size:18px; margin-top:28px; border-bottom:1px solid var(--line); }}
-.muted {{ color:var(--muted); }} .big {{ font-size:32px; font-weight:600; }}
+{design.css_variables()}
+body {{ background:var(--bg-primary); color:var(--text-primary); font:15px/1.5 var(--font-family); max-width:900px; margin:24px auto; padding:0 16px; }}
+h1 {{ font-size:var(--font-display); font-weight:700; margin-bottom:4px; }}
+h2 {{ font-size:var(--font-title); margin-top:28px; padding-bottom:6px; border-bottom:2px solid var(--accent-secondary); }}
+.muted {{ color:var(--text-secondary); }} .big {{ font-size:32px; font-weight:700; color:var(--accent-text); }}
 .grid {{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; }}
-.tile {{ border:1px solid var(--line); border-radius:8px; padding:12px; }}
+.tile {{ background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-card); padding:16px; }}
+a {{ color:var(--accent-text); }}
 </style></head><body>
 <h1>Сводка покрытия</h1>
 <div class="muted">{escape(s['date'])} · программа версии {__version__}</div>

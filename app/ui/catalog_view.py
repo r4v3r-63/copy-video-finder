@@ -5,7 +5,7 @@ from html import escape
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal
-from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtGui import QColor, QDesktopServices
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import (
 from app import catalog as cat
 from app import licenses, similar
 from app.processes import Category, Process
+from app.ui import theme
 from app.ui.coverage_view import level_brush
 from app.ui.player import format_duration
 
@@ -78,19 +79,25 @@ class VideoCard(QWidget):
         self.comment.setPlaceholderText("Комментарий")
         self.comment.setMaximumHeight(70)
         self.save_comment = QPushButton("Сохранить комментарий")
+        theme.set_role(self.save_comment, theme.SECONDARY)
         self.save_comment.clicked.connect(self._save_comment)
 
         self.links = QTableWidget(0, 3)
         self.links.setHorizontalHeaderLabels(["Услуга", "Соответствие", ""])
         self.links.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for col, width in ((1, 170), (2, 130)):
+            self.links.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Fixed)
+            self.links.setColumnWidth(col, width)
         self.links.verticalHeader().hide()
-        self.links.setMaximumHeight(140)
+        self.links.verticalHeader().setDefaultSectionSize(theme.CONTROL_HEIGHT + theme.SPACE_S)
+        self.links.setMaximumHeight(150)
         self.add_process = QComboBox()
         for p in processes:
             self.add_process.addItem(p.display, p.id)
         self.add_match = QComboBox()
         self.add_match.addItems(cat.MATCHES)
         self.link_button = QPushButton("Привязать")
+        theme.set_role(self.link_button, theme.SECONDARY)
         self.link_button.clicked.connect(self._add_link)
         add_row = QHBoxLayout()
         add_row.addWidget(self.add_process, 1)
@@ -114,6 +121,7 @@ class VideoCard(QWidget):
         form.addRow("", self.confirmed)
         form.addRow("Для зацикливания:", self.loop)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
         layout.addWidget(self.header)
         layout.addLayout(form)
         layout.addWidget(QLabel("Услуги и степень соответствия:"))
@@ -269,7 +277,7 @@ class CatalogView(QWidget):
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self.tree.setMinimumWidth(320)
+        self.tree.setMinimumWidth(360)
         self.tree.currentItemChanged.connect(lambda *_: self.refresh_list())
 
         self.search = QLineEdit()
@@ -298,7 +306,7 @@ class CatalogView(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.currentCellChanged.connect(lambda row, *_: self._show_row(row))
 
-        self.card = VideoCard(catalog, self.processes)
+        self.card = theme.make_card(VideoCard(catalog, self.processes))
         self.card.changed.connect(self.refresh)
 
         middle = QWidget()
@@ -314,7 +322,7 @@ class CatalogView(QWidget):
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 4)
         splitter.setStretchFactor(2, 3)
-        splitter.setSizes([400, 600, 480])
+        splitter.setSizes([420, 520, 520])
         layout = QVBoxLayout(self)
         layout.addWidget(splitter)
         self.refresh()
@@ -347,6 +355,7 @@ class CatalogView(QWidget):
             for p in c.processes:
                 item = QTreeWidgetItem([p.name, str(totals.get(p.id, 0)), f"{coverage.get(p.id, 0)} из {p.target}"])
                 item.setData(0, Qt.ItemDataRole.UserRole, p.id)
+                item.setToolTip(0, p.name)
                 for col in range(3):
                     item.setBackground(col, level_brush(coverage.get(p.id, 0), p.target))
                 cat_item.addChild(item)
@@ -388,7 +397,7 @@ class CatalogView(QWidget):
                                         "да" if e.downloaded_path else ""]):
                 item = QTableWidgetItem(text)
                 if not e.available:
-                    item.setForeground(Qt.GlobalColor.gray)
+                    item.setForeground(QColor(theme.palette().text_secondary))
                     item.setToolTip("Удалён с площадки")
                 self.table.setItem(row, col, item)
             if e.id == selected_id:

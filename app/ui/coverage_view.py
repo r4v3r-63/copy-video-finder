@@ -3,7 +3,7 @@
 from html import escape
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtGui import QBrush
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -17,15 +17,14 @@ from PyQt6.QtWidgets import (
 )
 
 from app import catalog as cat
+from app.ui import theme
 
-# Цвет покрытия: нет роликов / 1 / 2 / цель выполнена. Полупрозрачные — читаются в светлой и тёмной теме.
-LEVEL_COLORS = {0: QColor(220, 60, 60, 70), 1: QColor(235, 140, 40, 70), 2: QColor(230, 200, 40, 70),
-                3: QColor(60, 170, 80, 70)}
 LEVEL_NAMES = {0: "нет роликов", 1: "1 ролик", 2: "2 ролика", 3: "цель выполнена"}
 
 
 def level_brush(count: int, target: int) -> QBrush:
-    return QBrush(LEVEL_COLORS[cat.coverage_level(count, target)])
+    """Цвет покрытия (нет роликов / 1 / 2 / цель выполнена) — из токенов текущей темы."""
+    return QBrush(theme.coverage_color(cat.coverage_level(count, target)))
 
 
 class CoverageView(QWidget):
@@ -48,6 +47,7 @@ class CoverageView(QWidget):
         self.batch_button = QPushButton("Искать по незаполненным услугам")
         self.batch_button.setToolTip("Сначала услуги без роликов, затем с одним, затем остальные с недостатком. "
                                      "Ролики только находятся — решаете и скачиваете вы.")
+        theme.set_role(self.batch_button, theme.PRIMARY)
         self.batch_button.clicked.connect(lambda: self.stop_requested.emit() if self.running
                                           else self.batch_requested.emit())
         self.progress = QLabel()
@@ -70,6 +70,7 @@ class CoverageView(QWidget):
         hint = QLabel("Двойной щелчок по услуге — открыть её ролики на вкладке «Поиск» "
                       "(после пакетного поиска — из кэша, без новых запросов).")
         hint.setWordWrap(True)
+        hint.setProperty("muted", True)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.stats)

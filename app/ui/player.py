@@ -13,6 +13,7 @@ from app.catalog import REJECTED, SELECTED
 from app.downloader import choose_file
 from app.search import preview_file
 from app.sources.base import VideoResult
+from app.ui import theme
 
 
 def format_duration(seconds: float | None) -> str:
@@ -60,19 +61,24 @@ class PlayerPanel(QWidget):
         self.quality.setToolTip("Качество файла для скачивания")
         self.download_button = QPushButton("Скачать")
         self.download_button.clicked.connect(self._download)
+        theme.set_role(self.download_button, theme.PRIMARY)
         self.folder_button = QPushButton("Показать в папке")
         self.folder_button.clicked.connect(lambda: self.open_folder_requested.emit(self.downloaded_path))
         self.download_status = QLabel()
         self.download_status.setWordWrap(True)
+        self.download_status.setProperty("muted", True)
         self.download_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.select_button = QPushButton("В каталог — лицензию проверил")
         self.select_button.setToolTip("Добавить ролик в каталог услуги. Нажимайте, когда посмотрели ролик "
                                       "и условия лицензии.")
+        theme.set_role(self.select_button, theme.PRIMARY)
         self.select_button.clicked.connect(lambda: self.result and self.select_requested.emit(self.result))
         self.reject_button = QPushButton("Не подходит")
         self.reject_button.setToolTip("Больше не показывать этот ролик в поиске")
+        theme.set_role(self.reject_button, theme.SECONDARY)
         self.reject_button.clicked.connect(lambda: self.result and self.reject_requested.emit(self.result))
         self.catalog_status = QLabel()
+        self.catalog_status.setProperty("muted", True)
         catalog_row = QHBoxLayout()
         catalog_row.addWidget(self.select_button, 1)
         catalog_row.addWidget(self.reject_button)
@@ -88,6 +94,8 @@ class PlayerPanel(QWidget):
         self.info.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
+        layout.setSpacing(theme.SPACE_S)
         layout.addWidget(self.video, 1)
         layout.addLayout(controls)
         layout.addWidget(self.info)

@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app import paths
+from app.ui import theme
 
 
 def _table(headers: list[str], stretch: int = 0) -> QTableWidget:
@@ -52,6 +53,7 @@ class HistoryDialog(QDialog):
                 self.table.setItem(row, col, QTableWidgetItem(text))
         self.table.cellDoubleClicked.connect(lambda row, _c: self._repeat(row))
         repeat = QPushButton("Повторить поиск")
+        theme.set_role(repeat, theme.PRIMARY)
         repeat.clicked.connect(lambda: self._repeat(self.table.currentRow()))
         hint = QLabel("Двойной щелчок по строке — повторить поиск. Ролики, найденные впервые, будут помечены «новый».")
         hint.setWordWrap(True)

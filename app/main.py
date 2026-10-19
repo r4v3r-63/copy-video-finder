@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from app import paths, processes
 from app.settings import Settings
+from app.ui import theme
 
 
 def setup_logging() -> None:
@@ -32,6 +33,9 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
     app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.png")))
+    settings = Settings.load()
+    theme.load_fonts()
+    theme.apply(app, settings.theme)
     QNetworkProxyFactory.setUseSystemConfiguration(True)
     # Стандартные кнопки и окна Qt («Подробнее…», выбор папки) — на русском.
     translator = QTranslator(app)
@@ -54,7 +58,7 @@ def main() -> int:
 
     from app.ui.main_window import MainWindow
 
-    window = MainWindow(Settings.load(), catalog)
+    window = MainWindow(settings, catalog)
     window.show()
     logging.getLogger("app").info("Программа запущена")
     return app.exec()
