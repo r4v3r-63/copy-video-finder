@@ -68,7 +68,10 @@ class SettingsDialog(QDialog):
         form.addRow("Токен Vimeo:", vimeo_row)
         form.addRow("", _link("Создать приложение и личный токен Vimeo (права public)",
                               "https://developer.vimeo.com/apps"))
-        form.addRow("", QLabel("Wikimedia Commons работает без ключа."))
+        europeana_row, self.europeana_key = _key_field(settings.europeana_api_key, "europeana_api_key" in built)
+        form.addRow("Ключ API Europeana:", europeana_row)
+        form.addRow("", _link("Получить ключ Europeana (бесплатно)", "https://pro.europeana.eu/page/get-api"))
+        form.addRow("", QLabel("Wikimedia Commons и Internet Archive работают без ключа."))
 
         self.min_duration = QSpinBox()
         self.min_duration.setRange(1, 600)
@@ -136,6 +139,7 @@ class SettingsDialog(QDialog):
         self._settings.pixabay_api_key = self.pixabay_key.text().strip()
         self._settings.coverr_api_key = self.coverr_key.text().strip()
         self._settings.vimeo_token = self.vimeo_token.text().strip()
+        self._settings.europeana_api_key = self.europeana_key.text().strip()
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

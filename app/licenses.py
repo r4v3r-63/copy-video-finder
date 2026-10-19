@@ -46,3 +46,20 @@ def evaluate(name: str | None) -> tuple[str, str]:
 def attribution_text(author: str, title: str, license_name: str, url: str) -> str:
     """Готовый текст авторства: «Автор — Название — Лицензия — ссылка»."""
     return " — ".join(part for part in (author, title, license_name, url) if part)
+
+
+_CC_URL = re.compile(r"creativecommons\.org/(licenses|publicdomain)/([a-z\-]+)/?([\d.]+)?", re.IGNORECASE)
+
+
+def name_from_url(url: str | None) -> str:
+    """Название лицензии по ссылке на Creative Commons: «CC BY-SA 4.0», «CC0», «Public Domain».
+
+    Для прочих ссылок (rightsstatements.org и т.п.) — пустая строка: такая лицензия «требует проверки».
+    """
+    m = _CC_URL.search(url or "")
+    if not m:
+        return ""
+    kind, code, version = m.group(1).lower(), m.group(2).lower(), m.group(3) or ""
+    if kind == "publicdomain":
+        return "CC0" if code == "zero" else "Public Domain" if code == "mark" else ""
+    return f"CC {code.upper()} {version}".strip()

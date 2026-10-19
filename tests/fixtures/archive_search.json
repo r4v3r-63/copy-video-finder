@@ -1,0 +1,82 @@
+{
+ "_comment": "Настоящий ответ Internet Archive advancedsearch (printing press, mediatype:movies, licenseurl CC/PD), 2026-10-19.",
+ "responseHeader": {
+  "status": 0,
+  "QTime": 106,
+  "params": {
+   "query": "(((text:printing OR text:printing OR text__reviews:printing)(text:press OR text:press OR text__reviews:press)) OR (text:&quot;printing press&quot; OR text:&quot;printing press&quot; OR text__reviews:&quot;printing press&quot;)) AND mediatype:movies AND (licenseurl:*creativecommons* OR licenseurl:*publicdomain*)",
+   "qin": "(printing press) AND mediatype:movies AND (licenseurl:*creativecommons* OR licenseurl:*publicdomain*)",
+   "fields": "identifier,title,licenseurl,runtime,creator,subject",
+   "wt": "json",
+   "rows": 5,
+   "start": 0
+  }
+ },
+ "response": {
+  "numFound": 111,
+  "start": 0,
+  "docs": [
+   {
+    "creator": "Producer: Anton Leader w Leonard Goldstein (assoc. producer) / Director: Dane Lussier (screenplay), Jane S. McIlvaine (novel), Leonard Praskins (adaptation), Joseph Pevney / Writers: / Starring: Loretta Young, John Forsyth, Frank McHugh",
+    "identifier": "it-happens-every-thursday-1953-classic-comedy-loretta-young",
+    "licenseurl": "http://creativecommons.org/publicdomain/mark/1.0/",
+    "runtime": "1:20:18",
+    "subject": "1953, Classic, Comedy, Rural life, Small town, Drought, Rainmaker, Rain, Flood, Mayor, Newspaper, Editor, Printing press, News circulation, News story, Townsfolk, Rumours, Newspaper ads, Subscriptions, Baby, Contest, Draw, Prize",
+    "title": "It Happens Every Thursday (1953 Classic Comedy) Loretta Young"
+   },
+   {
+    "creator": "Future Worlds Center",
+    "identifier": "rmsCyprus",
+    "licenseurl": "http://creativecommons.org/publicdomain/zero/1.0/",
+    "subject": [
+     "RMS",
+     "Richard Stallman",
+     "Unconference 2019",
+     "Libre",
+     "Nicosia",
+     "Cyprus",
+     "Commons",
+     "Arts",
+     "Copyright"
+    ],
+    "title": "Richard Stallman: Copyright vs Community in the Age of Computer Networks"
+   },
+   {
+    "creator": "tENTATIVELY, a cONVENIENCE",
+    "identifier": "selections-3",
+    "licenseurl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "subject": "tENTATIVELY a cONVENIENCE aRCHIVE",
+    "title": "Selections 3"
+   },
+   {
+    "creator": "Revision 3",
+    "identifier": "Appjudgment_Snapp_23",
+    "licenseurl": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+    "runtime": "00:00:53",
+    "subject": [
+     "revision3",
+     "rev3",
+     "appjudgment snapp"
+    ],
+    "title": "Appjudgment Snapp 23: Control a Hand Driven Printing Press with LetterMpress for the iPad"
+   },
+   {
+    "creator": "Caitlin Johnstone",
+    "identifier": "youtube-KKyFhUDbCBw",
+    "licenseurl": "https://creativecommons.org/licenses/by/3.0/",
+    "subject": [
+     "Youtube",
+     "video",
+     "News & Politics",
+     "media",
+     "propaganda",
+     "west",
+     "us empire",
+     "middle east",
+     "war"
+    ],
+    "title": "The Western Press Are Just Printing Straight Up Nazi Propaganda About Middle Easterners Now"
+   }
+  ]
+ }
+}

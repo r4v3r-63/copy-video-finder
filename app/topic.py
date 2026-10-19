@@ -115,7 +115,7 @@ FOREIGN = (
     "wood", "lumber", "plank", "carpent", "joiner", "construction", "builder", "roof", "brick", "concrete",
     "cement", "timber", "kitchen", "cooking", "food", "vegetable", "meat", "garlic", "recipe", "beach", "ocean",
     "coast", "mountain", "forest", "wildlife", "animal", "bird", "music", "musician", "guitar", "concert",
-    "turntable", "automobile", "garden", "farm", "tractor",
+    "turntable", "automobile", "garden", "farm", "tractor", "steel", "physics", "experiment",
     "дерев", "древесин", "доски", "стройк", "строител", "плотник", "крыш", "кирпич", "бетон", "кухн", "еда",
     "готовк", "овощ", "мясо", "пляж", "океан", "горы", "лес", "животн", "птиц", "музык", "гитар", "концерт",
     "проигрыват", "автомобил", "сад", "ферм", "трактор",

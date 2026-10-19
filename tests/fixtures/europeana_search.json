@@ -1,0 +1,6267 @@
+{
+ "_comment": "Настоящий ответ Europeana Search API (query=printing press, qf=TYPE:VIDEO, reusability=open, profile=rich), 2026-10-19; поля link и apikey убраны.",
+ "success": true,
+ "requestNumber": 999,
+ "itemsCount": 4,
+ "totalResults": 4,
+ "items": [
+  {
+   "completeness": 10,
+   "country": [
+    "Netherlands"
+   ],
+   "dataProvider": [
+    "Netherlands Institute for Sound & Vision"
+   ],
+   "dcContributor": [
+    "Bloemendal, Philip (commentaar)"
+   ],
+   "dcContributorLangAware": {
+    "nl": [
+     "Bloemendal, Philip (commentaar)"
+    ]
+   },
+   "dcCreator": [
+    "Polygoon-Profilti (producent)",
+    "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+   ],
+   "dcCreatorLangAware": {
+    "nl": [
+     "Polygoon-Profilti (producent)",
+     "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+    ]
+   },
+   "dcDescription": [
+    "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+    "In het Centraal Museum te Utrecht is een tentoonstelling ingericht nav het feit dat in 1437 de eerste gedateerde boeken verschenen in Nederland. Met oa boeken uit de 15e eeuw. Verder oude en nieuwe technieken van het drukken van boeken. Een graveur snijdt een stempel van een letter, waarvan een letter wordt gegoten. De letters komen in een letterbak, waaruit ze worden gepakt en in een zethaak worden gezet. In een drukpers worden de pagina's afgedrukt op papier. In een monotypemachine wordt de getikte tekst overgebracht op een ponsband, waarmee een gietmachine wordt aangestuurd die de letters in regels giet. Vervolgens wordt de tekst gedrukt in een Heidelberger volautomatische drukpers. Met een monofoto-zetmachine wordt de tekst via een ponsband fotografisch op cellofaan aangebracht, samen met afbeeldingen. Dit wordt op cilinders overgebracht die in meerdere kleuren worden afgedrukt op papier. Met het standbeeld van Laurens Janszoon Coster voor de St. Bavo te Haarlem.",
+    "In the Centraal Museum in Utrecht, an exhibition has been set up to commemorate the fact that the first dated books appeared in the Netherlands in 1437. With books from the 15th century. Furthermore, old and new techniques of printing books. An engraver cuts a stamp from a letter, from which a letter is cast. The letters come in a letter box, from which they are taken and put in a setting hook. In a printing press the pages are printed on paper. In a monotype machine, the typed text is transferred to a punching belt, which drives a casting machine that casts the letters in lines. Then the text is printed in a Heidelberger fully automatic printing press. Using a mono-photographic composing machine, the text is photographed on cellophane using a punch tape, together with images. This is transferred to cylinders which are printed in multiple colours on paper. With the statue of Laurens Janszoon Coster in front of the St. Bavo in Haarlem.",
+    "Cinema newsreels in which Dutch subjects of a certain week are presented."
+   ],
+   "dcDescriptionLangAware": {
+    "en": [
+     "In the Centraal Museum in Utrecht, an exhibition has been set up to commemorate the fact that the first dated books appeared in the Netherlands in 1437. With books from the 15th century. Furthermore, old and new techniques of printing books. An engraver cuts a stamp from a letter, from which a letter is cast. The letters come in a letter box, from which they are taken and put in a setting hook. In a printing press the pages are printed on paper. In a monotype machine, the typed text is transferred to a punching belt, which drives a casting machine that casts the letters in lines. Then the text is printed in a Heidelberger fully automatic printing press. Using a mono-photographic composing machine, the text is photographed on cellophane using a punch tape, together with images. This is transferred to cylinders which are printed in multiple colours on paper. With the statue of Laurens Janszoon Coster in front of the St. Bavo in Haarlem.",
+     "Cinema newsreels in which Dutch subjects of a certain week are presented."
+    ],
+    "nl": [
+     "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+     "In het Centraal Museum te Utrecht is een tentoonstelling ingericht nav het feit dat in 1437 de eerste gedateerde boeken verschenen in Nederland. Met oa boeken uit de 15e eeuw. Verder oude en nieuwe technieken van het drukken van boeken. Een graveur snijdt een stempel van een letter, waarvan een letter wordt gegoten. De letters komen in een letterbak, waaruit ze worden gepakt en in een zethaak worden gezet. In een drukpers worden de pagina's afgedrukt op papier. In een monotypemachine wordt de getikte tekst overgebracht op een ponsband, waarmee een gietmachine wordt aangestuurd die de letters in regels giet. Vervolgens wordt de tekst gedrukt in een Heidelberger volautomatische drukpers. Met een monofoto-zetmachine wordt de tekst via een ponsband fotografisch op cellofaan aangebracht, samen met afbeeldingen. Dit wordt op cilinders overgebracht die in meerdere kleuren worden afgedrukt op papier. Met het standbeeld van Laurens Janszoon Coster voor de St. Bavo te Haarlem."
+    ]
+   },
+   "dcLanguage": [
+    "nl",
+    "nl"
+   ],
+   "dcLanguageLangAware": {
+    "def": [
+     "nl",
+     "nl"
+    ]
+   },
+   "dcSubjectLangAware": {
+    "def": [
+     "http://data.europeana.eu/organization/3999",
+     "http://www.wikidata.org/entity/Q260913"
+    ],
+    "nl": [
+     "boekdrukkunst",
+     "boeken",
+     "drukkerijen",
+     "standbeelden",
+     "tentoonstellingen",
+     "zetterijen",
+     "Coster, Laurens Janszoon",
+     "Centraal Museum",
+     "Sint Bravo"
+    ]
+   },
+   "dcTitleLangAware": {
+    "en": [
+     "500 years of book printing in the Netherlands modern and old printing techniques"
+    ],
+    "nl": [
+     "500 jaar boekdrukkunst in Nederland moderne en oude druktechnieken"
+    ]
+   },
+   "dcTypeLangAware": {
+    "def": [
+     "http://vocab.getty.edu/aat/300263857"
+    ]
+   },
+   "dctermsSpatial": [
+    "Haarlem",
+    "Nederland",
+    "Utrecht",
+    "http://data.europeana.eu/place/40710",
+    "http://data.europeana.eu/place/106",
+    "http://data.europeana.eu/place/40278",
+    "http://data.europeana.eu/place/40279",
+    "http://www.wikidata.org/entity/Q803",
+    "http://www.wikidata.org/entity/Q39297398",
+    "http://www.wikidata.org/entity/Q18108",
+    "http://www.wikidata.org/entity/Q2188357",
+    "http://www.wikidata.org/entity/Q9920",
+    "http://www.wikidata.org/entity/Q29999",
+    "http://www.wikidata.org/entity/Q55"
+   ],
+   "edmAgent": [
+    "http://www.wikidata.org/entity/Q260913"
+   ],
+   "edmAgentLabel": [
+    {
+     "def": "Centraal Museum Utrecht"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Центральный музей Утрехта"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum (Utrecht)"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Museu Centraal"
+    },
+    {
+     "def": "Centraal Museum"
+    },
+    {
+     "def": "Centraal Museum"
+    }
+   ],
+   "edmAgentLabelLangAware": {
+    "de": [
+     "Centraal Museum Utrecht"
+    ],
+    "sv": [
+     "Centraal Museum"
+    ],
+    "fi": [
+     "Centraal Museum"
+    ],
+    "ru": [
+     "Центральный музей Утрехта"
+    ],
+    "pt": [
+     "Centraal Museum"
+    ],
+    "en": [
+     "Centraal Museum"
+    ],
+    "it": [
+     "Centraal Museum"
+    ],
+    "fr": [
+     "Centraal Museum"
+    ],
+    "es": [
+     "Centraal Museum"
+    ],
+    "sl": [
+     "Centraal Museum (Utrecht)"
+    ],
+    "pl": [
+     "Centraal Museum"
+    ],
+    "ca": [
+     "Museu Centraal"
+    ],
+    "nl": [
+     "Centraal Museum"
+    ]
+   },
+   "edmConcept": [
+    "http://vocab.getty.edu/aat/300263857"
+   ],
+   "edmConceptLabel": [
+    {
+     "def": "moving images"
+    },
+    {
+     "def": "bewegtes Bild"
+    },
+    {
+     "def": "imagens em movimento"
+    },
+    {
+     "def": "imágenes en movimiento"
+    },
+    {
+     "def": "bewegende beelden"
+    }
+   ],
+   "edmConceptPrefLabelLangAware": {
+    "de": [
+     "bewegtes Bild"
+    ],
+    "pt": [
+     "imagens em movimento"
+    ],
+    "en": [
+     "moving images"
+    ],
+    "es": [
+     "imágenes en movimiento"
+    ],
+    "nl": [
+     "bewegende beelden"
+    ]
+   },
+   "edmDatasetName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "edmIsShownAt": [
+    "https://www.openbeelden.nl/media/676370"
+   ],
+   "edmIsShownBy": [
+    "https://www.openbeelden.nl/files/06/76/677181.676369.WEEKNUMMER735-HRE00016726_3087000_3259000.mp4"
+   ],
+   "edmPlace": [
+    "http://www.wikidata.org/entity/Q2188357",
+    "http://data.europeana.eu/place/40710",
+    "http://data.europeana.eu/place/106",
+    "http://www.wikidata.org/entity/Q55",
+    "http://www.wikidata.org/entity/Q803",
+    "http://data.europeana.eu/place/40279",
+    "http://www.wikidata.org/entity/Q9920",
+    "http://data.europeana.eu/place/40278",
+    "http://www.wikidata.org/entity/Q18108",
+    "http://www.wikidata.org/entity/Q39297398",
+    "http://www.wikidata.org/entity/Q29999"
+   ],
+   "edmPlaceAltLabel": [
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "die Niederlande"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Haarlem, Holanda do Norte"
+    },
+    {
+     "def": "Harlém"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "os Países Baixos"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utreque (cidade)"
+    },
+    {
+     "def": "Utrecht (cidade)"
+    },
+    {
+     "def": "Haarlem, Holanda do Norte"
+    },
+    {
+     "def": "Harlém"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utreque (cidade)"
+    },
+    {
+     "def": "Utrecht (cidade)"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Χάρλεμ"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Κάτω Χώρες"
+    },
+    {
+     "def": "Χάρλεμ"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Haarlem, North Holland"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "The Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "Kingdom of Netherlands"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "Utreg"
+    },
+    {
+     "def": "Utrecht (city)"
+    },
+    {
+     "def": "Haarlem, North Holland"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Utreg"
+    },
+    {
+     "def": "Utrecht (city)"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Hollande"
+    },
+    {
+     "def": "P.-B."
+    },
+    {
+     "def": "P.B."
+    },
+    {
+     "def": "P-B"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "royaume des Pays-Bas"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "Los Países Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "Los Paises Bajos"
+    },
+    {
+     "def": "Neerlandia"
+    },
+    {
+     "def": "Traiectum ad Rhenum"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Traiectum ad Rhenum"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Reino de Los Paises Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Gemeente Haarlem"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "KdN"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "nl"
+    },
+    {
+     "def": "Utrèg"
+    },
+    {
+     "def": "gemeente Utrecht"
+    },
+    {
+     "def": "Utrecht (gemeente)"
+    },
+    {
+     "def": "Gemeente Utrecht"
+    },
+    {
+     "def": "Utrecht (stad)"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Gemeente Haarlem"
+    },
+    {
+     "def": "Utrèg"
+    },
+    {
+     "def": "Gemeente Utrecht"
+    },
+    {
+     "def": "Utrecht (gemeente)"
+    },
+    {
+     "def": "Gemeente Utrecht"
+    },
+    {
+     "def": "Utrecht (stad)"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Hollanti"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "HOL"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "an Ollainn"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Nederlandene"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Utrecht (city)"
+    },
+    {
+     "def": "Utreg"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Regatul Ţărilor de Jos"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Ţările de Jos"
+    },
+    {
+     "def": "Tarile de Jos"
+    },
+    {
+     "def": "Голландия"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Холандия"
+    },
+    {
+     "def": "Olandija"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Holande"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Holanda"
+    }
+   ],
+   "edmPlaceAltLabelLangAware": {
+    "de": [
+     "Haerlem",
+     "Holland",
+     "die Niederlande",
+     "Haerlem",
+     "NL",
+     "Niederlande"
+    ],
+    "fi": [
+     "Alankomaat",
+     "Hollanti",
+     "Nederland"
+    ],
+    "ru": [
+     "Голландия",
+     "Nederland",
+     "Утрехт",
+     "Нидерланды"
+    ],
+    "pt": [
+     "Haarlem, Holanda do Norte",
+     "Harlém",
+     "Países Baixos",
+     "Holanda",
+     "os Países Baixos",
+     "Nederland",
+     "Utrecht",
+     "Utreque (cidade)",
+     "Utrecht (cidade)",
+     "Haarlem, Holanda do Norte",
+     "Harlém",
+     "Utrecht",
+     "Utreque (cidade)",
+     "Utrecht (cidade)",
+     "Países Baixos",
+     "NL"
+    ],
+    "bg": [
+     "Кралство Нидерландия",
+     "Холандия"
+    ],
+    "lt": [
+     "Olandija"
+    ],
+    "hr": [
+     "Holandija"
+    ],
+    "lv": [
+     "Holande"
+    ],
+    "fr": [
+     "Haerlem",
+     "Royaume des Pays-Bas",
+     "Hollande",
+     "P.-B.",
+     "P.B.",
+     "P-B",
+     "NL",
+     "NLD",
+     "Haerlem",
+     "NL",
+     "royaume des Pays-Bas",
+     "Pays-Bas"
+    ],
+    "hu": [
+     "Hollandia",
+     "Hollandia"
+    ],
+    "sk": [
+     "Holandsko",
+     "Holandsko"
+    ],
+    "sl": [
+     "Holandija"
+    ],
+    "ga": [
+     "An Ísiltír",
+     "An Ollainn",
+     "an Ollainn",
+     "An Ísiltír",
+     "An Ollainn"
+    ],
+    "ca": [
+     "Holanda"
+    ],
+    "sv": [
+     "Kungariket Nederländerna",
+     "Nederland",
+     "Kungariket Nederländerna"
+    ],
+    "el": [
+     "Χάρλεμ",
+     "Βασίλειο της Ολλανδίας",
+     "Κάτω Χώρες",
+     "Χάρλεμ",
+     "Βασίλειο της Ολλανδίας"
+    ],
+    "mt": [
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tan-Netherlands",
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi"
+    ],
+    "en": [
+     "Haarlem, North Holland",
+     "Haerlem",
+     "The Netherlands",
+     "Nederlanden",
+     "Kingdom of Netherlands",
+     "Holland",
+     "the Netherlands",
+     "Nederland",
+     "Nederlanden",
+     "de Nederlanden",
+     "NL",
+     "NLD",
+     "Utreg",
+     "Utrecht (city)",
+     "Haarlem, North Holland",
+     "Haerlem",
+     "Utreg",
+     "Utrecht (city)",
+     "Netherlands",
+     "the Netherlands",
+     "Nederlanden",
+     "NL"
+    ],
+    "it": [
+     "Paesi Bassi",
+     "HOL",
+     "Paesi Bassi",
+     "NL"
+    ],
+    "es": [
+     "Haerlem",
+     "Países Bajos",
+     "Holanda",
+     "Los Países Bajos",
+     "Paises Bajos",
+     "Los Paises Bajos",
+     "Neerlandia",
+     "Traiectum ad Rhenum",
+     "Haerlem",
+     "Traiectum ad Rhenum",
+     "Koninkrijk der Nederlanden",
+     "Reino de Los Paises Bajos",
+     "Paises Bajos",
+     "NL"
+    ],
+    "eu": [
+     "Herbeheretako Erresuma",
+     "Herbeheretako Erresuma"
+    ],
+    "pl": [
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "Koninkrijk der Nederlanden",
+     "Niderlandy",
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "NL",
+     "Koninkrijk der Nederlanden"
+    ],
+    "da": [
+     "Koninkrijk der Nederlanden",
+     "Nederlandene",
+     "Nederland",
+     "Koninkrijk der Nederlanden"
+    ],
+    "ro": [
+     "Țările de Jos",
+     "Olanda",
+     "Utrecht (city)",
+     "Utreg",
+     "Țările de Jos",
+     "Regatul Ţărilor de Jos",
+     "Netherlands",
+     "Ţările de Jos",
+     "Tarile de Jos"
+    ],
+    "nl": [
+     "Haerlem",
+     "Gemeente Haarlem",
+     "Nederland",
+     "NLD",
+     "KdN",
+     "Holland",
+     "de Nederlanden",
+     "NL",
+     "nl",
+     "Utrèg",
+     "gemeente Utrecht",
+     "Utrecht (gemeente)",
+     "Gemeente Utrecht",
+     "Utrecht (stad)",
+     "Haerlem",
+     "Gemeente Haarlem",
+     "Utrèg",
+     "Gemeente Utrecht",
+     "Utrecht (gemeente)",
+     "Gemeente Utrecht",
+     "Utrecht (stad)",
+     "Nederland"
+    ]
+   },
+   "edmPlaceLabel": [
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Haarlem (Sudafrica)"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Haarlem (LAV)"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Утрех"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Utreque"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utreque"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Нидерландия"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Утрехт"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Harlemas"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Utrechtas"
+    },
+    {
+     "def": "Harlemas"
+    },
+    {
+     "def": "Utrechtas"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Hārlema"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Nīderlande"
+    },
+    {
+     "def": "Utrehta"
+    },
+    {
+     "def": "Hārlema"
+    },
+    {
+     "def": "Utrehta"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "an Ísiltír"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "Països Baixos"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Nederländerna"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Χάαρλεμ"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Ολλανδία"
+    },
+    {
+     "def": "Ουτρέχτη"
+    },
+    {
+     "def": "Ουτρέχτη"
+    },
+    {
+     "def": "Χάαρλεμ"
+    },
+    {
+     "def": "Ουτρέχτη"
+    },
+    {
+     "def": "Ουτρέχτη"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Herbehereak"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Nizozemsko"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Utrecht"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Nederland"
+    }
+   ],
+   "edmPlaceLabelLangAware": {
+    "de": [
+     "Haarlem",
+     "Königreich der Niederlande",
+     "Niederlande",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Königreich der Niederlande"
+    ],
+    "no": [
+     "Nederland"
+    ],
+    "ru": [
+     "Харлем",
+     "Королевство Нидерландов",
+     "Нидерланды",
+     "Утрехт",
+     "Утрехт",
+     "Харлем",
+     "Утрехт",
+     "Утрех",
+     "Утрехт",
+     "Королевство Нидерландов"
+    ],
+    "fi": [
+     "Haarlem",
+     "Alankomaiden kuningaskunta",
+     "Alankomaat",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Alankomaiden kuningaskunta"
+    ],
+    "pt": [
+     "Haarlem",
+     "Reino dos Países Baixos",
+     "Países Baixos",
+     "Utreque",
+     "Haarlem",
+     "Utreque",
+     "Reino dos Países Baixos"
+    ],
+    "bg": [
+     "Харлем",
+     "Кралство Нидерландия",
+     "Нидерландия",
+     "Утрехт",
+     "Харлем",
+     "Утрехт",
+     "Кралство Нидерландия"
+    ],
+    "lt": [
+     "Harlemas",
+     "Nyderlandai",
+     "Nyderlandai",
+     "Utrechtas",
+     "Harlemas",
+     "Utrechtas",
+     "Utrecht",
+     "Nyderlandai"
+    ],
+    "lv": [
+     "Hārlema",
+     "Nīderlandes Karaliste",
+     "Nīderlande",
+     "Utrehta",
+     "Hārlema",
+     "Utrehta",
+     "Utrecht",
+     "Nīderlandes Karaliste"
+    ],
+    "hr": [
+     "Kraljevina Nizozemska",
+     "Nizozemska",
+     "Utrecht",
+     "Utrecht",
+     "Kraljevina Nizozemska"
+    ],
+    "fr": [
+     "Haarlem",
+     "Haarlem",
+     "Royaume des Pays-Bas",
+     "Pays-Bas",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Royaume des Pays-Bas"
+    ],
+    "hu": [
+     "Haarlem",
+     "Holland Királyság",
+     "Hollandia",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Holland Királyság"
+    ],
+    "sk": [
+     "Haarlem",
+     "Holandské kráľovstvo",
+     "Holandsko",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Holandské kráľovstvo"
+    ],
+    "sl": [
+     "Haarlem",
+     "Kraljevina Nizozemska",
+     "Nizozemska",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Kraljevina Nizozemska"
+    ],
+    "ga": [
+     "Haarlem",
+     "Ríocht na hÍsiltíre",
+     "an Ísiltír",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Ríocht na hÍsiltíre"
+    ],
+    "ca": [
+     "Haarlem",
+     "Regne dels Països Baixos",
+     "Països Baixos",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Regne dels Països Baixos"
+    ],
+    "sv": [
+     "Haarlem",
+     "Konungariket Nederländerna",
+     "Nederländerna",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Konungariket Nederländerna"
+    ],
+    "mt": [
+     "Haarlem",
+     "Renju tan-Netherlands",
+     "Netherlands",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Renju tan-Netherlands"
+    ],
+    "el": [
+     "Χάαρλεμ",
+     "Βασίλειο των Κάτω Χωρών",
+     "Ολλανδία",
+     "Ουτρέχτη",
+     "Ουτρέχτη",
+     "Χάαρλεμ",
+     "Ουτρέχτη",
+     "Ουτρέχτη",
+     "Βασίλειο των Κάτω Χωρών"
+    ],
+    "en": [
+     "Haarlem",
+     "Haarlem",
+     "Kingdom of the Netherlands",
+     "Netherlands",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Kingdom of the Netherlands"
+    ],
+    "it": [
+     "Haarlem (Sudafrica)",
+     "Haarlem",
+     "Regno dei Paesi Bassi",
+     "Paesi Bassi",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Regno dei Paesi Bassi"
+    ],
+    "es": [
+     "Haarlem",
+     "Reino de los Países Bajos",
+     "Países Bajos",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Reino de los Países Bajos"
+    ],
+    "et": [
+     "Haarlem (LAV)",
+     "Haarlem",
+     "Madalmaade Kuningriik",
+     "Holland",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Madalmaade Kuningriik"
+    ],
+    "eu": [
+     "Haarlem",
+     "Herbehereetako Erresuma",
+     "Herbehereak",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Herbehereetako Erresuma"
+    ],
+    "cs": [
+     "Haarlem",
+     "Nizozemské království",
+     "Nizozemsko",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Nizozemské království"
+    ],
+    "pl": [
+     "Haarlem",
+     "Holandia",
+     "Holandia",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Holandia"
+    ],
+    "ro": [
+     "Haarlem",
+     "Regatul Țărilor de Jos",
+     "Țările de Jos",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Regatul Țărilor de Jos"
+    ],
+    "da": [
+     "Haarlem",
+     "Kongeriget Nederlandene",
+     "Holland",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Kongeriget Nederlandene"
+    ],
+    "nl": [
+     "Haarlem",
+     "Haarlem",
+     "Koninkrijk der Nederlanden",
+     "Nederland",
+     "Utrecht",
+     "Utrecht",
+     "Haarlem",
+     "Utrecht",
+     "Utrecht",
+     "Utrecht",
+     "Koninkrijk der Nederlanden"
+    ]
+   },
+   "edmPlaceLatitude": [
+    "-33.733334",
+    "52.38139",
+    "52.366665",
+    "52.316666",
+    "52.09083",
+    "52.09083",
+    "52.38028",
+    "52.09083",
+    "-27.66",
+    "52.09083",
+    "52.366665"
+   ],
+   "edmPlaceLongitude": [
+    "23.338888",
+    "4.6355557",
+    "4.883333",
+    "5.55",
+    "5.1216664",
+    "5.12222",
+    "4.6405554",
+    "5.1216664",
+    "30.33",
+    "5.12222",
+    "4.883333"
+   ],
+   "edmPreview": [
+    "https://api.europeana.eu/thumbnail/v2/url.json?uri=https%3A%2F%2Fwww.openbeelden.nl%2Fimages%2F677702%2F500_jaar_boekdrukkunst_in_Nederland_moderne_en_oude_druktechnieken_%25281_25%2529.png&type=VIDEO"
+   ],
+   "edmTimespan": [
+    "#1973-12-01",
+    "http://data.europeana.eu/timespan/20"
+   ],
+   "edmTimespanLabel": [
+    {
+     "def": "1973-12-01"
+    },
+    {
+     "def": "20. Jahrhundert"
+    },
+    {
+     "def": "XX век"
+    },
+    {
+     "def": "1900-luku"
+    },
+    {
+     "def": "Século XX"
+    },
+    {
+     "def": "20 век"
+    },
+    {
+     "def": "XX amžius"
+    },
+    {
+     "def": "20. gadsimts"
+    },
+    {
+     "def": "20. stoljeće"
+    },
+    {
+     "def": "XXe siècle"
+    },
+    {
+     "def": "20. század"
+    },
+    {
+     "def": "20. storočie"
+    },
+    {
+     "def": "20. stoletje"
+    },
+    {
+     "def": "20ú haois"
+    },
+    {
+     "def": "Segle XX"
+    },
+    {
+     "def": "1900-talet"
+    },
+    {
+     "def": "20ός αιώνας"
+    },
+    {
+     "def": "20th century"
+    },
+    {
+     "def": "XX secolo"
+    },
+    {
+     "def": "Siglo XX"
+    },
+    {
+     "def": "20. sajand"
+    },
+    {
+     "def": "XX. mendea"
+    },
+    {
+     "def": "20. století"
+    },
+    {
+     "def": "XX wiek"
+    },
+    {
+     "def": "Secolul al XX-lea"
+    },
+    {
+     "def": "20. århundrede"
+    },
+    {
+     "def": "20e eeuw"
+    },
+    {
+     "def": "http://www.wikidata.org/entity/Q6927"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh85139020"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh2002012476"
+    },
+    {
+     "def": "http://data.bnf.fr/ark:/12148/cb11975995h"
+    },
+    {
+     "def": "http://www.idref.fr/086305646/id"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/D049673"
+    },
+    {
+     "def": "https://www.freebase.com/m/089_x"
+    },
+    {
+     "def": "https://g.co/kg/m/089_x"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/K01.400.504.968"
+    },
+    {
+     "def": "http://vocab.getty.edu/aat/300404514"
+    },
+    {
+     "def": "http://id.worldcat.org/fast/1159810"
+    },
+    {
+     "def": "http://dbpedia.org/resource/20th_century"
+    }
+   ],
+   "edmTimespanLabelLangAware": {
+    "de": [
+     "20. Jahrhundert"
+    ],
+    "ru": [
+     "XX век"
+    ],
+    "fi": [
+     "1900-luku"
+    ],
+    "pt": [
+     "Século XX"
+    ],
+    "bg": [
+     "20 век"
+    ],
+    "lt": [
+     "XX amžius"
+    ],
+    "lv": [
+     "20. gadsimts"
+    ],
+    "hr": [
+     "20. stoljeće"
+    ],
+    "fr": [
+     "XXe siècle"
+    ],
+    "hu": [
+     "20. század"
+    ],
+    "sk": [
+     "20. storočie"
+    ],
+    "sl": [
+     "20. stoletje"
+    ],
+    "ga": [
+     "20ú haois"
+    ],
+    "ca": [
+     "Segle XX"
+    ],
+    "sv": [
+     "1900-talet"
+    ],
+    "el": [
+     "20ός αιώνας"
+    ],
+    "en": [
+     "20th century"
+    ],
+    "it": [
+     "XX secolo"
+    ],
+    "es": [
+     "Siglo XX"
+    ],
+    "et": [
+     "20. sajand"
+    ],
+    "eu": [
+     "XX. mendea"
+    ],
+    "cs": [
+     "20. století"
+    ],
+    "zxx": [
+     "1973-12-01"
+    ],
+    "pl": [
+     "XX wiek"
+    ],
+    "ro": [
+     "Secolul al XX-lea"
+    ],
+    "da": [
+     "20. århundrede"
+    ],
+    "nl": [
+     "20e eeuw"
+    ]
+   },
+   "europeanaCollectionName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "europeanaCompleteness": 10,
+   "guid": "https://www.europeana.eu/item/2051906/data_euscreenXL_https___www_openbeelden_nl_media_676370?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+   "id": "/2051906/data_euscreenXL_https___www_openbeelden_nl_media_676370",
+   "index": 0,
+   "language": [
+    "nl"
+   ],
+   "organizations": [
+    "http://data.europeana.eu/organization/4538",
+    "http://data.europeana.eu/organization/1607"
+   ],
+   "previewNoDistribute": false,
+   "provider": [
+    "EUscreen"
+   ],
+   "rights": [
+    "http://creativecommons.org/licenses/by-sa/4.0/"
+   ],
+   "score": 23.114264,
+   "timestamp": 1788017029105,
+   "timestamp_created": "2016-02-08T14:11:26.222Z",
+   "timestamp_created_epoch": 1454940686222,
+   "timestamp_update": "2025-02-17T11:06:04.826Z",
+   "timestamp_update_epoch": 1739790364826,
+   "title": [
+    "500 jaar boekdrukkunst in Nederland moderne en oude druktechnieken",
+    "Weeknummer 73-52",
+    "500 years of book printing in the Netherlands modern and old printing techniques"
+   ],
+   "type": "VIDEO",
+   "ugc": [
+    false
+   ]
+  },
+  {
+   "completeness": 10,
+   "country": [
+    "Netherlands"
+   ],
+   "dataProvider": [
+    "Netherlands Institute for Sound & Vision"
+   ],
+   "dcCreator": [
+    "NOF/NIAM (producent)",
+    "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+   ],
+   "dcCreatorLangAware": {
+    "nl": [
+     "NOF/NIAM (producent)",
+     "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+    ]
+   },
+   "dcDescription": [
+    "Images including how a proof is made, the manuscript is written, and copy is set. The differences between a proof press and a regular press are discussed.",
+    "Film about the paper mill, the printing office and the invention of printing.",
+    "Film over de papierfabriek, de drukkerij en de uitvinding van de boekdrukkunst.",
+    "Beelden o.a. van hoe een proefdruk wordt gemaakt, het manuscript wordt geschreven, kopij wordt gezet. Er wordt ingegaan op de verschillen tussen een proefpers en een gewone pers."
+   ],
+   "dcDescriptionLangAware": {
+    "en": [
+     "Images including how a proof is made, the manuscript is written, and copy is set. The differences between a proof press and a regular press are discussed.",
+     "Film about the paper mill, the printing office and the invention of printing."
+    ],
+    "nl": [
+     "Film over de papierfabriek, de drukkerij en de uitvinding van de boekdrukkunst.",
+     "Beelden o.a. van hoe een proefdruk wordt gemaakt, het manuscript wordt geschreven, kopij wordt gezet. Er wordt ingegaan op de verschillen tussen een proefpers en een gewone pers."
+    ]
+   },
+   "dcLanguage": [
+    "nl",
+    "nl"
+   ],
+   "dcLanguageLangAware": {
+    "def": [
+     "nl",
+     "nl"
+    ]
+   },
+   "dcSubjectLangAware": {
+    "def": [
+     "http://data.europeana.eu/concept/2090"
+    ],
+    "nl": [
+     "boekdrukkunst",
+     "boeken",
+     "papier"
+    ]
+   },
+   "dcTitleLangAware": {
+    "en": [
+     "The book I"
+    ],
+    "nl": [
+     "Het boek I"
+    ]
+   },
+   "dcTypeLangAware": {
+    "def": [
+     "http://vocab.getty.edu/aat/300263857"
+    ]
+   },
+   "edmConcept": [
+    "http://data.europeana.eu/concept/2090",
+    "http://vocab.getty.edu/aat/300263857"
+   ],
+   "edmConceptLabel": [
+    {
+     "def": "Papier"
+    },
+    {
+     "def": "bewegtes Bild"
+    },
+    {
+     "def": "Бумага"
+    },
+    {
+     "def": "Paperi"
+    },
+    {
+     "def": "Papel"
+    },
+    {
+     "def": "imagens em movimento"
+    },
+    {
+     "def": "Хартия"
+    },
+    {
+     "def": "Popierius"
+    },
+    {
+     "def": "Papīrs"
+    },
+    {
+     "def": "Papir"
+    },
+    {
+     "def": "Papier"
+    },
+    {
+     "def": "Papír"
+    },
+    {
+     "def": "Papier"
+    },
+    {
+     "def": "Papir"
+    },
+    {
+     "def": "Páipéar"
+    },
+    {
+     "def": "Paper"
+    },
+    {
+     "def": "Papper"
+    },
+    {
+     "def": "Karta"
+    },
+    {
+     "def": "Χαρτί"
+    },
+    {
+     "def": "Paper"
+    },
+    {
+     "def": "moving images"
+    },
+    {
+     "def": "Carta"
+    },
+    {
+     "def": "Papel"
+    },
+    {
+     "def": "imágenes en movimiento"
+    },
+    {
+     "def": "Paber"
+    },
+    {
+     "def": "Paper"
+    },
+    {
+     "def": "Papír"
+    },
+    {
+     "def": "Papier"
+    },
+    {
+     "def": "Hârtie"
+    },
+    {
+     "def": "Papir"
+    },
+    {
+     "def": "Papier"
+    },
+    {
+     "def": "bewegende beelden"
+    }
+   ],
+   "edmConceptPrefLabelLangAware": {
+    "de": [
+     "Papier",
+     "bewegtes Bild"
+    ],
+    "ru": [
+     "Бумага"
+    ],
+    "fi": [
+     "Paperi"
+    ],
+    "pt": [
+     "Papel",
+     "imagens em movimento"
+    ],
+    "bg": [
+     "Хартия"
+    ],
+    "lt": [
+     "Popierius"
+    ],
+    "lv": [
+     "Papīrs"
+    ],
+    "hr": [
+     "Papir"
+    ],
+    "fr": [
+     "Papier"
+    ],
+    "hu": [
+     "Papír"
+    ],
+    "sk": [
+     "Papier"
+    ],
+    "sl": [
+     "Papir"
+    ],
+    "ga": [
+     "Páipéar"
+    ],
+    "ca": [
+     "Paper"
+    ],
+    "sv": [
+     "Papper"
+    ],
+    "mt": [
+     "Karta"
+    ],
+    "el": [
+     "Χαρτί"
+    ],
+    "en": [
+     "moving images",
+     "Paper"
+    ],
+    "it": [
+     "Carta"
+    ],
+    "es": [
+     "Papel",
+     "imágenes en movimiento"
+    ],
+    "et": [
+     "Paber"
+    ],
+    "eu": [
+     "Paper"
+    ],
+    "cs": [
+     "Papír"
+    ],
+    "pl": [
+     "Papier"
+    ],
+    "ro": [
+     "Hârtie"
+    ],
+    "da": [
+     "Papir"
+    ],
+    "nl": [
+     "Papier",
+     "bewegende beelden"
+    ]
+   },
+   "edmDatasetName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "edmIsShownAt": [
+    "https://www.openbeelden.nl/media/123758"
+   ],
+   "edmIsShownBy": [
+    "https://www.openbeelden.nl/files/01/23/123793.123757.HETBOEKIHETZE-HRE0005EF49.mp4"
+   ],
+   "edmPreview": [
+    "https://api.europeana.eu/thumbnail/v2/url.json?uri=https%3A%2F%2Fwww.openbeelden.nl%2Fimages%2F603001%2FHet_boek_I_%25289_04%2529.png&type=VIDEO"
+   ],
+   "edmTimespan": [
+    "#1944-01-01",
+    "http://data.europeana.eu/timespan/20"
+   ],
+   "edmTimespanLabel": [
+    {
+     "def": "1944-01-01"
+    },
+    {
+     "def": "20. Jahrhundert"
+    },
+    {
+     "def": "XX век"
+    },
+    {
+     "def": "1900-luku"
+    },
+    {
+     "def": "Século XX"
+    },
+    {
+     "def": "20 век"
+    },
+    {
+     "def": "XX amžius"
+    },
+    {
+     "def": "20. gadsimts"
+    },
+    {
+     "def": "20. stoljeće"
+    },
+    {
+     "def": "XXe siècle"
+    },
+    {
+     "def": "20. század"
+    },
+    {
+     "def": "20. storočie"
+    },
+    {
+     "def": "20. stoletje"
+    },
+    {
+     "def": "20ú haois"
+    },
+    {
+     "def": "Segle XX"
+    },
+    {
+     "def": "1900-talet"
+    },
+    {
+     "def": "20ός αιώνας"
+    },
+    {
+     "def": "20th century"
+    },
+    {
+     "def": "XX secolo"
+    },
+    {
+     "def": "Siglo XX"
+    },
+    {
+     "def": "20. sajand"
+    },
+    {
+     "def": "XX. mendea"
+    },
+    {
+     "def": "20. století"
+    },
+    {
+     "def": "XX wiek"
+    },
+    {
+     "def": "Secolul al XX-lea"
+    },
+    {
+     "def": "20. århundrede"
+    },
+    {
+     "def": "20e eeuw"
+    },
+    {
+     "def": "http://www.wikidata.org/entity/Q6927"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh85139020"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh2002012476"
+    },
+    {
+     "def": "http://data.bnf.fr/ark:/12148/cb11975995h"
+    },
+    {
+     "def": "http://www.idref.fr/086305646/id"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/D049673"
+    },
+    {
+     "def": "https://www.freebase.com/m/089_x"
+    },
+    {
+     "def": "https://g.co/kg/m/089_x"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/K01.400.504.968"
+    },
+    {
+     "def": "http://vocab.getty.edu/aat/300404514"
+    },
+    {
+     "def": "http://id.worldcat.org/fast/1159810"
+    },
+    {
+     "def": "http://dbpedia.org/resource/20th_century"
+    }
+   ],
+   "edmTimespanLabelLangAware": {
+    "de": [
+     "20. Jahrhundert"
+    ],
+    "ru": [
+     "XX век"
+    ],
+    "fi": [
+     "1900-luku"
+    ],
+    "pt": [
+     "Século XX"
+    ],
+    "bg": [
+     "20 век"
+    ],
+    "lt": [
+     "XX amžius"
+    ],
+    "lv": [
+     "20. gadsimts"
+    ],
+    "hr": [
+     "20. stoljeće"
+    ],
+    "fr": [
+     "XXe siècle"
+    ],
+    "hu": [
+     "20. század"
+    ],
+    "sk": [
+     "20. storočie"
+    ],
+    "sl": [
+     "20. stoletje"
+    ],
+    "ga": [
+     "20ú haois"
+    ],
+    "ca": [
+     "Segle XX"
+    ],
+    "sv": [
+     "1900-talet"
+    ],
+    "el": [
+     "20ός αιώνας"
+    ],
+    "en": [
+     "20th century"
+    ],
+    "it": [
+     "XX secolo"
+    ],
+    "es": [
+     "Siglo XX"
+    ],
+    "et": [
+     "20. sajand"
+    ],
+    "eu": [
+     "XX. mendea"
+    ],
+    "cs": [
+     "20. století"
+    ],
+    "zxx": [
+     "1944-01-01"
+    ],
+    "pl": [
+     "XX wiek"
+    ],
+    "ro": [
+     "Secolul al XX-lea"
+    ],
+    "da": [
+     "20. århundrede"
+    ],
+    "nl": [
+     "20e eeuw"
+    ]
+   },
+   "europeanaCollectionName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "europeanaCompleteness": 10,
+   "guid": "https://www.europeana.eu/item/2051906/data_euscreenXL_https___www_openbeelden_nl_media_123758?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+   "id": "/2051906/data_euscreenXL_https___www_openbeelden_nl_media_123758",
+   "index": 0,
+   "language": [
+    "nl"
+   ],
+   "organizations": [
+    "http://data.europeana.eu/organization/4538",
+    "http://data.europeana.eu/organization/1607"
+   ],
+   "previewNoDistribute": false,
+   "provider": [
+    "EUscreen"
+   ],
+   "rights": [
+    "http://creativecommons.org/licenses/by-sa/4.0/"
+   ],
+   "score": 5.834776,
+   "timestamp": 1788016986888,
+   "timestamp_created": "2016-02-08T14:10:39.667Z",
+   "timestamp_created_epoch": 1454940639667,
+   "timestamp_update": "2025-02-17T11:06:04.826Z",
+   "timestamp_update_epoch": 1739790364826,
+   "title": [
+    "The book I",
+    "Het boek I",
+    "Zetten en drukken"
+   ],
+   "type": "VIDEO",
+   "ugc": [
+    false
+   ]
+  },
+  {
+   "completeness": 10,
+   "country": [
+    "Netherlands"
+   ],
+   "dataProvider": [
+    "Netherlands Institute for Sound & Vision"
+   ],
+   "dcContributor": [
+    "Bloemendal, Philip (commentaar)"
+   ],
+   "dcContributorLangAware": {
+    "nl": [
+     "Bloemendal, Philip (commentaar)"
+    ]
+   },
+   "dcCreator": [
+    "Polygoon-Profilti (producent)",
+    "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+   ],
+   "dcCreatorLangAware": {
+    "nl": [
+     "Polygoon-Profilti (producent)",
+     "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+    ]
+   },
+   "dcDescription": [
+    "Three graphic artists have established the printing house Het Drukhuis in the basement and rear section of the building at Herengracht 229 in Amsterdam. They print with historical printing machines to preserve the machines and the knowledge about them. With a cylinder press, hooks for lead and wooden letters and a step-down hedgehog press.",
+    "Cinema newsreels in which Dutch subjects of a certain week are presented.",
+    "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+    "Drie grafisch kunstenaars hebben in het souterrain en het achterhuis van het pand Herengracht 229 te Amsterdam de drukkerij Het Drukhuis gevestigd. Ze drukken er met historische drukmachines om de machines en de kennis erover te behouden. Met oa een cilinderpers, zethaken voor loden en houten letters en een trapdegelpers."
+   ],
+   "dcDescriptionLangAware": {
+    "en": [
+     "Three graphic artists have established the printing house Het Drukhuis in the basement and rear section of the building at Herengracht 229 in Amsterdam. They print with historical printing machines to preserve the machines and the knowledge about them. With a cylinder press, hooks for lead and wooden letters and a step-down hedgehog press.",
+     "Cinema newsreels in which Dutch subjects of a certain week are presented."
+    ],
+    "nl": [
+     "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+     "Drie grafisch kunstenaars hebben in het souterrain en het achterhuis van het pand Herengracht 229 te Amsterdam de drukkerij Het Drukhuis gevestigd. Ze drukken er met historische drukmachines om de machines en de kennis erover te behouden. Met oa een cilinderpers, zethaken voor loden en houten letters en een trapdegelpers."
+    ]
+   },
+   "dcLanguage": [
+    "nl",
+    "nl"
+   ],
+   "dcLanguageLangAware": {
+    "def": [
+     "nl",
+     "nl"
+    ]
+   },
+   "dcSubjectLangAware": {
+    "nl": [
+     "drukkerijen",
+     "drukpersen",
+     "grafisch kunstenaars"
+    ]
+   },
+   "dcTitleLangAware": {
+    "en": [
+     "Pressure house in old canal house"
+    ],
+    "nl": [
+     "Drukhuis in oud grachtenpand"
+    ]
+   },
+   "dcTypeLangAware": {
+    "def": [
+     "http://vocab.getty.edu/aat/300263857"
+    ]
+   },
+   "dctermsSpatial": [
+    "http://www.wikidata.org/entity/Q3152900",
+    "http://www.wikidata.org/entity/Q55",
+    "http://www.wikidata.org/entity/Q29999",
+    "http://www.wikidata.org/entity/Q727",
+    "http://data.europeana.eu/place/106",
+    "http://data.europeana.eu/place/40964",
+    "Amsterdam",
+    "Nederland"
+   ],
+   "edmConcept": [
+    "http://vocab.getty.edu/aat/300263857"
+   ],
+   "edmConceptLabel": [
+    {
+     "def": "moving images"
+    },
+    {
+     "def": "bewegtes Bild"
+    },
+    {
+     "def": "imagens em movimento"
+    },
+    {
+     "def": "imágenes en movimiento"
+    },
+    {
+     "def": "bewegende beelden"
+    }
+   ],
+   "edmConceptPrefLabelLangAware": {
+    "de": [
+     "bewegtes Bild"
+    ],
+    "pt": [
+     "imagens em movimento"
+    ],
+    "en": [
+     "moving images"
+    ],
+    "es": [
+     "imágenes en movimiento"
+    ],
+    "nl": [
+     "bewegende beelden"
+    ]
+   },
+   "edmDatasetName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "edmIsShownAt": [
+    "https://www.openbeelden.nl/media/679539"
+   ],
+   "edmIsShownBy": [
+    "https://www.openbeelden.nl/files/06/79/679985.679538.WEEKNUMMER732-HRE00015B2E_1381000_1471560.mp4"
+   ],
+   "edmPlace": [
+    "http://www.wikidata.org/entity/Q3152900",
+    "http://data.europeana.eu/place/106",
+    "http://data.europeana.eu/place/40964",
+    "http://www.wikidata.org/entity/Q727",
+    "http://www.wikidata.org/entity/Q55",
+    "http://www.wikidata.org/entity/Q29999"
+   ],
+   "edmPlaceAltLabel": [
+    {
+     "def": "Roburnia"
+    },
+    {
+     "def": "Roburnial"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "KdN"
+    },
+    {
+     "def": "020"
+    },
+    {
+     "def": "Mokum Alef"
+    },
+    {
+     "def": "AMS"
+    },
+    {
+     "def": "020"
+    },
+    {
+     "def": "Mokum Alef"
+    },
+    {
+     "def": "AMS"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "nl"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Hollanti"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Amsterdã"
+    },
+    {
+     "def": "Amesterdao"
+    },
+    {
+     "def": "Amsterdam, Países Baixos"
+    },
+    {
+     "def": "Abstradam"
+    },
+    {
+     "def": "Mastradama"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdã"
+    },
+    {
+     "def": "Amesterdao"
+    },
+    {
+     "def": "Amsterdam, Países Baixos"
+    },
+    {
+     "def": "Abstradam"
+    },
+    {
+     "def": "Mastradama"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "os Países Baixos"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Αμστελόδαμον"
+    },
+    {
+     "def": "Αμστελόδαμο"
+    },
+    {
+     "def": "Αμστελόδαμον"
+    },
+    {
+     "def": "Αμστελόδαμο"
+    },
+    {
+     "def": "Κάτω Χώρες"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "The Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "Kingdom of Netherlands"
+    },
+    {
+     "def": "Mokum"
+    },
+    {
+     "def": "Amsterdam, North Holland"
+    },
+    {
+     "def": "Amsterdam, NL"
+    },
+    {
+     "def": "Amsterdam, Netherlands"
+    },
+    {
+     "def": "A'dam"
+    },
+    {
+     "def": "Mokum"
+    },
+    {
+     "def": "Amsterdam, North Holland"
+    },
+    {
+     "def": "Amsterdam, NL"
+    },
+    {
+     "def": "Amsterdam, Netherlands"
+    },
+    {
+     "def": "A'dam"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "HOL"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "A'dam"
+    },
+    {
+     "def": "A'dam"
+    },
+    {
+     "def": "Hollande"
+    },
+    {
+     "def": "P.-B."
+    },
+    {
+     "def": "P.B."
+    },
+    {
+     "def": "P-B"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "royaume des Pays-Bas"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "Los Países Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "Los Paises Bajos"
+    },
+    {
+     "def": "Neerlandia"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Reino de Los Paises Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "an Ollainn"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Nederlandene"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Regatul Ţărilor de Jos"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Ţările de Jos"
+    },
+    {
+     "def": "Tarile de Jos"
+    },
+    {
+     "def": "Amsterodam"
+    },
+    {
+     "def": "Amsterodam"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "die Niederlande"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Голландия"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Холандия"
+    },
+    {
+     "def": "Olandija"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Holande"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Holanda"
+    }
+   ],
+   "edmPlaceAltLabelLangAware": {
+    "de": [
+     "Holland",
+     "die Niederlande",
+     "NL",
+     "Niederlande"
+    ],
+    "fi": [
+     "Alankomaat",
+     "Hollanti",
+     "Nederland"
+    ],
+    "ru": [
+     "Голландия",
+     "Nederland",
+     "Нидерланды"
+    ],
+    "pt": [
+     "Países Baixos",
+     "Amsterdã",
+     "Amesterdao",
+     "Amsterdam, Países Baixos",
+     "Abstradam",
+     "Mastradama",
+     "Amsterdam",
+     "Amsterdã",
+     "Amesterdao",
+     "Amsterdam, Países Baixos",
+     "Abstradam",
+     "Mastradama",
+     "Holanda",
+     "os Países Baixos",
+     "Nederland",
+     "Países Baixos",
+     "NL"
+    ],
+    "bg": [
+     "Кралство Нидерландия",
+     "Холандия"
+    ],
+    "lt": [
+     "Olandija"
+    ],
+    "hr": [
+     "Holandija"
+    ],
+    "lv": [
+     "Holande"
+    ],
+    "fr": [
+     "Royaume des Pays-Bas",
+     "A'dam",
+     "A'dam",
+     "Hollande",
+     "P.-B.",
+     "P.B.",
+     "P-B",
+     "NL",
+     "NLD",
+     "NL",
+     "royaume des Pays-Bas",
+     "Pays-Bas"
+    ],
+    "hu": [
+     "Hollandia",
+     "Hollandia"
+    ],
+    "sk": [
+     "Holandsko",
+     "Holandsko"
+    ],
+    "sl": [
+     "Holandija"
+    ],
+    "ga": [
+     "An Ísiltír",
+     "An Ollainn",
+     "an Ollainn",
+     "An Ísiltír",
+     "An Ollainn"
+    ],
+    "ca": [
+     "Holanda"
+    ],
+    "sv": [
+     "Kungariket Nederländerna",
+     "Nederland",
+     "Kungariket Nederländerna"
+    ],
+    "el": [
+     "Βασίλειο της Ολλανδίας",
+     "Αμστελόδαμον",
+     "Αμστελόδαμο",
+     "Αμστελόδαμον",
+     "Αμστελόδαμο",
+     "Κάτω Χώρες",
+     "Βασίλειο της Ολλανδίας"
+    ],
+    "mt": [
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tan-Netherlands",
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi"
+    ],
+    "en": [
+     "The Netherlands",
+     "Nederlanden",
+     "Kingdom of Netherlands",
+     "Mokum",
+     "Amsterdam, North Holland",
+     "Amsterdam, NL",
+     "Amsterdam, Netherlands",
+     "A'dam",
+     "Mokum",
+     "Amsterdam, North Holland",
+     "Amsterdam, NL",
+     "Amsterdam, Netherlands",
+     "A'dam",
+     "Holland",
+     "the Netherlands",
+     "Nederland",
+     "Nederlanden",
+     "de Nederlanden",
+     "NL",
+     "NLD",
+     "Netherlands",
+     "the Netherlands",
+     "Nederlanden",
+     "NL"
+    ],
+    "it": [
+     "Paesi Bassi",
+     "HOL",
+     "Paesi Bassi",
+     "NL"
+    ],
+    "es": [
+     "Países Bajos",
+     "Amsterdam",
+     "Holanda",
+     "Los Países Bajos",
+     "Paises Bajos",
+     "Los Paises Bajos",
+     "Neerlandia",
+     "Koninkrijk der Nederlanden",
+     "Reino de Los Paises Bajos",
+     "Paises Bajos",
+     "NL"
+    ],
+    "eu": [
+     "Herbeheretako Erresuma",
+     "Herbeheretako Erresuma"
+    ],
+    "cs": [
+     "Amsterodam",
+     "Amsterodam"
+    ],
+    "pl": [
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "Koninkrijk der Nederlanden",
+     "Niderlandy",
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "NL",
+     "Koninkrijk der Nederlanden"
+    ],
+    "da": [
+     "Koninkrijk der Nederlanden",
+     "Nederlandene",
+     "Nederland",
+     "Koninkrijk der Nederlanden"
+    ],
+    "ro": [
+     "Țările de Jos",
+     "Olanda",
+     "Țările de Jos",
+     "Regatul Ţărilor de Jos",
+     "Netherlands",
+     "Ţările de Jos",
+     "Tarile de Jos"
+    ],
+    "nl": [
+     "Roburnia",
+     "Roburnial",
+     "Nederland",
+     "NLD",
+     "KdN",
+     "020",
+     "Mokum Alef",
+     "AMS",
+     "020",
+     "Mokum Alef",
+     "AMS",
+     "Holland",
+     "de Nederlanden",
+     "NL",
+     "nl",
+     "Nederland"
+    ]
+   },
+   "edmPlaceLabel": [
+    {
+     "def": "Амстердам"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Амстердам"
+    },
+    {
+     "def": "Амстердам"
+    },
+    {
+     "def": "Нидерландия"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Amsterdam (LAV)"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Амстердам"
+    },
+    {
+     "def": "Амстердам"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Amesterdão"
+    },
+    {
+     "def": "Amesterdão"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Amsterdamas"
+    },
+    {
+     "def": "Amsterdamas"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Amsterdama"
+    },
+    {
+     "def": "Amsterdama"
+    },
+    {
+     "def": "Nīderlande"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "Amszterdam"
+    },
+    {
+     "def": "Amszterdam"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "Amstardam"
+    },
+    {
+     "def": "Amstardam"
+    },
+    {
+     "def": "an Ísiltír"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Països Baixos"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Nederländerna"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Άμστερνταμ"
+    },
+    {
+     "def": "Άμστερνταμ"
+    },
+    {
+     "def": "Ολλανδία"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Ámsterdam"
+    },
+    {
+     "def": "Ámsterdam"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Nizozemsko"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Herbehereak"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Amsterdam"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Nederland"
+    }
+   ],
+   "edmPlaceLabelLangAware": {
+    "de": [
+     "Königreich der Niederlande",
+     "Amsterdam",
+     "Amsterdam",
+     "Niederlande",
+     "Königreich der Niederlande"
+    ],
+    "no": [
+     "Nederland"
+    ],
+    "ru": [
+     "Королевство Нидерландов",
+     "Амстердам",
+     "Амстердам",
+     "Нидерланды",
+     "Королевство Нидерландов"
+    ],
+    "fi": [
+     "Alankomaiden kuningaskunta",
+     "Amsterdam",
+     "Amsterdam",
+     "Alankomaat",
+     "Alankomaiden kuningaskunta"
+    ],
+    "pt": [
+     "Reino dos Países Baixos",
+     "Amesterdão",
+     "Amesterdão",
+     "Países Baixos",
+     "Reino dos Países Baixos"
+    ],
+    "bg": [
+     "Амстердам",
+     "Кралство Нидерландия",
+     "Амстердам",
+     "Амстердам",
+     "Нидерландия",
+     "Кралство Нидерландия"
+    ],
+    "lt": [
+     "Nyderlandai",
+     "Amsterdamas",
+     "Amsterdamas",
+     "Nyderlandai",
+     "Nyderlandai"
+    ],
+    "lv": [
+     "Nīderlandes Karaliste",
+     "Amsterdama",
+     "Amsterdama",
+     "Nīderlande",
+     "Nīderlandes Karaliste"
+    ],
+    "hr": [
+     "Kraljevina Nizozemska",
+     "Amsterdam",
+     "Amsterdam",
+     "Nizozemska",
+     "Kraljevina Nizozemska"
+    ],
+    "fr": [
+     "Royaume des Pays-Bas",
+     "Amsterdam",
+     "Amsterdam",
+     "Pays-Bas",
+     "Royaume des Pays-Bas"
+    ],
+    "hu": [
+     "Holland Királyság",
+     "Amszterdam",
+     "Amszterdam",
+     "Hollandia",
+     "Holland Királyság"
+    ],
+    "sk": [
+     "Holandské kráľovstvo",
+     "Amsterdam",
+     "Amsterdam",
+     "Holandsko",
+     "Holandské kráľovstvo"
+    ],
+    "sl": [
+     "Kraljevina Nizozemska",
+     "Amsterdam",
+     "Amsterdam",
+     "Nizozemska",
+     "Kraljevina Nizozemska"
+    ],
+    "ga": [
+     "Ríocht na hÍsiltíre",
+     "Amstardam",
+     "Amstardam",
+     "an Ísiltír",
+     "Ríocht na hÍsiltíre"
+    ],
+    "ca": [
+     "Regne dels Països Baixos",
+     "Amsterdam",
+     "Amsterdam",
+     "Països Baixos",
+     "Regne dels Països Baixos"
+    ],
+    "sv": [
+     "Konungariket Nederländerna",
+     "Amsterdam",
+     "Amsterdam",
+     "Nederländerna",
+     "Konungariket Nederländerna"
+    ],
+    "mt": [
+     "Renju tan-Netherlands",
+     "Amsterdam",
+     "Amsterdam",
+     "Netherlands",
+     "Renju tan-Netherlands"
+    ],
+    "el": [
+     "Βασίλειο των Κάτω Χωρών",
+     "Άμστερνταμ",
+     "Άμστερνταμ",
+     "Ολλανδία",
+     "Βασίλειο των Κάτω Χωρών"
+    ],
+    "en": [
+     "Amsterdam",
+     "Kingdom of the Netherlands",
+     "Amsterdam",
+     "Amsterdam",
+     "Netherlands",
+     "Kingdom of the Netherlands"
+    ],
+    "it": [
+     "Amsterdam",
+     "Regno dei Paesi Bassi",
+     "Amsterdam",
+     "Amsterdam",
+     "Paesi Bassi",
+     "Regno dei Paesi Bassi"
+    ],
+    "es": [
+     "Reino de los Países Bajos",
+     "Ámsterdam",
+     "Ámsterdam",
+     "Países Bajos",
+     "Reino de los Países Bajos"
+    ],
+    "et": [
+     "Amsterdam (LAV)",
+     "Madalmaade Kuningriik",
+     "Amsterdam",
+     "Amsterdam",
+     "Holland",
+     "Madalmaade Kuningriik"
+    ],
+    "cs": [
+     "Nizozemské království",
+     "Amsterdam",
+     "Amsterdam",
+     "Nizozemsko",
+     "Nizozemské království"
+    ],
+    "eu": [
+     "Herbehereetako Erresuma",
+     "Amsterdam",
+     "Amsterdam",
+     "Herbehereak",
+     "Herbehereetako Erresuma"
+    ],
+    "pl": [
+     "Holandia",
+     "Amsterdam",
+     "Amsterdam",
+     "Holandia",
+     "Holandia"
+    ],
+    "ro": [
+     "Amsterdam",
+     "Regatul Țărilor de Jos",
+     "Amsterdam",
+     "Amsterdam",
+     "Țările de Jos",
+     "Regatul Țărilor de Jos"
+    ],
+    "da": [
+     "Kongeriget Nederlandene",
+     "Amsterdam",
+     "Amsterdam",
+     "Holland",
+     "Kongeriget Nederlandene"
+    ],
+    "nl": [
+     "Amsterdam",
+     "Koninkrijk der Nederlanden",
+     "Amsterdam",
+     "Amsterdam",
+     "Nederland",
+     "Koninkrijk der Nederlanden"
+    ]
+   },
+   "edmPlaceLatitude": [
+    "-26.617",
+    "52.366665",
+    "52.366665",
+    "52.366665",
+    "52.316666",
+    "52.366665"
+   ],
+   "edmPlaceLongitude": [
+    "30.667",
+    "4.883333",
+    "4.883333",
+    "4.883333",
+    "5.55",
+    "4.883333"
+   ],
+   "edmPreview": [
+    "https://api.europeana.eu/thumbnail/v2/url.json?uri=https%3A%2F%2Fwww.openbeelden.nl%2Fimages%2F680436%2FDrukhuis_in_oud_grachtenpand_%25280_45%2529.png&type=VIDEO"
+   ],
+   "edmTimespan": [
+    "#1973-06-01",
+    "http://data.europeana.eu/timespan/20"
+   ],
+   "edmTimespanLabel": [
+    {
+     "def": "1973-06-01"
+    },
+    {
+     "def": "20. Jahrhundert"
+    },
+    {
+     "def": "XX век"
+    },
+    {
+     "def": "1900-luku"
+    },
+    {
+     "def": "Século XX"
+    },
+    {
+     "def": "20 век"
+    },
+    {
+     "def": "XX amžius"
+    },
+    {
+     "def": "20. gadsimts"
+    },
+    {
+     "def": "20. stoljeće"
+    },
+    {
+     "def": "XXe siècle"
+    },
+    {
+     "def": "20. század"
+    },
+    {
+     "def": "20. storočie"
+    },
+    {
+     "def": "20. stoletje"
+    },
+    {
+     "def": "20ú haois"
+    },
+    {
+     "def": "Segle XX"
+    },
+    {
+     "def": "1900-talet"
+    },
+    {
+     "def": "20ός αιώνας"
+    },
+    {
+     "def": "20th century"
+    },
+    {
+     "def": "XX secolo"
+    },
+    {
+     "def": "Siglo XX"
+    },
+    {
+     "def": "20. sajand"
+    },
+    {
+     "def": "XX. mendea"
+    },
+    {
+     "def": "20. století"
+    },
+    {
+     "def": "XX wiek"
+    },
+    {
+     "def": "Secolul al XX-lea"
+    },
+    {
+     "def": "20. århundrede"
+    },
+    {
+     "def": "20e eeuw"
+    },
+    {
+     "def": "http://www.wikidata.org/entity/Q6927"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh85139020"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh2002012476"
+    },
+    {
+     "def": "http://data.bnf.fr/ark:/12148/cb11975995h"
+    },
+    {
+     "def": "http://www.idref.fr/086305646/id"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/D049673"
+    },
+    {
+     "def": "https://www.freebase.com/m/089_x"
+    },
+    {
+     "def": "https://g.co/kg/m/089_x"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/K01.400.504.968"
+    },
+    {
+     "def": "http://vocab.getty.edu/aat/300404514"
+    },
+    {
+     "def": "http://id.worldcat.org/fast/1159810"
+    },
+    {
+     "def": "http://dbpedia.org/resource/20th_century"
+    }
+   ],
+   "edmTimespanLabelLangAware": {
+    "de": [
+     "20. Jahrhundert"
+    ],
+    "ru": [
+     "XX век"
+    ],
+    "fi": [
+     "1900-luku"
+    ],
+    "pt": [
+     "Século XX"
+    ],
+    "bg": [
+     "20 век"
+    ],
+    "lt": [
+     "XX amžius"
+    ],
+    "lv": [
+     "20. gadsimts"
+    ],
+    "hr": [
+     "20. stoljeće"
+    ],
+    "fr": [
+     "XXe siècle"
+    ],
+    "hu": [
+     "20. század"
+    ],
+    "sk": [
+     "20. storočie"
+    ],
+    "sl": [
+     "20. stoletje"
+    ],
+    "ga": [
+     "20ú haois"
+    ],
+    "ca": [
+     "Segle XX"
+    ],
+    "sv": [
+     "1900-talet"
+    ],
+    "el": [
+     "20ός αιώνας"
+    ],
+    "en": [
+     "20th century"
+    ],
+    "it": [
+     "XX secolo"
+    ],
+    "es": [
+     "Siglo XX"
+    ],
+    "et": [
+     "20. sajand"
+    ],
+    "eu": [
+     "XX. mendea"
+    ],
+    "cs": [
+     "20. století"
+    ],
+    "zxx": [
+     "1973-06-01"
+    ],
+    "pl": [
+     "XX wiek"
+    ],
+    "ro": [
+     "Secolul al XX-lea"
+    ],
+    "da": [
+     "20. århundrede"
+    ],
+    "nl": [
+     "20e eeuw"
+    ]
+   },
+   "europeanaCollectionName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "europeanaCompleteness": 10,
+   "guid": "https://www.europeana.eu/item/2051906/data_euscreenXL_https___www_openbeelden_nl_media_679539?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+   "id": "/2051906/data_euscreenXL_https___www_openbeelden_nl_media_679539",
+   "index": 0,
+   "language": [
+    "nl"
+   ],
+   "organizations": [
+    "http://data.europeana.eu/organization/4538",
+    "http://data.europeana.eu/organization/1607"
+   ],
+   "previewNoDistribute": false,
+   "provider": [
+    "EUscreen"
+   ],
+   "rights": [
+    "http://creativecommons.org/licenses/by-sa/4.0/"
+   ],
+   "score": 4.9389825,
+   "timestamp": 1788017037734,
+   "timestamp_created": "2016-02-08T14:11:26.822Z",
+   "timestamp_created_epoch": 1454940686822,
+   "timestamp_update": "2025-02-17T11:06:04.826Z",
+   "timestamp_update_epoch": 1739790364826,
+   "title": [
+    "Pressure house in old canal house",
+    "Drukhuis in oud grachtenpand",
+    "Weeknummer 73-25"
+   ],
+   "type": "VIDEO",
+   "ugc": [
+    false
+   ]
+  },
+  {
+   "completeness": 10,
+   "country": [
+    "Netherlands"
+   ],
+   "dataProvider": [
+    "Netherlands Institute for Sound & Vision"
+   ],
+   "dcCreator": [
+    "Polygoon-Profilti (producent)",
+    "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+   ],
+   "dcCreatorLangAware": {
+    "nl": [
+     "Polygoon-Profilti (producent)",
+     "Nederlands Instituut voor Beeld en Geluid (beheerder)"
+    ]
+   },
+   "dcDescription": [
+    "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+    "Aandacht voor de komende Kinderpostzegelactie. De actie wordt vanaf het allereerste begin in beeld gebracht, beginnend met het ontwerpen van de zegels; eindigend met kinderen die bij de mensen thuis bestellingen voor de zegels noteren. SHOTS: - In zijn atelier ontwerpt, tekent en graveert de kunstenaar Hub Levigne de voorstellingen die op de nieuwe postzegels moeten komen; - in de drukkerij vindt met de gravure een aantal grafische processen plaats die uiteindelijk leiden tot de productie van een drukplaat; - de drukplaat wordt in een drukpers geplaatst die vervolgens vellen ongetande postzegels begint te produceren; - een andere machine brengt de perforatie aan; medewerkers controleren nauwgezet de vellen; misdrukken worden onmiddellijk terzijde gelegd; - cu's van enkele zegels; - kinderen gaan de straat op; bellen huis aan huis aan en noteren bestellingen voor kinderpostzegels op hun bestelformulier; plakken zegeltje op de deur als teken van hun bezoek.",
+    "Attention to the upcoming Children's Stamp Campaign. The action is portrayed from the very beginning, starting with the design of the stamps, ending with children taking orders for the stamps in people's homes. SHOTS: - In his studio, the artist Hub Levigne designs, draws and engraves the representations that should appear on the new stamps; - in the printing office, a number of graphic processes take place with the engraving that ultimately lead to the production of a printing plate; - the printing plate is placed in a printing press that then begins to produce sheets of unperforated stamps; - another machine applies the perforation; employees meticulously check the sheets; misprints are immediately put aside; - cu's of some stamps; - children go out on the streets; they ring doorbells and note down orders for children's stamps on their order forms; they put a stamp on the door as a sign of their visit.",
+    "Cinema newsreels in which Dutch subjects of a certain week are presented."
+   ],
+   "dcDescriptionLangAware": {
+    "en": [
+     "Attention to the upcoming Children's Stamp Campaign. The action is portrayed from the very beginning, starting with the design of the stamps, ending with children taking orders for the stamps in people's homes. SHOTS: - In his studio, the artist Hub Levigne designs, draws and engraves the representations that should appear on the new stamps; - in the printing office, a number of graphic processes take place with the engraving that ultimately lead to the production of a printing plate; - the printing plate is placed in a printing press that then begins to produce sheets of unperforated stamps; - another machine applies the perforation; employees meticulously check the sheets; misprints are immediately put aside; - cu's of some stamps; - children go out on the streets; they ring doorbells and note down orders for children's stamps on their order forms; they put a stamp on the door as a sign of their visit.",
+     "Cinema newsreels in which Dutch subjects of a certain week are presented."
+    ],
+    "nl": [
+     "Bioscoopjournaals waarin Nederlandse onderwerpen van een bepaalde week worden gepresenteerd.",
+     "Aandacht voor de komende Kinderpostzegelactie. De actie wordt vanaf het allereerste begin in beeld gebracht, beginnend met het ontwerpen van de zegels; eindigend met kinderen die bij de mensen thuis bestellingen voor de zegels noteren. SHOTS: - In zijn atelier ontwerpt, tekent en graveert de kunstenaar Hub Levigne de voorstellingen die op de nieuwe postzegels moeten komen; - in de drukkerij vindt met de gravure een aantal grafische processen plaats die uiteindelijk leiden tot de productie van een drukplaat; - de drukplaat wordt in een drukpers geplaatst die vervolgens vellen ongetande postzegels begint te produceren; - een andere machine brengt de perforatie aan; medewerkers controleren nauwgezet de vellen; misdrukken worden onmiddellijk terzijde gelegd; - cu's van enkele zegels; - kinderen gaan de straat op; bellen huis aan huis aan en noteren bestellingen voor kinderpostzegels op hun bestelformulier; plakken zegeltje op de deur als teken van hun bezoek."
+    ]
+   },
+   "dcLanguage": [
+    "nl",
+    "nl"
+   ],
+   "dcLanguageLangAware": {
+    "def": [
+     "nl",
+     "nl"
+    ]
+   },
+   "dcSubjectLangAware": {
+    "def": [
+     "http://www.wikidata.org/entity/Q55300"
+    ],
+    "nl": [
+     "acties",
+     "drukkerijen",
+     "grafisch kunstenaars",
+     "kinderen",
+     "kinderpostzegels",
+     "Levigne, Hub",
+     "Joh. Enschedé en Zonen"
+    ]
+   },
+   "dcTitleLangAware": {
+    "en": [
+     "By the child, for the child new children for the benefit of the deprived youth"
+    ],
+    "nl": [
+     "Door het kind, voor het kind nieuwe kinders ten bate van de misdeelde jeugd"
+    ]
+   },
+   "dcTypeLangAware": {
+    "def": [
+     "http://vocab.getty.edu/aat/300263857"
+    ]
+   },
+   "dctermsSpatial": [
+    "http://data.europeana.eu/place/40710",
+    "http://data.europeana.eu/place/106",
+    "http://www.wikidata.org/entity/Q9920",
+    "http://www.wikidata.org/entity/Q2188357",
+    "http://www.wikidata.org/entity/Q55",
+    "http://www.wikidata.org/entity/Q29999",
+    "Haarlem",
+    "Nederland"
+   ],
+   "edmConcept": [
+    "http://vocab.getty.edu/aat/300263857"
+   ],
+   "edmConceptLabel": [
+    {
+     "def": "moving images"
+    },
+    {
+     "def": "bewegtes Bild"
+    },
+    {
+     "def": "imagens em movimento"
+    },
+    {
+     "def": "imágenes en movimiento"
+    },
+    {
+     "def": "bewegende beelden"
+    }
+   ],
+   "edmConceptPrefLabelLangAware": {
+    "de": [
+     "bewegtes Bild"
+    ],
+    "pt": [
+     "imagens em movimento"
+    ],
+    "en": [
+     "moving images"
+    ],
+    "es": [
+     "imágenes en movimiento"
+    ],
+    "nl": [
+     "bewegende beelden"
+    ]
+   },
+   "edmDatasetName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "edmIsShownAt": [
+    "https://www.openbeelden.nl/media/673370"
+   ],
+   "edmIsShownBy": [
+    "https://www.openbeelden.nl/files/06/73/674060.673369.WEEKNUMMER494-HRE0001A6E4_741720_890600.mp4"
+   ],
+   "edmPlace": [
+    "http://www.wikidata.org/entity/Q2188357",
+    "http://data.europeana.eu/place/40710",
+    "http://data.europeana.eu/place/106",
+    "http://www.wikidata.org/entity/Q55300",
+    "http://www.wikidata.org/entity/Q55",
+    "http://www.wikidata.org/entity/Q9920",
+    "http://www.wikidata.org/entity/Q29999"
+   ],
+   "edmPlaceAltLabel": [
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "SBZ"
+    },
+    {
+     "def": "Ostzone"
+    },
+    {
+     "def": "Zone"
+    },
+    {
+     "def": "SBZ , Sowjetische Besatzungszone"
+    },
+    {
+     "def": "Sowjetische Besatzungszone; SBZ"
+    },
+    {
+     "def": "Deutschland (Gebiet unter Alliierter Besatzung, Sowjetische Zone)"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "die Niederlande"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Haarlem, Holanda do Norte"
+    },
+    {
+     "def": "Harlém"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "os Países Baixos"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Haarlem, Holanda do Norte"
+    },
+    {
+     "def": "Harlém"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Χάρλεμ"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Κάτω Χώρες"
+    },
+    {
+     "def": "Χάρλεμ"
+    },
+    {
+     "def": "Βασίλειο της Ολλανδίας"
+    },
+    {
+     "def": "Haarlem, North Holland"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "The Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "Kingdom of Netherlands"
+    },
+    {
+     "def": "Sowjetische Besatzungszone"
+    },
+    {
+     "def": "SBZ"
+    },
+    {
+     "def": "Germany (Territory under Allied occupation, 1945-1955 : Russian Zone)‏"
+    },
+    {
+     "def": "Soviet occupation zone in Germany"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "Haarlem, North Holland"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "the Netherlands"
+    },
+    {
+     "def": "Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Sowjetische Besatzungszone"
+    },
+    {
+     "def": "SBZ"
+    },
+    {
+     "def": "Hollande"
+    },
+    {
+     "def": "P.-B."
+    },
+    {
+     "def": "P.B."
+    },
+    {
+     "def": "P-B"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "royaume des Pays-Bas"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Zona de ocupacion sovietica"
+    },
+    {
+     "def": "Holanda"
+    },
+    {
+     "def": "Los Países Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "Los Paises Bajos"
+    },
+    {
+     "def": "Neerlandia"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Reino de Los Paises Bajos"
+    },
+    {
+     "def": "Paises Bajos"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Gemeente Haarlem"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NLD"
+    },
+    {
+     "def": "KdN"
+    },
+    {
+     "def": "oostelijke bezettingszone van Duitsland"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "de Nederlanden"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "nl"
+    },
+    {
+     "def": "Haerlem"
+    },
+    {
+     "def": "Gemeente Haarlem"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Kungariket Nederländerna"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Hollanti"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Pajjiżi Baxxi"
+    },
+    {
+     "def": "Renju tal-Pajjiżi Baxxi"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "Zona di occupazione sovietica della Germania"
+    },
+    {
+     "def": "HOL"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "szovjet megszállási zóna"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Herbeheretako Erresuma"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "an Ollainn"
+    },
+    {
+     "def": "An Ísiltír"
+    },
+    {
+     "def": "An Ollainn"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "sowiecka strefa okupacyjna w Niemczech"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Niderlandy"
+    },
+    {
+     "def": "Królestwo Niderlandów"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "NL"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Nederlandene"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Olanda"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Regatul Ţărilor de Jos"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Ţările de Jos"
+    },
+    {
+     "def": "Tarile de Jos"
+    },
+    {
+     "def": "sovjetska zasedbena cona"
+    },
+    {
+     "def": "cona sovjetske zasedbe Nemčije"
+    },
+    {
+     "def": "sovjetsko zasedbeno ozemlje"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Голландия"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Холандия"
+    },
+    {
+     "def": "Olandija"
+    },
+    {
+     "def": "Holandija"
+    },
+    {
+     "def": "Holande"
+    },
+    {
+     "def": "Holanda"
+    }
+   ],
+   "edmPlaceAltLabelLangAware": {
+    "de": [
+     "Haerlem",
+     "SBZ",
+     "Ostzone",
+     "Zone",
+     "SBZ , Sowjetische Besatzungszone",
+     "Sowjetische Besatzungszone; SBZ",
+     "Deutschland (Gebiet unter Alliierter Besatzung, Sowjetische Zone)",
+     "Holland",
+     "die Niederlande",
+     "Haerlem",
+     "NL",
+     "Niederlande"
+    ],
+    "fi": [
+     "Alankomaat",
+     "Hollanti",
+     "Nederland"
+    ],
+    "ru": [
+     "Голландия",
+     "Nederland",
+     "Нидерланды"
+    ],
+    "pt": [
+     "Haarlem, Holanda do Norte",
+     "Harlém",
+     "Países Baixos",
+     "Holanda",
+     "os Países Baixos",
+     "Nederland",
+     "Haarlem, Holanda do Norte",
+     "Harlém",
+     "Países Baixos",
+     "NL"
+    ],
+    "bg": [
+     "Кралство Нидерландия",
+     "Холандия"
+    ],
+    "lt": [
+     "Olandija"
+    ],
+    "hr": [
+     "Holandija"
+    ],
+    "lv": [
+     "Holande"
+    ],
+    "fr": [
+     "Haerlem",
+     "Royaume des Pays-Bas",
+     "Sowjetische Besatzungszone",
+     "SBZ",
+     "Hollande",
+     "P.-B.",
+     "P.B.",
+     "P-B",
+     "NL",
+     "NLD",
+     "Haerlem",
+     "NL",
+     "royaume des Pays-Bas",
+     "Pays-Bas"
+    ],
+    "hu": [
+     "Hollandia",
+     "szovjet megszállási zóna",
+     "Hollandia"
+    ],
+    "sk": [
+     "Holandsko",
+     "Holandsko"
+    ],
+    "sl": [
+     "sovjetska zasedbena cona",
+     "cona sovjetske zasedbe Nemčije",
+     "sovjetsko zasedbeno ozemlje",
+     "Holandija"
+    ],
+    "ga": [
+     "An Ísiltír",
+     "An Ollainn",
+     "an Ollainn",
+     "An Ísiltír",
+     "An Ollainn"
+    ],
+    "ca": [
+     "Holanda"
+    ],
+    "sv": [
+     "Kungariket Nederländerna",
+     "Nederland",
+     "Kungariket Nederländerna"
+    ],
+    "el": [
+     "Χάρλεμ",
+     "Βασίλειο της Ολλανδίας",
+     "Κάτω Χώρες",
+     "Χάρλεμ",
+     "Βασίλειο της Ολλανδίας"
+    ],
+    "mt": [
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tan-Netherlands",
+     "Netherlands",
+     "Olanda",
+     "Pajjiżi Baxxi",
+     "Renju tal-Pajjiżi Baxxi"
+    ],
+    "en": [
+     "Haarlem, North Holland",
+     "Haerlem",
+     "The Netherlands",
+     "Nederlanden",
+     "Kingdom of Netherlands",
+     "Sowjetische Besatzungszone",
+     "SBZ",
+     "Germany (Territory under Allied occupation, 1945-1955 : Russian Zone)‏",
+     "Soviet occupation zone in Germany",
+     "Holland",
+     "the Netherlands",
+     "Nederland",
+     "Nederlanden",
+     "de Nederlanden",
+     "NL",
+     "NLD",
+     "Haarlem, North Holland",
+     "Haerlem",
+     "Netherlands",
+     "the Netherlands",
+     "Nederlanden",
+     "NL"
+    ],
+    "it": [
+     "Paesi Bassi",
+     "Zona di occupazione sovietica della Germania",
+     "HOL",
+     "Paesi Bassi",
+     "NL"
+    ],
+    "es": [
+     "Haerlem",
+     "Países Bajos",
+     "Zona de ocupacion sovietica",
+     "Holanda",
+     "Los Países Bajos",
+     "Paises Bajos",
+     "Los Paises Bajos",
+     "Neerlandia",
+     "Haerlem",
+     "Koninkrijk der Nederlanden",
+     "Reino de Los Paises Bajos",
+     "Paises Bajos",
+     "NL"
+    ],
+    "eu": [
+     "Herbeheretako Erresuma",
+     "Herbeheretako Erresuma"
+    ],
+    "pl": [
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "Koninkrijk der Nederlanden",
+     "sowiecka strefa okupacyjna w Niemczech",
+     "Niderlandy",
+     "Niderlandy",
+     "Królestwo Niderlandów",
+     "Nederland",
+     "NL",
+     "Koninkrijk der Nederlanden"
+    ],
+    "da": [
+     "Koninkrijk der Nederlanden",
+     "Nederlandene",
+     "Nederland",
+     "Koninkrijk der Nederlanden"
+    ],
+    "ro": [
+     "Țările de Jos",
+     "Olanda",
+     "Țările de Jos",
+     "Regatul Ţărilor de Jos",
+     "Netherlands",
+     "Ţările de Jos",
+     "Tarile de Jos"
+    ],
+    "nl": [
+     "Haerlem",
+     "Gemeente Haarlem",
+     "Nederland",
+     "NLD",
+     "KdN",
+     "oostelijke bezettingszone van Duitsland",
+     "Holland",
+     "de Nederlanden",
+     "NL",
+     "nl",
+     "Haerlem",
+     "Gemeente Haarlem",
+     "Nederland"
+    ]
+   },
+   "edmPlaceLabel": [
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Soviet occupation zone of Germany"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kingdom of the Netherlands"
+    },
+    {
+     "def": "Haarlem (Sudafrica)"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Zona di occupazione sovietica"
+    },
+    {
+     "def": "Paesi Bassi"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regno dei Paesi Bassi"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "zone d'occupation soviétique en Allemagne"
+    },
+    {
+     "def": "Pays-Bas"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Royaume des Pays-Bas"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Sovjet-bezettingszone in Duitsland"
+    },
+    {
+     "def": "Nederland"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Koninkrijk der Nederlanden"
+    },
+    {
+     "def": "Haarlem (LAV)"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Nõukogude Liidu okupatsioonitsoon Saksamaal"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Madalmaade Kuningriik"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Sowjetische Besatzungszone"
+    },
+    {
+     "def": "Niederlande"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Königreich der Niederlande"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Советская зона оккупации Германии"
+    },
+    {
+     "def": "Нидерланды"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Королевство Нидерландов"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Alankomaat"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Alankomaiden kuningaskunta"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Zona de ocupação soviética na Alemanha"
+    },
+    {
+     "def": "Países Baixos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino dos Países Baixos"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Съветска окупационна зона"
+    },
+    {
+     "def": "Нидерландия"
+    },
+    {
+     "def": "Харлем"
+    },
+    {
+     "def": "Кралство Нидерландия"
+    },
+    {
+     "def": "Harlemas"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Harlemas"
+    },
+    {
+     "def": "Nyderlandai"
+    },
+    {
+     "def": "Hārlema"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Padomju okupācijas zona Vācijā"
+    },
+    {
+     "def": "Nīderlande"
+    },
+    {
+     "def": "Hārlema"
+    },
+    {
+     "def": "Nīderlandes Karaliste"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "szovjet megszállási övezet"
+    },
+    {
+     "def": "Hollandia"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holland Királyság"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Sovietska okupačná zóna Nemecka"
+    },
+    {
+     "def": "Holandsko"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandské kráľovstvo"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "sovjetska zasedbena cona v Nemčiji"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "an Ísiltír"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Ríocht na hÍsiltíre"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "zona d'ocupació soviètica"
+    },
+    {
+     "def": "Països Baixos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regne dels Països Baixos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Sovjetiska ockupationszonen"
+    },
+    {
+     "def": "Nederländerna"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Konungariket Nederländerna"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Netherlands"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Renju tan-Netherlands"
+    },
+    {
+     "def": "Χάαρλεμ"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Σοβιετική Ζώνη Κατοχής στη Γερμανία"
+    },
+    {
+     "def": "Ολλανδία"
+    },
+    {
+     "def": "Χάαρλεμ"
+    },
+    {
+     "def": "Βασίλειο των Κάτω Χωρών"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Zona de ocupación soviética"
+    },
+    {
+     "def": "Países Bajos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Reino de los Países Bajos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Herbehereak"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Herbehereetako Erresuma"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Sovětská okupační zóna Německa"
+    },
+    {
+     "def": "Nizozemsko"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Nizozemské království"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "radziecka strefa okupacyjna w Niemczech"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Holandia"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Zona de ocupație sovietică"
+    },
+    {
+     "def": "Țările de Jos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Regatul Țărilor de Jos"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Holland"
+    },
+    {
+     "def": "Haarlem"
+    },
+    {
+     "def": "Kongeriget Nederlandene"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Nizozemska"
+    },
+    {
+     "def": "Kraljevina Nizozemska"
+    },
+    {
+     "def": "Nederland"
+    }
+   ],
+   "edmPlaceLabelLangAware": {
+    "de": [
+     "Haarlem",
+     "Königreich der Niederlande",
+     "Sowjetische Besatzungszone",
+     "Niederlande",
+     "Haarlem",
+     "Königreich der Niederlande"
+    ],
+    "no": [
+     "Nederland"
+    ],
+    "ru": [
+     "Харлем",
+     "Королевство Нидерландов",
+     "Советская зона оккупации Германии",
+     "Нидерланды",
+     "Харлем",
+     "Королевство Нидерландов"
+    ],
+    "fi": [
+     "Haarlem",
+     "Alankomaiden kuningaskunta",
+     "Alankomaat",
+     "Haarlem",
+     "Alankomaiden kuningaskunta"
+    ],
+    "pt": [
+     "Haarlem",
+     "Reino dos Países Baixos",
+     "Zona de ocupação soviética na Alemanha",
+     "Países Baixos",
+     "Haarlem",
+     "Reino dos Países Baixos"
+    ],
+    "bg": [
+     "Харлем",
+     "Кралство Нидерландия",
+     "Съветска окупационна зона",
+     "Нидерландия",
+     "Харлем",
+     "Кралство Нидерландия"
+    ],
+    "lt": [
+     "Harlemas",
+     "Nyderlandai",
+     "Nyderlandai",
+     "Harlemas",
+     "Nyderlandai"
+    ],
+    "lv": [
+     "Hārlema",
+     "Nīderlandes Karaliste",
+     "Padomju okupācijas zona Vācijā",
+     "Nīderlande",
+     "Hārlema",
+     "Nīderlandes Karaliste"
+    ],
+    "hr": [
+     "Kraljevina Nizozemska",
+     "Nizozemska",
+     "Kraljevina Nizozemska"
+    ],
+    "fr": [
+     "Haarlem",
+     "Haarlem",
+     "Royaume des Pays-Bas",
+     "zone d'occupation soviétique en Allemagne",
+     "Pays-Bas",
+     "Haarlem",
+     "Royaume des Pays-Bas"
+    ],
+    "hu": [
+     "Haarlem",
+     "Holland Királyság",
+     "szovjet megszállási övezet",
+     "Hollandia",
+     "Haarlem",
+     "Holland Királyság"
+    ],
+    "sk": [
+     "Haarlem",
+     "Holandské kráľovstvo",
+     "Sovietska okupačná zóna Nemecka",
+     "Holandsko",
+     "Haarlem",
+     "Holandské kráľovstvo"
+    ],
+    "sl": [
+     "Haarlem",
+     "Kraljevina Nizozemska",
+     "sovjetska zasedbena cona v Nemčiji",
+     "Nizozemska",
+     "Haarlem",
+     "Kraljevina Nizozemska"
+    ],
+    "ga": [
+     "Haarlem",
+     "Ríocht na hÍsiltíre",
+     "an Ísiltír",
+     "Haarlem",
+     "Ríocht na hÍsiltíre"
+    ],
+    "ca": [
+     "Haarlem",
+     "Regne dels Països Baixos",
+     "zona d'ocupació soviètica",
+     "Països Baixos",
+     "Haarlem",
+     "Regne dels Països Baixos"
+    ],
+    "sv": [
+     "Haarlem",
+     "Konungariket Nederländerna",
+     "Sovjetiska ockupationszonen",
+     "Nederländerna",
+     "Haarlem",
+     "Konungariket Nederländerna"
+    ],
+    "mt": [
+     "Haarlem",
+     "Renju tan-Netherlands",
+     "Netherlands",
+     "Haarlem",
+     "Renju tan-Netherlands"
+    ],
+    "el": [
+     "Χάαρλεμ",
+     "Βασίλειο των Κάτω Χωρών",
+     "Σοβιετική Ζώνη Κατοχής στη Γερμανία",
+     "Ολλανδία",
+     "Χάαρλεμ",
+     "Βασίλειο των Κάτω Χωρών"
+    ],
+    "en": [
+     "Haarlem",
+     "Haarlem",
+     "Kingdom of the Netherlands",
+     "Soviet occupation zone of Germany",
+     "Netherlands",
+     "Haarlem",
+     "Kingdom of the Netherlands"
+    ],
+    "it": [
+     "Haarlem (Sudafrica)",
+     "Haarlem",
+     "Regno dei Paesi Bassi",
+     "Zona di occupazione sovietica",
+     "Paesi Bassi",
+     "Haarlem",
+     "Regno dei Paesi Bassi"
+    ],
+    "es": [
+     "Haarlem",
+     "Reino de los Países Bajos",
+     "Zona de ocupación soviética",
+     "Países Bajos",
+     "Haarlem",
+     "Reino de los Países Bajos"
+    ],
+    "et": [
+     "Haarlem (LAV)",
+     "Haarlem",
+     "Madalmaade Kuningriik",
+     "Nõukogude Liidu okupatsioonitsoon Saksamaal",
+     "Holland",
+     "Haarlem",
+     "Madalmaade Kuningriik"
+    ],
+    "eu": [
+     "Haarlem",
+     "Herbehereetako Erresuma",
+     "Herbehereak",
+     "Haarlem",
+     "Herbehereetako Erresuma"
+    ],
+    "cs": [
+     "Haarlem",
+     "Nizozemské království",
+     "Sovětská okupační zóna Německa",
+     "Nizozemsko",
+     "Haarlem",
+     "Nizozemské království"
+    ],
+    "pl": [
+     "Haarlem",
+     "Holandia",
+     "radziecka strefa okupacyjna w Niemczech",
+     "Holandia",
+     "Haarlem",
+     "Holandia"
+    ],
+    "ro": [
+     "Haarlem",
+     "Regatul Țărilor de Jos",
+     "Zona de ocupație sovietică",
+     "Țările de Jos",
+     "Haarlem",
+     "Regatul Țărilor de Jos"
+    ],
+    "da": [
+     "Haarlem",
+     "Kongeriget Nederlandene",
+     "Holland",
+     "Haarlem",
+     "Kongeriget Nederlandene"
+    ],
+    "nl": [
+     "Haarlem",
+     "Haarlem",
+     "Koninkrijk der Nederlanden",
+     "Sovjet-bezettingszone in Duitsland",
+     "Nederland",
+     "Haarlem",
+     "Koninkrijk der Nederlanden"
+    ]
+   },
+   "edmPlaceLatitude": [
+    "-33.733334",
+    "52.38139",
+    "52.366665",
+    "52.316666",
+    "52.38028",
+    "52.366665"
+   ],
+   "edmPlaceLongitude": [
+    "23.338888",
+    "4.6355557",
+    "4.883333",
+    "5.55",
+    "4.6405554",
+    "4.883333"
+   ],
+   "edmPreview": [
+    "https://api.europeana.eu/thumbnail/v2/url.json?uri=https%3A%2F%2Fwww.openbeelden.nl%2Fimages%2F674295%2FDoor_het_kind%252C_voor_het_kind_nieuwe_kinders_ten_bate_van_de_misdeelde_jeugd_%25281_14%2529.png&type=VIDEO"
+   ],
+   "edmTimespan": [
+    "#1949-10-27",
+    "http://data.europeana.eu/timespan/20"
+   ],
+   "edmTimespanLabel": [
+    {
+     "def": "1949-10-27"
+    },
+    {
+     "def": "20. Jahrhundert"
+    },
+    {
+     "def": "XX век"
+    },
+    {
+     "def": "1900-luku"
+    },
+    {
+     "def": "Século XX"
+    },
+    {
+     "def": "20 век"
+    },
+    {
+     "def": "XX amžius"
+    },
+    {
+     "def": "20. gadsimts"
+    },
+    {
+     "def": "20. stoljeće"
+    },
+    {
+     "def": "XXe siècle"
+    },
+    {
+     "def": "20. század"
+    },
+    {
+     "def": "20. storočie"
+    },
+    {
+     "def": "20. stoletje"
+    },
+    {
+     "def": "20ú haois"
+    },
+    {
+     "def": "Segle XX"
+    },
+    {
+     "def": "1900-talet"
+    },
+    {
+     "def": "20ός αιώνας"
+    },
+    {
+     "def": "20th century"
+    },
+    {
+     "def": "XX secolo"
+    },
+    {
+     "def": "Siglo XX"
+    },
+    {
+     "def": "20. sajand"
+    },
+    {
+     "def": "XX. mendea"
+    },
+    {
+     "def": "20. století"
+    },
+    {
+     "def": "XX wiek"
+    },
+    {
+     "def": "Secolul al XX-lea"
+    },
+    {
+     "def": "20. århundrede"
+    },
+    {
+     "def": "20e eeuw"
+    },
+    {
+     "def": "http://www.wikidata.org/entity/Q6927"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh85139020"
+    },
+    {
+     "def": "http://id.loc.gov/authorities/names/sh2002012476"
+    },
+    {
+     "def": "http://data.bnf.fr/ark:/12148/cb11975995h"
+    },
+    {
+     "def": "http://www.idref.fr/086305646/id"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/D049673"
+    },
+    {
+     "def": "https://www.freebase.com/m/089_x"
+    },
+    {
+     "def": "https://g.co/kg/m/089_x"
+    },
+    {
+     "def": "http://id.nlm.nih.gov/mesh/K01.400.504.968"
+    },
+    {
+     "def": "http://vocab.getty.edu/aat/300404514"
+    },
+    {
+     "def": "http://id.worldcat.org/fast/1159810"
+    },
+    {
+     "def": "http://dbpedia.org/resource/20th_century"
+    }
+   ],
+   "edmTimespanLabelLangAware": {
+    "de": [
+     "20. Jahrhundert"
+    ],
+    "ru": [
+     "XX век"
+    ],
+    "fi": [
+     "1900-luku"
+    ],
+    "pt": [
+     "Século XX"
+    ],
+    "bg": [
+     "20 век"
+    ],
+    "lt": [
+     "XX amžius"
+    ],
+    "lv": [
+     "20. gadsimts"
+    ],
+    "hr": [
+     "20. stoljeće"
+    ],
+    "fr": [
+     "XXe siècle"
+    ],
+    "hu": [
+     "20. század"
+    ],
+    "sk": [
+     "20. storočie"
+    ],
+    "sl": [
+     "20. stoletje"
+    ],
+    "ga": [
+     "20ú haois"
+    ],
+    "ca": [
+     "Segle XX"
+    ],
+    "sv": [
+     "1900-talet"
+    ],
+    "el": [
+     "20ός αιώνας"
+    ],
+    "en": [
+     "20th century"
+    ],
+    "it": [
+     "XX secolo"
+    ],
+    "es": [
+     "Siglo XX"
+    ],
+    "et": [
+     "20. sajand"
+    ],
+    "eu": [
+     "XX. mendea"
+    ],
+    "cs": [
+     "20. století"
+    ],
+    "zxx": [
+     "1949-10-27"
+    ],
+    "pl": [
+     "XX wiek"
+    ],
+    "ro": [
+     "Secolul al XX-lea"
+    ],
+    "da": [
+     "20. århundrede"
+    ],
+    "nl": [
+     "20e eeuw"
+    ]
+   },
+   "europeanaCollectionName": [
+    "2051906_Ag_EU_EUscreen_1019"
+   ],
+   "europeanaCompleteness": 10,
+   "guid": "https://www.europeana.eu/item/2051906/data_euscreenXL_https___www_openbeelden_nl_media_673370?utm_source=api&utm_medium=api&utm_campaign=api2demo",
+   "id": "/2051906/data_euscreenXL_https___www_openbeelden_nl_media_673370",
+   "index": 0,
+   "language": [
+    "nl"
+   ],
+   "organizations": [
+    "http://data.europeana.eu/organization/4538",
+    "http://data.europeana.eu/organization/1607"
+   ],
+   "previewNoDistribute": false,
+   "provider": [
+    "EUscreen"
+   ],
+   "rights": [
+    "http://creativecommons.org/publicdomain/mark/1.0/"
+   ],
+   "score": 3.5471025,
+   "timestamp": 1788017019918,
+   "timestamp_created": "2016-02-08T14:11:25.505Z",
+   "timestamp_created_epoch": 1454940685505,
+   "timestamp_update": "2025-02-17T11:06:04.826Z",
+   "timestamp_update_epoch": 1739790364826,
+   "title": [
+    "Door het kind, voor het kind nieuwe kinders ten bate van de misdeelde jeugd",
+    "Weeknummer 49-44",
+    "By the child, for the child new children for the benefit of the deprived youth"
+   ],
+   "type": "VIDEO",
+   "ugc": [
+    false
+   ]
+  }
+ ]
+}

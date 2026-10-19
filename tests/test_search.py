@@ -272,6 +272,8 @@ def test_service_exclude_words():
     ("принтер, распечатать, компьютер, бумага, офис", True),
     ("chopping, cutting, ingredients, kitchen, garlic", False),
     ("sydney, city, aerial", False),  # ни одного слова полиграфии
+    # Настоящий промах Wikimedia: физический опыт с «laminated steel core».
+    ("Solid State Delayed Lenz Effect in laminated steel core proved with the VRM measurement", False),
     ("mug, sublimation, heat press, souvenir", True),
     ("printing 3d, printer 3d, close 3d printing", True),
 ])

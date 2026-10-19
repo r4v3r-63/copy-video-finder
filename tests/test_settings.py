@@ -5,7 +5,7 @@ from app.settings import Settings
 def test_defaults_when_no_file(data_dir):
     s = Settings.load()
     assert s.pexels_api_key == ""
-    assert (s.min_duration, s.max_duration) == (5, 45)
+    assert (s.min_duration, s.max_duration) == (5, 180)
 
 
 def test_save_and_load_in_data_dir(data_dir):
@@ -55,3 +55,13 @@ def test_no_api_keys_in_repository():
     pattern = re.compile(r"\b\d{6,}-[0-9a-f]{20,}\b|\b[0-9a-f]{32}\b")  # вид ключей Pixabay и токенов Vimeo
     for path in list(root.glob("app/**/*.py")) + list(root.glob("resources/*.json")) + [root / ".github/workflows/build.yml"]:
         assert not pattern.search(path.read_text(encoding="utf-8")), path
+
+
+def test_old_default_duration_raised_but_own_value_kept(data_dir):
+    paths.settings_file().write_text('{"max_duration": 45}', encoding="utf-8")
+    assert Settings.load().max_duration == 180  # старое значение по умолчанию
+    paths.settings_file().write_text('{"max_duration": 60}', encoding="utf-8")
+    assert Settings.load().max_duration == 60  # своё значение пользователя
+    s = Settings(max_duration=45)
+    s.save()
+    assert Settings.load().max_duration == 45  # выбрано после обновления — не трогаем

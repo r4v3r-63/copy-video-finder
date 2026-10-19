@@ -30,7 +30,9 @@ from app.search import SearchWorker, print_stems
 from app.settings import Settings
 from app.sources.base import SearchFilters, Source, VideoResult
 from app.sources.pexels import PexelsSource
+from app.sources.archive import ArchiveSource
 from app.sources.coverr import CoverrSource
+from app.sources.europeana import EuropeanaSource
 from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
@@ -47,6 +49,8 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         CoverrSource(settings.key("coverr_api_key"), cache),
         VimeoSource(settings.key("vimeo_token"), cache),
         WikimediaSource(cache),
+        EuropeanaSource(settings.key("europeana_api_key"), cache),
+        ArchiveSource(cache),
         PexelsSource(settings.key("pexels_api_key"), cache),
     ]
 
@@ -200,7 +204,7 @@ class MainWindow(QMainWindow):
         if skipped:
             self.query_info.setText(
                 f"Без ключа API пропускаются: {', '.join(skipped)}. Ключи вводятся в меню «Файл → Настройки». "
-                "Wikimedia Commons работает без ключа."
+                "Wikimedia Commons и Internet Archive работают без ключа."
             )
         else:
             self.query_info.setText("")
