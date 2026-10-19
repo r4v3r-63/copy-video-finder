@@ -1,0 +1,50 @@
+name: Удаление старых выпусков
+
+# Только вручную: Actions → Удаление старых выпусков → Run workflow.
+# Оставляет N самых новых выпусков (автообновление берёт только последний), остальные
+# удаляет вместе с тегами. По умолчанию — проверка: только печатает, что было бы удалено.
+on:
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: "Сколько последних выпусков оставить"
+        default: "3"
+        required: true
+      dry_run:
+        description: "Только показать, что будет удалено (true/false)"
+        default: "true"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Старые выпуски
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          KEEP: ${{ inputs.keep }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$KEEP" =~ ^[0-9]+$ ]] || [ "$KEEP" -lt 1 ]; then
+            echo "keep должно быть числом от 1"; exit 1
+          fi
+          # Выпуски от новых к старым по дате создания.
+          gh api "repos/$REPO/releases" --paginate -q '.[] | [.created_at, .tag_name] | @tsv' \
+            | sort -r | cut -f2 > releases.txt
+          echo "Всего выпусков: $(wc -l < releases.txt)"
+          echo "Остаются:"; head -n "$KEEP" releases.txt
+          tail -n +"$((KEEP + 1))" releases.txt > old.txt
+          echo "Удаляются ($(wc -l < old.txt)):"; cat old.txt
+          if [ "$DRY_RUN" != "false" ]; then
+            echo "Проверка: ничего не удалено. Чтобы удалить, запустите с dry_run=false."
+            exit 0
+          fi
+          while read -r tag; do
+            gh release delete "$tag" --repo "$REPO" --cleanup-tag --yes
+            echo "удалён $tag"
+          done < old.txt
