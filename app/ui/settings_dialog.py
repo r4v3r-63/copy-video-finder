@@ -114,6 +114,12 @@ class SettingsDialog(QDialog):
         self.check_updates = QCheckBox("Проверять обновления при запуске")
         self.check_updates.setChecked(settings.check_updates)
         form.addRow("", self.check_updates)
+        self.link_check_days = QSpinBox()
+        self.link_check_days.setRange(0, 365)
+        self.link_check_days.setSuffix(" дн.")
+        self.link_check_days.setSpecialValueText("не проверять")
+        self.link_check_days.setValue(settings.link_check_days)
+        form.addRow("Проверять ссылки каталога раз в:", self.link_check_days)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -147,5 +153,6 @@ class SettingsDialog(QDialog):
         self._settings.allow_4k = self.allow_4k.isChecked()
         self._settings.convert_to_mp4 = self.convert.isChecked()
         self._settings.check_updates = self.check_updates.isChecked()
+        self._settings.link_check_days = self.link_check_days.value()
         self._settings.save()
         super().accept()

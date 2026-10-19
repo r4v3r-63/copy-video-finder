@@ -55,6 +55,7 @@ class DownloadJob:
     catalog_id: int | None = None
     id: int = 0
     cancel: threading.Event = field(default_factory=threading.Event)
+    loop_hint: bool | None = None  # подсказка «подходит для зацикливания» после скачивания
 
 
 def short_side(f: VideoFile) -> int:
@@ -205,6 +206,33 @@ def probe(path: Path, ffprobe: Path | None) -> dict | None:
         return None
 
 
+def _frame(path: Path, ffmpeg: Path, last: bool) -> bytes | None:
+    """Первый или последний кадр ролика в PNG (через FFmpeg, без временных файлов)."""
+    seek = ["-sseof", "-0.3"] if last else []
+    try:
+        out = subprocess.run([str(ffmpeg), "-v", "error", *seek, "-i", str(path), "-frames:v", "1",
+                              "-f", "image2pipe", "-vcodec", "png", "-"],
+                             capture_output=True, timeout=60, creationflags=_NO_WINDOW)
+        return out.stdout or None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def loop_hint(path: Path, ffmpeg: Path) -> bool | None:
+    """Похожи ли первый и последний кадр: ролик можно зациклить без заметного скачка.
+
+    None — сравнить не удалось. Это подсказка, окончательно решает пользователь.
+    """
+    from app import similar
+    first, last = _frame(path, ffmpeg, last=False), _frame(path, ffmpeg, last=True)
+    if not first or not last:
+        return None
+    try:
+        return similar.distance(similar.dhash(first), similar.dhash(last)) <= similar.LOOP_DISTANCE
+    except (OSError, ValueError):
+        return None
+
+
 def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event | None = None) -> None:
     tmp = dest.with_name(dest.stem + ".converting.mp4")
     cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c:v", "libx264", "-preset", "medium",
@@ -251,6 +279,8 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     info = probe(final, ffprobe)
     if ffprobe and info is None:
         note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"
+    elif ffmpeg:
+        job.loop_hint = loop_hint(final, ffmpeg)
     (folder / (stem + ".txt")).write_text(license_text(job, final, now(), info), encoding="utf-8")
     return final, note
 

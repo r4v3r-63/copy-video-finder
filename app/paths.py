@@ -46,6 +46,11 @@ def settings_file() -> Path:
     return data_dir() / "settings.json"
 
 
+def terms_file() -> Path:
+    """Пользовательская копия словаря перевода (редактор словаря)."""
+    return data_dir() / "terms_ru_en.json"
+
+
 def processes_file() -> Path:
     """Пользовательская копия справочника, если её уже редактировали."""
     return data_dir() / "processes.json"

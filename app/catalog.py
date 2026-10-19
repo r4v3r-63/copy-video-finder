@@ -69,6 +69,15 @@ CREATE TABLE IF NOT EXISTS links (
 """
 
 
+_ADDED_COLUMNS = {
+    "available": "INTEGER NOT NULL DEFAULT 1",
+    "link_checked_at": "REAL",
+    "phash": "TEXT NOT NULL DEFAULT ''",
+    "loop": "INTEGER",
+    "loop_hint": "INTEGER",
+}
+
+
 @dataclass
 class Entry:
     """Ролик в каталоге: данные площадки и отметки пользователя."""
@@ -82,12 +91,19 @@ class Entry:
     added_at: float | None = None
     checked_at: float | None = None
     links: dict[str, str] = field(default_factory=dict)  # услуга → степень соответствия
+    available: bool = True  # False — ролик удалён с площадки (плановая проверка ссылок)
+    link_checked_at: float | None = None
+    phash: str = ""  # перцептивный хеш превью (поиск похожих дублей)
+    loop: bool | None = None  # подходит для зацикливания — отметка пользователя
+    loop_hint: bool | None = None  # подсказка по первому и последнему кадру скачанного файла
 
     @property
     def counts_for_coverage(self) -> bool:
         lic = self.result.license
+        # Удалённый с площадки ролик засчитывается, только если он уже скачан.
         return (self.status != REJECTED and self.license_confirmed
-                and lic is not None and lic.status in licenses.SUITABLE)
+                and lic is not None and lic.status in licenses.SUITABLE
+                and (self.available or bool(self.downloaded_path)))
 
 
 def _files_to_json(files: list[VideoFile]) -> str:
@@ -110,6 +126,11 @@ class Catalog:
         with self._db:
             self._db.execute("PRAGMA foreign_keys = ON")
             self._db.executescript(_SCHEMA)
+            # Поля этапа 8 — в каталоги, созданные раньше, добавляются без потери данных.
+            have = {r["name"] for r in self._db.execute("PRAGMA table_info(videos)")}
+            for column, decl in _ADDED_COLUMNS.items():
+                if column not in have:
+                    self._db.execute(f"ALTER TABLE videos ADD COLUMN {column} {decl}")
 
     def close(self) -> None:
         self._db.close()
@@ -181,6 +202,19 @@ class Catalog:
     def set_downloaded(self, video_id: int, path: str) -> None:
         self._update(video_id, downloaded_path=path)
 
+    def set_available(self, video_id: int, available: bool) -> None:
+        """Результат проверки ссылки: ролик есть на площадке или удалён."""
+        self._update(video_id, available=int(available), link_checked_at=self._now())
+
+    def set_phash(self, video_id: int, value: str) -> None:
+        self._update(video_id, phash=value)
+
+    def set_loop(self, video_id: int, value: bool | None) -> None:
+        self._update(video_id, loop=None if value is None else int(value))
+
+    def set_loop_hint(self, video_id: int, value: bool | None) -> None:
+        self._update(video_id, loop_hint=None if value is None else int(value))
+
     def link(self, video_id: int, process_id: str, match: str = EXACT) -> None:
         assert match in MATCHES, match
         with self._lock, self._db:
@@ -212,9 +246,12 @@ class Catalog:
         )
         links = {r["process_id"]: r["match"] for r in
                  self._db.execute("SELECT process_id, match FROM links WHERE video_id = ?", (row["id"],))}
+        optional = lambda v: None if v is None else bool(v)  # noqa: E731
         return Entry(id=row["id"], result=result, status=row["status"], license_confirmed=bool(row["license_confirmed"]),
                      comment=row["comment"], downloaded_path=row["downloaded_path"], added_at=row["added_at"],
-                     checked_at=row["checked_at"], links=links)
+                     checked_at=row["checked_at"], links=links, available=bool(row["available"]),
+                     link_checked_at=row["link_checked_at"], phash=row["phash"] or "", loop=optional(row["loop"]),
+                     loop_hint=optional(row["loop_hint"]))
 
     def get(self, video_id: int) -> Entry | None:
         with self._lock:
@@ -269,6 +306,20 @@ class Catalog:
     def set_meta(self, key: str, value: str) -> None:
         with self._lock, self._db:
             self._db.execute("INSERT OR REPLACE INTO meta VALUES (?, ?)", (key, value))
+
+    def search_history(self, limit: int = 100) -> list[dict]:
+        """Прошлые поиски, последние сверху: запрос, когда, сколько раз, найдено и новых в последний раз."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT query, MAX(at) AS last_at, COUNT(*) AS times FROM searches "
+                "GROUP BY query ORDER BY last_at DESC LIMIT ?", (limit,)).fetchall()
+            result = []
+            for r in rows:
+                last = self._db.execute("SELECT found, new FROM searches WHERE query = ? AND at = ?",
+                                        (r["query"], r["last_at"])).fetchone()
+                result.append({"query": r["query"], "last_at": r["last_at"], "times": r["times"],
+                               "found": last["found"], "new": last["new"]})
+            return result
 
     def has_history(self) -> bool:
         with self._lock:

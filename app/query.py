@@ -58,7 +58,9 @@ class Dictionary:
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Dictionary":
-        path = path or paths.resources_dir() / "terms_ru_en.json"
+        if path is None:
+            user_copy = paths.terms_file()
+            path = user_copy if user_copy.exists() else paths.resources_dir() / "terms_ru_en.json"
         raw = json.loads(path.read_text(encoding="utf-8"))
         return cls(raw["terms"], raw.get("stopwords", []))
 

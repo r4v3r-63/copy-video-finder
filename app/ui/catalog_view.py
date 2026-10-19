@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app import catalog as cat
-from app import licenses
+from app import licenses, similar
 from app.processes import Category, Process
 from app.ui.coverage_view import level_brush
 from app.ui.player import format_duration
@@ -38,6 +38,7 @@ NO_SERVICE = "__none__"
 STATUS_FILTERS = [("Все отметки", None), ("Выбранные", cat.SELECTED), ("Отклонённые", cat.REJECTED),
                   ("Без отметки", cat.NEW)]
 STATUS_NAMES = {cat.SELECTED: "выбрано", cat.REJECTED: "отклонено", cat.NEW: "—"}
+LOOP_CHOICES = [("не проверено", None), ("да", True), ("нет", False)]
 
 
 def _date(ts: float | None) -> str:
@@ -68,6 +69,11 @@ class VideoCard(QWidget):
         self.status.activated.connect(self._save_status)
         self.confirmed = QCheckBox("Лицензию проверил(а)")
         self.confirmed.toggled.connect(self._save_confirmed)
+        self.loop = QComboBox()
+        for name, value in LOOP_CHOICES:
+            self.loop.addItem(name, value)
+        self.loop.setToolTip("Можно ли крутить ролик по кругу без заметного скачка на стыке.")
+        self.loop.activated.connect(self._save_loop)
         self.comment = QPlainTextEdit()
         self.comment.setPlaceholderText("Комментарий")
         self.comment.setMaximumHeight(70)
@@ -106,6 +112,7 @@ class VideoCard(QWidget):
         form.addRow("Название:", self.title)
         form.addRow("Отметка:", self.status)
         form.addRow("", self.confirmed)
+        form.addRow("Для зацикливания:", self.loop)
         layout = QVBoxLayout(self)
         layout.addWidget(self.header)
         layout.addLayout(form)
@@ -120,7 +127,7 @@ class VideoCard(QWidget):
 
     def show_entry(self, entry: cat.Entry | None):
         self.entry = entry
-        for w in (self.title, self.status, self.confirmed, self.comment, self.links, self.add_process,
+        for w in (self.title, self.status, self.confirmed, self.loop, self.comment, self.links, self.add_process,
                   self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
             w.setEnabled(entry is not None)
         self.open_file.setEnabled(bool(entry and entry.downloaded_path))
@@ -147,15 +154,25 @@ class VideoCard(QWidget):
         lines.append(f"Добавлен: {_date(entry.added_at)} · лицензия проверена: {_date(entry.checked_at)}")
         if entry.downloaded_path:
             lines.append(f"Скачан: {escape(entry.downloaded_path)}")
+        if not entry.available:
+            lines.append(f"<b>Удалён с площадки</b> (проверено {_date(entry.link_checked_at)})")
+        if entry.loop_hint is not None and entry.loop is None:
+            lines.append("Подсказка: первый и последний кадр " +
+                         ("похожи — вероятно, подходит для зацикливания." if entry.loop_hint else
+                          "заметно отличаются — на стыке будет скачок."))
+        similar_ids = self._similar(entry)
+        if similar_ids:
+            lines.append("Похож на ролики № " + ", ".join(map(str, similar_ids)) + " — возможный дубль.")
         if not entry.counts_for_coverage:
-            lines.append("<i>В покрытие не засчитывается: нужна подходящая подтверждённая лицензия "
-                         "и отметка не «отклонено».</i>")
+            lines.append("<i>В покрытие не засчитывается: нужна подходящая подтверждённая лицензия, "
+                         "отметка не «отклонено» и ролик на площадке или скачанный.</i>")
         self.header.setText("<br>".join(lines))
         self.title.setText(r.title)
         self.status.setCurrentIndex(max(self.status.findData(entry.status), 0))
         self.confirmed.blockSignals(True)
         self.confirmed.setChecked(entry.license_confirmed)
         self.confirmed.blockSignals(False)
+        self.loop.setCurrentIndex([v for _, v in LOOP_CHOICES].index(entry.loop))
         self.comment.setPlainText(entry.comment)
         self._fill_links()
 
@@ -175,6 +192,12 @@ class VideoCard(QWidget):
             remove.clicked.connect(lambda _c=False, pid=process_id: self._unlink(pid))
             self.links.setCellWidget(row, 2, remove)
 
+    def _similar(self, entry: cat.Entry) -> list[int]:
+        if not entry.phash:
+            return []
+        return [e.id for e in self.catalog.entries() if e.id != entry.id and e.phash
+                and similar.distance(e.phash, entry.phash) <= similar.DUPLICATE_DISTANCE]
+
     def _reload(self):
         self.show_entry(self.catalog.get(self.entry.id))
         self.changed.emit()
@@ -192,6 +215,11 @@ class VideoCard(QWidget):
     def _save_confirmed(self, checked: bool):
         if self.entry:
             self.catalog.confirm_license(self.entry.id, checked)
+            self._reload()
+
+    def _save_loop(self):
+        if self.entry:
+            self.catalog.set_loop(self.entry.id, LOOP_CHOICES[self.loop.currentIndex()][1])
             self._reload()
 
     def _save_comment(self):
@@ -354,10 +382,15 @@ class CatalogView(QWidget):
             self.table.insertRow(row)
             lic = e.result.license
             license_text = f"{lic.status}{'' if e.license_confirmed else ' (не проверена)'}"
-            for col, text in enumerate([str(e.id), e.result.title, e.result.source, format_duration(e.result.duration),
+            title = e.result.title + (" (удалён с площадки)" if not e.available else "")
+            for col, text in enumerate([str(e.id), title, e.result.source, format_duration(e.result.duration),
                                         license_text, STATUS_NAMES.get(e.status, e.status),
                                         "да" if e.downloaded_path else ""]):
-                self.table.setItem(row, col, QTableWidgetItem(text))
+                item = QTableWidgetItem(text)
+                if not e.available:
+                    item.setForeground(Qt.GlobalColor.gray)
+                    item.setToolTip("Удалён с площадки")
+                self.table.setItem(row, col, item)
             if e.id == selected_id:
                 restore = row
         self.table.blockSignals(False)
@@ -366,6 +399,18 @@ class CatalogView(QWidget):
             self.card.show_entry(entries[restore])
         else:
             self.card.show_entry(None)
+
+    def select_entry(self, video_id: int):
+        """Показать ролик: сбросить фильтры, выбрать «Все ролики» и строку ролика."""
+        self.search.clear()
+        self.status_filter.setCurrentIndex(0)
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))
+        self.refresh_list()
+        for row, e in enumerate(self.entries):
+            if e.id == video_id:
+                self.table.selectRow(row)
+                self.card.show_entry(e)
+                break
 
     def _show_row(self, row: int):
         self.card.show_entry(self.entries[row] if 0 <= row < len(self.entries) else None)

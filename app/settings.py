@@ -31,6 +31,7 @@ class Settings:
     allow_4k: bool = False  # по умолчанию скачивается максимум Full HD
     convert_to_mp4: bool = True  # WebM/OGV с Wikimedia конвертируются в MP4
     check_updates: bool = True  # проверять новую версию на GitHub при запуске
+    link_check_days: int = 7  # раз в сколько дней проверять, не удалены ли ролики с площадок (0 — не проверять)
     skipped_version: str = ""  # версия, которую пользователь попросил не предлагать
 
     @classmethod

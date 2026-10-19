@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import __version__, paths, processes, query, updater
+from app import __version__, maintenance, paths, processes, query, updater
 from app import catalog as cat
 from app.cache import Cache
 from app.downloader import DownloadJob, DownloadQueue
@@ -41,11 +41,12 @@ from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
 from app.batch import BatchWorker
-from app.export import html_catalog, registry, summary
+from app.export import html_catalog, playlist, registry, summary
 from app.ui.catalog_view import CatalogView
 from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
+from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
 THUMB = QSize(256, 144)
@@ -173,6 +174,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.coverage_view, "Покрытие")
         self.tabs.currentChanged.connect(self._on_tab)
         self.batch: BatchWorker | None = None
+        self.link_check: maintenance.LinkCheckWorker | None = None
+        self.duplicates: maintenance.DuplicateWorker | None = None
         self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
@@ -202,6 +205,13 @@ class MainWindow(QMainWindow):
         quit_action.triggered.connect(self.close)
         menu.addAction(quit_action)
 
+        search_menu = self.menuBar().addMenu("Поиск")
+        for title, handler in (("История поиска…", self.show_history),
+                               ("Словарь перевода…", self.edit_dictionary)):
+            action = QAction(title, self)
+            action.triggered.connect(handler)
+            search_menu.addAction(action)
+
         catalog_menu = self.menuBar().addMenu("Каталог")
         for title, handler in (("Экспорт реестра в Excel…", self.export_xlsx),
                                ("Экспорт реестра в CSV…", self.export_csv),
@@ -210,10 +220,20 @@ class MainWindow(QMainWindow):
             action = QAction(title, self)
             action.triggered.connect(handler)
             catalog_menu.addAction(action)
+        playlist_action = QAction("Плейлист M3U из скачанных…", self)
+        playlist_action.triggered.connect(self.export_playlist)
+        catalog_menu.addAction(playlist_action)
         catalog_menu.addSeparator()
         import_action = QAction("Импорт реестра CSV…", self)
         import_action.triggered.connect(self.import_csv)
         catalog_menu.addAction(import_action)
+        catalog_menu.addSeparator()
+        links_action = QAction("Проверить ссылки сейчас", self)
+        links_action.triggered.connect(lambda: self.check_links(manual=True))
+        catalog_menu.addAction(links_action)
+        duplicates_action = QAction("Найти похожие дубли…", self)
+        duplicates_action.triggered.connect(self.find_duplicates)
+        catalog_menu.addAction(duplicates_action)
 
         help_menu = self.menuBar().addMenu("Справка")
         check = QAction("Проверить обновления…", self)
@@ -227,6 +247,91 @@ class MainWindow(QMainWindow):
         updater.cleanup()
         if self.settings.check_updates:
             self.updates.check(manual=False)
+        if maintenance.link_check_due(self.catalog, self.settings.link_check_days) and self.catalog.entries():
+            self.check_links(manual=False)
+
+    # --- история, словарь, обслуживание каталога ---
+
+    def show_history(self):
+        dialog = HistoryDialog(self.catalog.search_history(), self)
+        dialog.repeat.connect(self._repeat_search)
+        dialog.exec()
+
+    def _repeat_search(self, text: str):
+        self.tabs.setCurrentIndex(0)
+        self.query.setText(text)
+        self.run_search()
+
+    def edit_dictionary(self):
+        if DictionaryDialog(self).exec():
+            self.dictionary = query.Dictionary.load()
+            self.statusBar().showMessage("Словарь перевода обновлён.")
+
+    def check_links(self, manual: bool):
+        """Проверить, не удалены ли ролики каталога с площадок (раз в N дней при запуске или по команде)."""
+        if self.link_check and self.link_check.isRunning():
+            return
+        sources, _ = make_sources(self.settings, self.cache)
+        self.link_check = maintenance.LinkCheckWorker(self.catalog, sources, self)
+        self.link_check.progress.connect(
+            lambda i, n: self.statusBar().showMessage(f"Проверка ссылок каталога: {i} из {n}"))
+        self.link_check.done.connect(lambda counts: self._links_checked(counts, manual))
+        self.link_check.start()
+
+    def _links_checked(self, counts: dict, manual: bool):
+        text = f"Проверка ссылок: проверено {counts['checked']}"
+        if counts["removed"]:
+            text += f", удалены с площадки — {counts['removed']}"
+        if counts["restored"]:
+            text += f", снова доступны — {counts['restored']}"
+        if counts["skipped"]:
+            text += f", не удалось проверить — {counts['skipped']}"
+        self.statusBar().showMessage(text)
+        self.catalog_view.refresh()
+        self.coverage_view.refresh()
+        if manual or counts["removed"]:
+            note = ("\n\nУдалённые ролики помечены в каталоге; нескачанные не засчитываются в покрытие."
+                    if counts["removed"] else "")
+            QMessageBox.information(self, "Проверка ссылок", text + "." + note)
+
+    def find_duplicates(self):
+        if self.duplicates and self.duplicates.isRunning():
+            return
+        self.statusBar().showMessage("Поиск похожих роликов: загружаются превью…")
+        self.duplicates = maintenance.DuplicateWorker(self.catalog, self)
+        self.duplicates.done.connect(self._show_duplicates)
+        self.duplicates.start()
+
+    def _show_duplicates(self, pairs: list):
+        self.statusBar().showMessage(f"Похожих пар: {len(pairs)}")
+        dialog = DuplicatesDialog(pairs, self)
+        dialog.open_entry.connect(self._open_entry)
+        dialog.exec()
+
+    def _open_entry(self, video_id: int):
+        self.tabs.setCurrentIndex(1)
+        self.catalog_view.select_entry(video_id)
+
+    def export_playlist(self):
+        folder = self.download_dir()
+        folder.mkdir(parents=True, exist_ok=True)
+        chosen, _ = QFileDialog.getSaveFileName(self, "Плейлист M3U", str(folder / "Плейлист.m3u8"),
+                                                "Плейлист (*.m3u8 *.m3u)")
+        if not chosen:
+            return
+        path = Path(chosen)
+        if path.suffix.lower() not in (".m3u", ".m3u8"):
+            path = path.with_suffix(".m3u8")
+        entries = sorted((e for e in self.catalog.entries() if e.status != cat.REJECTED), key=lambda e: e.id)
+        try:
+            count = playlist.write_m3u(path, entries)
+        except OSError as exc:
+            return self._export_failed(exc)
+        if not count:
+            path.unlink(missing_ok=True)
+            QMessageBox.information(self, "Плейлист", "В каталоге нет скачанных роликов, файлы которых есть на диске.")
+            return
+        self._exported(path, f"Плейлист из {count} роликов сохранён")
 
     def _about(self):
         QMessageBox.about(self, "О программе",
@@ -579,6 +684,8 @@ class MainWindow(QMainWindow):
         job = self.downloads.jobs[job_id]
         if job.catalog_id:
             self.catalog.set_downloaded(job.catalog_id, path)
+            if job.loop_hint is not None:
+                self.catalog.set_loop_hint(job.catalog_id, job.loop_hint)
         self._set_download_state(self._job_key(job_id), text, path, False)
         self.statusBar().showMessage(f"Скачано: {Path(path).name}")
 
@@ -658,6 +765,10 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.stop_search()
         self.stop_batch()
+        for worker in (self.link_check, self.duplicates):
+            if worker and worker.isRunning():
+                worker.cancel.set()
+                worker.wait(3000)
         self.downloads.stop()
         self.player.player.stop()
         super().closeEvent(event)
