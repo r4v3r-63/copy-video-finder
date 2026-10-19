@@ -51,6 +51,7 @@ from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
 from app.ui import theme
+from app.ui.services_dialog import ServicesDialog
 from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
@@ -242,6 +243,7 @@ class MainWindow(QMainWindow):
 
         search_menu = self.menuBar().addMenu("Поиск")
         for title, handler in (("История поиска…", self.show_history),
+                               ("Справочник услуг…", self.edit_services),
                                ("Словарь перевода…", self.edit_dictionary)):
             action = QAction(title, self)
             action.triggered.connect(handler)
@@ -301,6 +303,23 @@ class MainWindow(QMainWindow):
         self.tabs.setCurrentIndex(0)
         self.query.setText(text)
         self.run_search()
+
+    def edit_services(self):
+        counts: dict[str, int] = {}
+        for e in self.catalog.entries():
+            for pid in e.links:
+                counts[pid] = counts.get(pid, 0) + 1
+        if ServicesDialog(self.categories, counts, self).exec():
+            self.set_categories(processes.load_catalog())
+            self.statusBar().showMessage("Справочник услуг обновлён.")
+
+    def set_categories(self, categories: list[processes.Category]):
+        """Новый справочник услуг: подсказки, фразы поиска, каталог и покрытие."""
+        self.categories = categories
+        self.processes = processes.all_processes(categories)
+        self.printing = print_stems(self.processes)
+        self.catalog_view.set_categories(categories)
+        self.coverage_view.set_categories(categories)
 
     def edit_dictionary(self):
         if DictionaryDialog(self).exec():

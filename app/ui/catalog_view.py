@@ -133,6 +133,14 @@ class VideoCard(QWidget):
         layout.addStretch()
         self.show_entry(None)
 
+    def set_processes(self, processes: list[Process]):
+        self.processes = {p.id: p for p in processes}
+        self.add_process.clear()
+        for p in processes:
+            self.add_process.addItem(p.display, p.id)
+        if self.entry:
+            self._fill_links()
+
     def show_entry(self, entry: cat.Entry | None):
         self.entry = entry
         for w in (self.title, self.status, self.confirmed, self.loop, self.comment, self.links, self.add_process,
@@ -325,6 +333,12 @@ class CatalogView(QWidget):
         splitter.setSizes([420, 520, 520])
         layout = QVBoxLayout(self)
         layout.addWidget(splitter)
+        self.refresh()
+
+    def set_categories(self, categories: list[Category]):
+        self.categories = categories
+        self.processes = [p for c in categories for p in c.processes]
+        self.card.set_processes(self.processes)
         self.refresh()
 
     def selected_process(self) -> str:

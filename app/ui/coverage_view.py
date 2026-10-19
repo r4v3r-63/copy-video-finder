@@ -79,6 +79,11 @@ class CoverageView(QWidget):
         layout.addWidget(hint)
         self.refresh()
 
+    def set_categories(self, categories):
+        self.categories = categories
+        self.processes = [p for c in categories for p in c.processes]
+        self.refresh()
+
     def refresh(self):
         st = cat.statistics(self.catalog, self.categories)
         levels = " · ".join(f"{name}: {st['services_by_count'][key]}" for key, name in

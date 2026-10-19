@@ -1,6 +1,7 @@
 """Справочник услуг (техпроцессов): загрузка и подсказки по вводу."""
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -53,12 +54,27 @@ class Category:
     processes: list[Process]
 
 
+def builtin_file() -> Path:
+    return paths.resources_dir() / "processes.json"
+
+
 def load_catalog(path: Path | None = None) -> list[Category]:
-    """Читает справочник: пользовательскую копию из «Данные», иначе встроенный."""
+    """Читает справочник: пользовательскую копию из «Данные» (редактор справочника), иначе встроенный.
+
+    В пользовательской копии недостающие поля услуги (например, уровни поиска, появившиеся
+    в новой версии программы) берутся из встроенного справочника по коду услуги.
+    """
     if path is None:
         user_copy = paths.processes_file()
-        path = user_copy if user_copy.exists() else paths.resources_dir() / "processes.json"
+        path = user_copy if user_copy.exists() else builtin_file()
     raw = json.loads(path.read_text(encoding="utf-8"))
+    if path != builtin_file() and builtin_file().exists():
+        builtin = {p["id"]: p for c in json.loads(builtin_file().read_text(encoding="utf-8"))["categories"]
+                   for p in c["processes"]}
+        for cat in raw["categories"]:
+            for p in cat["processes"]:
+                for key, value in builtin.get(p["id"], {}).items():
+                    p.setdefault(key, value)
     categories = []
     for cat in raw["categories"]:
         processes = [
@@ -81,6 +97,60 @@ def load_catalog(path: Path | None = None) -> list[Category]:
         ]
         categories.append(Category(id=cat["id"], name=cat["name"], processes=processes))
     return categories
+
+
+def process_dict(p: Process) -> dict:
+    """Услуга в формате справочника (пустые поля не пишутся)."""
+    d = {"id": p.id, "name": p.name, "aliases": p.aliases, "phrases_ru": p.phrases_ru, "phrases_en": p.phrases_en,
+         "key_ru": p.key_ru, "key_en": p.key_en, "exclude": p.exclude}
+    d = {k: v for k, v in d.items() if v or k in ("id", "name")}
+    if p.target != 3:
+        d["target"] = p.target
+    # Уровни пишутся всегда, даже пустым списком: иначе при загрузке подставятся встроенные.
+    d["levels"] = [{"name": lv.name, "match": lv.match, **{lang: lv.phrases[lang] for lang in LANGS
+                                                           if lv.phrases.get(lang)}} for lv in p.levels]
+    return d
+
+
+def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
+    """Сохранить справочник (редактор услуг) — по умолчанию в «Данные/processes.json»."""
+    path = path or paths.processes_file()
+    version = json.loads(builtin_file().read_text(encoding="utf-8")).get("version", 1)
+    lines = ["{", f'  "version": {version},', '  "categories": [']
+    for ci, c in enumerate(categories):
+        lines += ["    {", f'      "id": {json.dumps(c.id)},', f'      "name": {json.dumps(c.name, ensure_ascii=False)},',
+                  '      "processes": [']
+        for pi, p in enumerate(c.processes):
+            d = process_dict(p)
+            levels = d.pop("levels")
+            fields = [f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in d.items()]
+            lines.append("        {" + ",\n         ".join(fields) + ",")
+            lines.append('         "levels": [' + ("" if levels else "]}" + ("," if pi < len(c.processes) - 1 else "")))
+            if levels:
+                lines += ["           " + json.dumps(lv, ensure_ascii=False) + ("," if li < len(levels) - 1 else "")
+                          for li, lv in enumerate(levels)]
+                lines.append("         ]}" + ("," if pi < len(c.processes) - 1 else ""))
+        lines += ["      ]", "    }" + ("," if ci < len(categories) - 1 else "")]
+    lines += ["  ]", "}"]
+    text = "\n".join(lines) + "\n"
+    json.loads(text)  # проверка: файл должен читаться
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+_TRANSLIT = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
+                     ["a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s",
+                      "t", "u", "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya"]))
+
+
+def new_id(name: str, existing: set[str]) -> str:
+    """Код новой услуги или категории из названия: «Печать на холсте» → pechat_na_holste."""
+    base = "".join(_TRANSLIT.get(ch, ch) for ch in name.lower())
+    base = "_".join(re.findall(r"[a-z0-9]+", base))[:40] or "service"
+    candidate, n = base, 2
+    while candidate in existing:
+        candidate, n = f"{base}_{n}", n + 1
+    return candidate
 
 
 def all_processes(categories: list[Category]) -> list[Process]:
