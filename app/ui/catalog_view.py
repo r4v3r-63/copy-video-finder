@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import (
 from app import catalog as cat
 from app import licenses
 from app.processes import Category, Process
+from app.ui.coverage_view import level_brush
 from app.ui.player import format_duration
 
 ALL = "__all__"
@@ -70,8 +71,8 @@ class VideoCard(QWidget):
         self.comment = QPlainTextEdit()
         self.comment.setPlaceholderText("Комментарий")
         self.comment.setMaximumHeight(70)
-        save_comment = QPushButton("Сохранить комментарий")
-        save_comment.clicked.connect(self._save_comment)
+        self.save_comment = QPushButton("Сохранить комментарий")
+        self.save_comment.clicked.connect(self._save_comment)
 
         self.links = QTableWidget(0, 3)
         self.links.setHorizontalHeaderLabels(["Услуга", "Соответствие", ""])
@@ -83,12 +84,12 @@ class VideoCard(QWidget):
             self.add_process.addItem(p.display, p.id)
         self.add_match = QComboBox()
         self.add_match.addItems(cat.MATCHES)
-        link_button = QPushButton("Привязать")
-        link_button.clicked.connect(self._add_link)
+        self.link_button = QPushButton("Привязать")
+        self.link_button.clicked.connect(self._add_link)
         add_row = QHBoxLayout()
         add_row.addWidget(self.add_process, 1)
         add_row.addWidget(self.add_match)
-        add_row.addWidget(link_button)
+        add_row.addWidget(self.link_button)
 
         self.open_page = QPushButton("Открыть страницу ролика")
         self.open_page.clicked.connect(lambda: self.entry and QDesktopServices.openUrl(QUrl(self.entry.result.page_url)))
@@ -112,7 +113,7 @@ class VideoCard(QWidget):
         layout.addWidget(self.links)
         layout.addLayout(add_row)
         layout.addWidget(self.comment)
-        layout.addWidget(save_comment)
+        layout.addWidget(self.save_comment)
         layout.addLayout(buttons)
         layout.addStretch()
         self.show_entry(None)
@@ -120,7 +121,7 @@ class VideoCard(QWidget):
     def show_entry(self, entry: cat.Entry | None):
         self.entry = entry
         for w in (self.title, self.status, self.confirmed, self.comment, self.links, self.add_process,
-                  self.add_match, self.open_page, self.delete):
+                  self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
             w.setEnabled(entry is not None)
         self.open_file.setEnabled(bool(entry and entry.downloaded_path))
         if entry is None:
@@ -318,6 +319,8 @@ class CatalogView(QWidget):
             for p in c.processes:
                 item = QTreeWidgetItem([p.name, str(totals.get(p.id, 0)), f"{coverage.get(p.id, 0)} из {p.target}"])
                 item.setData(0, Qt.ItemDataRole.UserRole, p.id)
+                for col in range(3):
+                    item.setBackground(col, level_brush(coverage.get(p.id, 0), p.target))
                 cat_item.addChild(item)
                 if p.id == current:
                     restore = item

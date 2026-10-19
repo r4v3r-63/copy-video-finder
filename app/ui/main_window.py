@@ -38,7 +38,9 @@ from app.sources.europeana import EuropeanaSource
 from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
 from app.sources.wikimedia import WikimediaSource
+from app.batch import BatchWorker
 from app.ui.catalog_view import CatalogView
+from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
 from app.ui.update import UpdateController
@@ -160,7 +162,13 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.addTab(search_tab, "Поиск")
         self.tabs.addTab(self.catalog_view, "Каталог")
-        self.tabs.currentChanged.connect(lambda i: i == 1 and self.catalog_view.refresh())
+        self.coverage_view = CoverageView(self.catalog, categories)
+        self.coverage_view.open_service.connect(self.open_service)
+        self.coverage_view.batch_requested.connect(self.start_batch)
+        self.coverage_view.stop_requested.connect(self.stop_batch)
+        self.tabs.addTab(self.coverage_view, "Покрытие")
+        self.tabs.currentChanged.connect(self._on_tab)
+        self.batch: BatchWorker | None = None
         self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
@@ -355,6 +363,60 @@ class MainWindow(QMainWindow):
         if result and result.key in self.download_state:
             self.player.set_download_state(*self.download_state[result.key])
 
+    def _on_tab(self, index: int):
+        if index == 1:
+            self.catalog_view.refresh()
+        elif index == 2:
+            self.coverage_view.refresh()
+
+    def open_service(self, process_id: str):
+        """Открыть ролики услуги на вкладке «Поиск» (после пакетного поиска — из кэша)."""
+        proc = next((p for p in self.processes if p.id == process_id), None)
+        if proc:
+            self.tabs.setCurrentIndex(0)
+            self.query.setText(proc.display)
+            self.run_search()
+
+    def start_batch(self):
+        if self.batch and self.batch.isRunning():
+            return
+        order = cat.batch_order(self.processes, self.catalog.coverage())
+        if not order:
+            QMessageBox.information(self, "Пакетный поиск", "Цель выполнена по всем услугам.")
+            return
+        sources, _ = make_sources(self.settings, self.cache)
+        answer = QMessageBox.question(
+            self, "Пакетный поиск",
+            f"Искать ролики для {len(order)} услуг с недостатком роликов? Это займёт несколько минут.\n\n"
+            "Ролики только находятся, ничего не скачивается. Лимиты площадок соблюдаются: если лимит "
+            "исчерпается (у Coverr — 50 запросов в час), эта площадка пропустит часть услуг.")
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self.coverage_view.candidates = {}
+        self.batch = BatchWorker(self.processes, order, sources, self.filters(), self.dictionary, self.catalog,
+                                 self.printing, self.settings.only_without_attribution, self)
+        names = {p.id: p.name for p in self.processes}
+        self.batch.started_service.connect(lambda pid, i, n: self.coverage_view.progress.setText(
+            f"Ищем: {names[pid]} ({i} из {n})…"))
+        self.batch.done_service.connect(self.coverage_view.service_done)
+        self.batch.finished.connect(self._batch_finished)
+        self.coverage_view.set_running(True)
+        self.batch.start()
+
+    def stop_batch(self):
+        if self.batch and self.batch.isRunning():
+            self.batch.cancel()
+            self.batch.wait(10000)
+
+    def _batch_finished(self):
+        self.coverage_view.set_running(False)
+        done = len(self.coverage_view.candidates)
+        text = f"Пакетный поиск завершён: просмотрено услуг — {done}."
+        if self.batch and self.batch.problems:
+            text += " " + " ".join(self.batch.problems)
+        self.coverage_view.progress.setText(text)
+        self.coverage_view.refresh()
+
     def add_to_catalog(self, result: VideoResult):
         """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""
         process = self.plan.process if self.plan else None
@@ -445,7 +507,17 @@ class MainWindow(QMainWindow):
         if not self.worker:
             return
         count = self.results.count()
+        shown = [self.results.item(i).data(Qt.ItemDataRole.UserRole) for i in range(count)]
+        shown = [r for r in shown if r is not None]
+        had_history = self.catalog.has_history()
+        new = self.catalog.record_search(self.plan_text, [r.key for r in shown])
+        if had_history:  # на самом первом поиске новыми были бы все — не помечаем
+            for r in shown:
+                if r.key in new:
+                    self._mark_item(r, "новый")
         message = f"Найдено подходящих роликов: {count}"
+        if had_history and new:
+            message += f" (новых с прошлого поиска: {len(new)})"
         counts = self.worker.rejection_counts()
         if counts:
             details = ", ".join(f"{reason} — {n}" for reason, n in counts.most_common())
@@ -491,6 +563,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.stop_search()
+        self.stop_batch()
         self.downloads.stop()
         self.player.player.stop()
         super().closeEvent(event)

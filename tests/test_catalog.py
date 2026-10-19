@@ -116,3 +116,46 @@ def test_persists_between_sessions(tmp_path):
     c = Catalog(tmp_path / "c.sqlite")
     assert c.get(vid).links == {"lam_pouch": EXACT}
     c.close()
+
+
+def test_record_search_and_new_since_previous(cat, clock):
+    assert cat.new_since_previous_search() == 0
+    new = cat.record_search("ламинация", [("Pixabay", "1"), ("Pixabay", "2"), ("Pixabay", "1")])
+    assert new == {("Pixabay", "1"), ("Pixabay", "2")}
+    assert cat.new_since_previous_search() == 2
+    clock.t += 60
+    new = cat.record_search("ламинация", [("Pixabay", "2"), ("Coverr", "9")])
+    assert new == {("Coverr", "9")}
+    assert cat.new_since_previous_search() == 1
+
+
+def test_coverage_level_and_batch_order():
+    from app.catalog import batch_order, coverage_level
+    from app.processes import Process
+    assert [coverage_level(n, 3) for n in (0, 1, 2, 3, 5)] == [0, 1, 2, 3, 3]
+    assert coverage_level(2, 2) == 3
+    procs = [Process(id=i, name=i, category="c", phrases_ru=[], phrases_en=[], target=3) for i in "abcde"]
+    coverage = {"a": 2, "b": 0, "c": 3, "d": 1, "e": 0}
+    assert [p.id for p in batch_order(procs, coverage)] == ["b", "e", "d", "a"]  # «c» — цель выполнена
+
+
+def test_statistics(cat):
+    from app.catalog import statistics
+    from app.processes import Category, Process
+    procs = [Process(id=i, name=i, category="Кат", phrases_ru=[], phrases_en=[], target=3) for i in ("p1", "p2")]
+    cats = [Category(id="c", name="Кат", processes=procs)]
+    for sid in ("1", "2", "3"):
+        cat.select(video(sid), "p1", EXACT)
+    cat.select(video("4", source="Coverr"), "p2", PARTIAL)
+    cat.reject(video("5"))
+    st = statistics(cat, cats)
+    assert (st["categories"], st["services"], st["videos"], st["counted"], st["exact"]) == (1, 2, 4, 4, 3)
+    assert st["services_by_count"] == {"0": 0, "1": 1, "2": 0, "3 и более": 1}
+    assert st["services_done"] == 1
+    assert st["by_source"] == {"Pixabay": 3, "Coverr": 1}
+
+
+def test_has_history(cat):
+    assert not cat.has_history()
+    cat.record_search("x", [])
+    assert cat.has_history()

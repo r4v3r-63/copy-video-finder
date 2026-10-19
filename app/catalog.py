@@ -46,6 +46,18 @@ CREATE TABLE IF NOT EXISTS videos (
     added_at REAL, checked_at REAL, updated_at REAL,
     UNIQUE (source, source_id)
 );
+CREATE TABLE IF NOT EXISTS seen (
+    source TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    first_seen REAL NOT NULL,
+    PRIMARY KEY (source, source_id)
+);
+CREATE TABLE IF NOT EXISTS searches (
+    at REAL NOT NULL,
+    query TEXT NOT NULL,
+    found INTEGER NOT NULL,
+    new INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS links (
     video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
     process_id TEXT NOT NULL,
@@ -236,6 +248,31 @@ class Catalog:
         with self._lock:
             return [self._entry(row) for row in self._db.execute(sql, args).fetchall()]
 
+    # --- история поиска: что найдено впервые ---
+
+    def record_search(self, query: str, keys: list[tuple[str, str]]) -> set[tuple[str, str]]:
+        """Запомнить выдачу поиска; вернуть ключи роликов, найденных впервые."""
+        now = self._now()
+        with self._lock, self._db:
+            known = {(r["source"], r["source_id"]) for r in self._db.execute("SELECT source, source_id FROM seen")}
+            new = [k for k in dict.fromkeys(keys) if k not in known]
+            self._db.executemany("INSERT INTO seen VALUES (?, ?, ?)", [(*k, now) for k in new])
+            self._db.execute("INSERT INTO searches VALUES (?, ?, ?, ?)", (now, query, len(set(keys)), len(new)))
+        return set(new)
+
+    def has_history(self) -> bool:
+        with self._lock:
+            return self._db.execute("SELECT 1 FROM searches LIMIT 1").fetchone() is not None
+
+    def new_since_previous_search(self) -> int:
+        """Сколько роликов впервые найдено с даты предыдущего поиска (то есть в последнем)."""
+        with self._lock:
+            times = [r["at"] for r in self._db.execute("SELECT DISTINCT at FROM searches ORDER BY at DESC LIMIT 2")]
+            if not times:
+                return 0
+            since = times[1] if len(times) > 1 else 0
+            return self._db.execute("SELECT COUNT(*) FROM seen WHERE first_seen > ?", (since,)).fetchone()[0]
+
     def coverage(self) -> dict[str, int]:
         """Число засчитанных роликов по каждой услуге (правила — в начале модуля)."""
         counts: dict[str, int] = {}
@@ -246,3 +283,42 @@ class Catalog:
                 if match != PRODUCT:
                     counts[process_id] = counts.get(process_id, 0) + 1
         return counts
+
+
+def coverage_level(count: int, target: int) -> int:
+    """Уровень покрытия для цвета: 0 — нет роликов, 1, 2, 3 — цель выполнена."""
+    if count >= target:
+        return 3
+    return min(count, 2)
+
+
+def batch_order(processes, coverage: dict[str, int]) -> list:
+    """Порядок пакетного поиска (ТЗ, 5.2): сначала услуги без роликов, затем с одним,
+    затем остальные с недостатком; услуги с выполненной целью пропускаются."""
+    short = [p for p in processes if coverage.get(p.id, 0) < p.target]
+    return sorted(short, key=lambda p: (min(coverage.get(p.id, 0), 2), processes.index(p)))
+
+
+def statistics(catalog: "Catalog", categories) -> dict:
+    """Статистика каталога (ТЗ, 7.2)."""
+    processes = [p for c in categories for p in c.processes]
+    entries = [e for e in catalog.entries() if e.status != REJECTED]
+    coverage = catalog.coverage()
+    by_level = {"0": 0, "1": 0, "2": 0, "3 и более": 0}
+    for p in processes:
+        n = coverage.get(p.id, 0)
+        by_level["3 и более" if n >= 3 else str(n)] += 1
+    by_source: dict[str, int] = {}
+    for e in entries:
+        by_source[e.result.source] = by_source.get(e.result.source, 0) + 1
+    return {
+        "categories": len(categories),
+        "services": len(processes),
+        "videos": len(entries),
+        "counted": sum(1 for e in entries if e.counts_for_coverage),
+        "exact": sum(1 for e in entries if e.counts_for_coverage and EXACT in e.links.values()),
+        "services_by_count": by_level,
+        "services_done": sum(1 for p in processes if coverage.get(p.id, 0) >= p.target),
+        "by_source": dict(sorted(by_source.items(), key=lambda kv: -kv[1])),
+        "new_since_previous_search": catalog.new_since_previous_search(),
+    }
