@@ -139,6 +139,28 @@ def test_all_significant_words_of_a_phrase_required(phrase, tags, ok):
     assert is_relevant(tagged("1", tags), phrase_stems([phrase])) is ok
 
 
+def test_single_broad_word_does_not_confirm_topic():
+    from app.search import is_relevant
+    from app.topic import phrase_stems
+    phrases = phrase_stems(["печать этикеток", "термопринтер этикеток", "этикетки", "label printer"])
+    sale_sign = tagged("1", "распродажа, цена, рекламный щит, знак, этикетка")
+    turntable = tagged("2", "проигрыватель, старый, винил, музыка, этикетка")
+    thermal = tagged("3", "термопринтер, этикетка, склад")
+    english = tagged("4", "label, printer, barcode, warehouse")
+    assert not is_relevant(sale_sign, phrases)
+    assert not is_relevant(turntable, phrases)
+    assert is_relevant(thermal, phrases)
+    assert is_relevant(english, phrases)
+
+
+def test_specific_single_words_still_confirm_topic():
+    from app.topic import phrase_stems
+    assert frozenset({"lamin"}) in phrase_stems(["laminator"])
+    assert frozenset({"плотт"}) in phrase_stems(["плоттер"])
+    assert phrase_stems(["этикетки"]) == [] and phrase_stems(["calendar"]) == []
+    assert phrase_stems(["сборка календарей"]) == [] and phrase_stems(["изготовление печатей"]) == []
+
+
 def test_wikimedia_checked_by_title_only(tmp_path):
     from app.cache import Cache
     from app.search import is_relevant

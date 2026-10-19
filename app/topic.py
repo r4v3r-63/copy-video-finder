@@ -54,12 +54,33 @@ OPTIONAL = {
 }
 
 
+# Широкие слова: в одиночку тему не подтверждают. Тег «этикетка» Pixabay ставит
+# на ценники и таблички, «calendar» — на новогодние открытки, «печать» — на что угодно.
+# Фраза из одного такого слова остаётся запросом, но ролик должен совпасть с другой фразой.
+BROAD = {
+    "печать", "печати", "печатей", "этикетки", "этикетка", "этикеток", "календарь", "календаря", "значки",
+    "значков", "магниты", "магнитов", "сублимация", "штамп", "баннер", "фото", "резка", "бумага", "принтер",
+    "label", "labels", "calendar", "magnet", "magnets", "badge", "banner", "stamp", "photo", "cutting", "cut",
+    "print", "sticker", "sublimation", "binding", "press", "heat", "laser", "vinyl", "hole", "corner", "foil",
+    "spiral", "comb", "thermal", "paper", "printer",
+}
+_BROAD_STEMS = {stem(w) for w in BROAD}
+
+
 def phrase_stems(texts: list[str]) -> list[frozenset[str]]:
-    """Для каждой фразы — основы её обязательных слов; фразы без таких слов пропускаются."""
+    """Для каждой фразы — основы её обязательных слов.
+
+    Пропускаются фразы без обязательных слов и фразы из одного широкого слова.
+    """
     def required(w: str) -> bool:
         return w not in OPTIONAL and not w.isdigit() and (len(w) >= 3 or is_significant(w))
     sets = {frozenset(stem(w) for w in words(t) if required(w)) for t in texts}
-    return [s for s in sets if s]
+    return [s for s in sets if s and not (len(s) == 1 and _is_broad(next(iter(s))))]
+
+
+def _is_broad(word_stem: str) -> bool:
+    # Основы разных падежей разной длины: «календ» (календарей) и «кален» (календарь).
+    return any(word_stem.startswith(b) or b.startswith(word_stem) for b in _BROAD_STEMS)
 
 
 def key_words(phrases: list[str], limit: int = 1) -> list[str]:
