@@ -117,17 +117,17 @@ def test_pixabay_beaches_rejected_for_lamination():
     assert is_relevant(tagged("3", "laminating, office, document"), stems)
 
 
-def test_wikimedia_checked_by_title_only():
+def test_wikimedia_checked_by_title_only(tmp_path):
     from app.cache import Cache
     from app.search import is_relevant, topic_stems
     from app.sources.wikimedia import WikimediaSource
     from tests.fakes import FakeResponse, FakeSession, fixture_text
-    import tempfile, pathlib
-    with tempfile.TemporaryDirectory() as d:
-        session = FakeSession(FakeResponse(text=fixture_text("wikimedia_search.json")))
-        session.headers = {}
-        src = WikimediaSource(Cache(pathlib.Path(d) / "c.sqlite"), session=session)
-        found = {r.title: r for r in src.search("laminator", SearchFilters())}
+    session = FakeSession(FakeResponse(text=fixture_text("wikimedia_search.json")))
+    session.headers = {}
+    cache = Cache(tmp_path / "c.sqlite")
+    src = WikimediaSource(cache, session=session)
+    found = {r.title: r for r in src.search("laminator", SearchFilters())}
+    cache.close()
     stems = topic_stems(["roll laminator", "lamination"])
     assert is_relevant(found["Heated Roll Lamination Machine"], stems, use_description=False)
     # В описании есть «laminated», но ролик о спицах — по названию он не проходит.

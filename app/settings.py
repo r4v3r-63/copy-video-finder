@@ -23,6 +23,8 @@ class Settings:
     download_dir: str = ""  # пусто — «Данные/Видео»
     allow_4k: bool = False  # по умолчанию скачивается максимум Full HD
     convert_to_mp4: bool = True  # WebM/OGV с Wikimedia конвертируются в MP4
+    check_updates: bool = True  # проверять новую версию на GitHub при запуске
+    skipped_version: str = ""  # версия, которую пользователь попросил не предлагать
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Settings":

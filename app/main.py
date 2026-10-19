@@ -3,7 +3,7 @@
 import logging
 import sys
 
-from PyQt6.QtCore import QLockFile
+from PyQt6.QtCore import QLibraryInfo, QLocale, QLockFile, QTranslator
 from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -31,6 +31,11 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
     QNetworkProxyFactory.setUseSystemConfiguration(True)
+    # Стандартные кнопки и окна Qt («Подробнее…», выбор папки) — на русском.
+    translator = QTranslator(app)
+    if translator.load(QLocale(QLocale.Language.Russian), "qtbase", "_",
+                       QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+        app.installTranslator(translator)
 
     lock = QLockFile(str(paths.lock_file()))
     lock.setStaleLockTime(0)

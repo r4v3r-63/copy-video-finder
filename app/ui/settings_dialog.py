@@ -98,6 +98,9 @@ class SettingsDialog(QDialog):
         self.convert = QCheckBox("Конвертировать WebM/OGV в MP4 (нужен FFmpeg в папке программы)")
         self.convert.setChecked(settings.convert_to_mp4)
         form.addRow("", self.convert)
+        self.check_updates = QCheckBox("Проверять обновления при запуске")
+        self.check_updates.setChecked(settings.check_updates)
+        form.addRow("", self.check_updates)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -127,5 +130,6 @@ class SettingsDialog(QDialog):
         self._settings.download_dir = self.download_dir.text().strip()
         self._settings.allow_4k = self.allow_4k.isChecked()
         self._settings.convert_to_mp4 = self.convert.isChecked()
+        self._settings.check_updates = self.check_updates.isChecked()
         self._settings.save()
         super().accept()

@@ -4,7 +4,7 @@ from html import escape
 
 from pathlib import Path
 
-from PyQt6.QtCore import QSize, QStringListModel, Qt, QUrl
+from PyQt6.QtCore import QSize, QStringListModel, Qt, QTimer, QUrl
 from PyQt6.QtGui import QAction, QDesktopServices, QIcon, QPixmap
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PyQt6.QtWidgets import (
@@ -16,13 +16,14 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QSplitter,
     QVBoxLayout,
     QWidget,
 )
 
-from app import paths, processes, query
+from app import __version__, paths, processes, query, updater
 from app.cache import Cache
 from app.downloader import DownloadJob, DownloadQueue
 from app.search import SearchWorker, print_stems
@@ -33,6 +34,7 @@ from app.sources.pixabay import PixabaySource
 from app.sources.wikimedia import WikimediaSource
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.settings_dialog import SettingsDialog
+from app.ui.update import UpdateController
 
 THUMB = QSize(256, 144)
 
@@ -144,6 +146,10 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Папка данных: {paths.data_dir()}")
         self._show_hint()
 
+        self.updates = UpdateController(self, settings)
+        # Через несколько секунд после запуска: убрать остатки прошлого обновления и проверить новое.
+        QTimer.singleShot(4000, self._startup_update_check)
+
     def _build_menu(self):
         menu = self.menuBar().addMenu("Файл")
         settings_action = QAction("Настройки…", self)
@@ -156,6 +162,27 @@ class MainWindow(QMainWindow):
         quit_action = QAction("Выход", self)
         quit_action.triggered.connect(self.close)
         menu.addAction(quit_action)
+
+        help_menu = self.menuBar().addMenu("Справка")
+        check = QAction("Проверить обновления…", self)
+        check.triggered.connect(lambda: self.updates.check(manual=True))
+        help_menu.addAction(check)
+        about = QAction("О программе", self)
+        about.triggered.connect(self._about)
+        help_menu.addAction(about)
+
+    def _startup_update_check(self):
+        updater.cleanup()
+        if self.settings.check_updates:
+            self.updates.check(manual=False)
+
+    def _about(self):
+        QMessageBox.about(self, "О программе",
+                          f"Поиск видео для копицентров Copy.ru\nВерсия {__version__}\n\n"
+                          f"Новые версии: {updater.RELEASES_PAGE}")
+
+    def downloads_busy(self) -> bool:
+        return any(busy for _, _, busy in self.download_state.values())
 
     def _show_hint(self):
         _, skipped = make_sources(self.settings, self.cache)
