@@ -28,6 +28,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Версия выпуска совпадает с __version__
+        if: env.RELEASE_TAG != ''
+        shell: pwsh
+        run: |
+          # Иначе программа будет без конца предлагать «обновиться» до той же версии.
+          $m = Select-String -Path app/__init__.py -Pattern '__version__\s*=\s*"([^"]+)"'
+          $code = $m.Matches[0].Groups[1].Value
+          if ("v$code" -ne $env:RELEASE_TAG) { throw "Тег $env:RELEASE_TAG не совпадает с __version__ = $code в app/__init__.py" }
+
       - name: Зависимости
         run: pip install -r requirements-dev.txt
 

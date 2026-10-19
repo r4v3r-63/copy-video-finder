@@ -112,10 +112,15 @@ def process_dict(p: Process) -> dict:
     return d
 
 
+_LIST_FIELDS = ("aliases", "phrases_ru", "phrases_en", "key_ru", "key_en", "exclude")
+
+
 def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
     """Сохранить справочник (редактор услуг) — по умолчанию в «Данные/processes.json»."""
     path = path or paths.processes_file()
-    version = json.loads(builtin_file().read_text(encoding="utf-8")).get("version", 1)
+    builtin_raw = json.loads(builtin_file().read_text(encoding="utf-8"))
+    version = builtin_raw.get("version", 1)
+    builtin = {p["id"]: p for c in builtin_raw["categories"] for p in c["processes"]}
     lines = ["{", f'  "version": {version},', '  "categories": [']
     for ci, c in enumerate(categories):
         lines += ["    {", f'      "id": {json.dumps(c.id)},', f'      "name": {json.dumps(c.name, ensure_ascii=False)},',
@@ -123,6 +128,13 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
         for pi, p in enumerate(c.processes):
             d = process_dict(p)
             levels = d.pop("levels")
+            # Поле, очищенное пользователем, пишется явно (пустым или со значением по умолчанию):
+            # иначе при загрузке load_catalog подставит его из встроенного справочника.
+            for key, value in builtin.get(p.id, {}).items():
+                if key in _LIST_FIELDS and key not in d and value:
+                    d[key] = []
+            if "target" not in d and builtin.get(p.id, {}).get("target", 3) != 3:
+                d["target"] = 3
             fields = [f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in d.items()]
             lines.append("        {" + ",\n         ".join(fields) + ",")
             lines.append('         "levels": [' + ("" if levels else "]}" + ("," if pi < len(c.processes) - 1 else "")))

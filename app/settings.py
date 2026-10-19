@@ -24,7 +24,7 @@ class Settings:
     coverr_api_key: str = ""
     vimeo_token: str = ""  # личный токен доступа Vimeo (права public)
     europeana_api_key: str = ""
-    tavily_api_key: str = ""  # Tavily — бесплатный поиск по интернету (1000 в месяц); без ключа — DuckDuckGo, Bing
+    tavily_api_key: str = ""  # Tavily — бесплатный поиск по интернету (1000 в месяц); без ключа — DuckDuckGo
     brave_api_key: str = ""  # Brave Search API — платный, необязательно
     min_duration: int = 5
     max_duration: int = 180  # с версии 0.7.0; раньше 45 — на стоках мало коротких роликов о полиграфии
@@ -65,7 +65,8 @@ class Settings:
         tmp.replace(path)
 
 
-KEY_FIELDS = ("pexels_api_key", "pixabay_api_key", "coverr_api_key", "vimeo_token", "europeana_api_key")
+KEY_FIELDS = ("pexels_api_key", "pixabay_api_key", "coverr_api_key", "vimeo_token", "europeana_api_key",
+              "tavily_api_key", "brave_api_key")
 
 
 def built_in_keys(path: Path | None = None) -> dict[str, str]:

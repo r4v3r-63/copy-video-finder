@@ -100,4 +100,5 @@ class CoverrSource(HttpSource):
         return LicenseInfo(name=name, url=LICENSE_URL, status=status, note=note)
 
     def get_license(self, result: VideoResult) -> LicenseInfo:
-        return self.license_for(result)
+        # Лицензия из ответа API помнит is_premium и is_ai_generated; без неё — заново по API.
+        return result.license or self.get_details(result.source_id).license

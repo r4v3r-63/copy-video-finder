@@ -95,9 +95,21 @@ def ddg_blocked(page: str, status: int) -> bool:
     return status == 202 or "anomaly" in page[:20000].lower()
 
 
+def _on_domain(host: str, domain: str) -> bool:
+    """Сайт на этом домене: «x.com» — это x.com и www.x.com, но не dropbox.com.
+
+    Записи без точки на конце домена («gettyimages», «amazon.») — часть имени: gettyimages.de, amazon.co.uk.
+    """
+    if domain.endswith("."):
+        return domain.rstrip(".") in host.split(".")
+    if "." not in domain:
+        return any(label.startswith(domain) for label in host.split("."))
+    return host == domain or host.endswith("." + domain)
+
+
 def skipped(url: str) -> bool:
-    host = urlparse(url).netloc.lower()
-    return any(d in host for d in SKIP_DOMAINS)
+    host = urlparse(url).netloc.lower().split(":")[0]
+    return any(_on_domain(host, d) for d in SKIP_DOMAINS)
 
 
 def known_site(url: str) -> tuple[str, str] | None:
@@ -136,8 +148,10 @@ def _video_objects(page: str) -> list[dict]:
     return objects
 
 
-def _duration(text: str) -> float | None:
-    m = _ISO_DURATION.fullmatch(text or "")
+def _duration(text) -> float | None:
+    if not isinstance(text, str):  # в разметке бывает число или объект — длительность неизвестна
+        return None
+    m = _ISO_DURATION.fullmatch(text)
     if not m or not any(m.groups()):
         return None
     hours, minutes, seconds = (float(g or 0) for g in m.groups())
@@ -359,7 +373,7 @@ class WebSource(HttpSource):
                     return None  # картинка или документ, а не ролик
                 return source.get_by_title(source_id)
             return source.get_details(source_id)
-        if any(d in urlparse(url).netloc.lower() for d in STOCK_DOMAINS):
+        if any(_on_domain(urlparse(url).netloc.lower().split(":")[0], d) for d in STOCK_DOMAINS):
             return None  # страница поиска или картинок стока, а не ролик — не открываем
         return parse_page(self.pages.read(url), url)
 

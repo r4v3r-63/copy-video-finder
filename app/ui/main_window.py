@@ -463,7 +463,7 @@ class MainWindow(QMainWindow):
         self.worker = SearchWorker(plan, self.sources, self.filters(),
                                    self.settings.only_without_attribution, self, printing=self.printing,
                                    hidden=hidden)
-        self.worker.found.connect(self._add_results)
+        self.worker.found.connect(self._on_found)
         self.worker.problem.connect(self._on_problem)
         self.worker.progress.connect(self._on_progress)
         self.worker.finished.connect(self._on_finished)
@@ -493,6 +493,14 @@ class MainWindow(QMainWindow):
         if plan.note:
             lines.append(plan.note)
         return "\n".join(lines)
+
+    def _from_old_search(self) -> bool:
+        """Сигнал остановленного поиска, пришедший уже после запуска нового, — не наш."""
+        return self.sender() is not self.worker
+
+    def _on_found(self, results: list[VideoResult]):
+        if not self._from_old_search():
+            self._add_results(results)
 
     def _add_results(self, results: list[VideoResult], off_topic: bool = False, view_only: bool = False):
         self._remove_placeholder()
@@ -732,7 +740,9 @@ class MainWindow(QMainWindow):
         # Скачанный ролик попадает в каталог; номер в каталоге — в имени файла.
         # Лицензию это не подтверждает: для этого кнопка «В каталог — лицензию проверил».
         entry = self.catalog.find(result.key)
-        video_id = self.catalog.select(result, process.id if process else None,
+        # Степень соответствия: уже выбранную в каталоге не перезаписываем, иначе — подсказка уровня поиска.
+        match = (entry.links.get(process.id) if entry and process else None) or result.match_hint or cat.EXACT
+        video_id = self.catalog.select(result, process.id if process else None, match,
                                        license_confirmed=bool(entry and entry.license_confirmed))
         self.player.set_catalog_state(cat.SELECTED, video_id)
         source = next((s for s in all_sources(self.settings, self.cache) if s.name == result.source), None)
@@ -779,16 +789,20 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(path).parent)))
 
     def _on_problem(self, message: str):
+        if self._from_old_search():
+            return
         if message not in self.problems:
             self.problems.append(message)
 
     def _on_progress(self, done: int, total: int):
+        if self._from_old_search():
+            return
         self.statusBar().showMessage(f"Поиск: {done} из {total} запросов, найдено {self.results.count()}")
 
     def _on_finished(self):
-        self.search_button.setText("Найти")
-        if not self.worker:
+        if not self.worker or self._from_old_search():
             return
+        self.search_button.setText("Найти")
         count = self.results.count()
         shown = [self.results.item(i).data(Qt.ItemDataRole.UserRole) for i in range(count)]
         shown = [r for r in shown if r is not None]

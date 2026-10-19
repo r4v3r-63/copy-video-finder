@@ -10,6 +10,7 @@ import queue
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
@@ -239,16 +240,19 @@ def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event 
     tmp = dest.with_name(dest.stem + ".converting.mp4")
     cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c:v", "libx264", "-preset", "medium",
            "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)]
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
-                            creationflags=_NO_WINDOW)
-    while proc.poll() is None:
-        if cancel and cancel.is_set():
-            proc.kill()
-            proc.wait()
-            tmp.unlink(missing_ok=True)
-            raise Cancelled()
-        time.sleep(0.2)
-    err = proc.stderr.read() if proc.stderr else ""
+    # Ошибки FFmpeg — во временный файл: из непрочитанного канала (PIPE) при длинном выводе
+    # FFmpeg встал бы, а цикл ниже ждал бы его вечно.
+    with tempfile.TemporaryFile() as log_file:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=log_file, creationflags=_NO_WINDOW)
+        while proc.poll() is None:
+            if cancel and cancel.is_set():
+                proc.kill()
+                proc.wait()
+                tmp.unlink(missing_ok=True)
+                raise Cancelled()
+            time.sleep(0.2)
+        log_file.seek(0)
+        err = log_file.read().decode("utf-8", "replace")
     if proc.returncode != 0 or not tmp.exists():
         tmp.unlink(missing_ok=True)
         raise DownloadError(f"Не удалось конвертировать в MP4: {err.strip()[-300:]}")

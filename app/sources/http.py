@@ -14,6 +14,14 @@ from app.sources.base import AuthError, NetworkError, NotFoundError, RateLimitEr
 
 log = logging.getLogger(__name__)
 
+_LIMIT_LOCKS: dict[str, threading.Lock] = {}  # площадка → замок лимита (общий для всех её экземпляров)
+_LIMIT_LOCKS_GUARD = threading.Lock()
+
+
+def _limit_lock(name: str) -> threading.Lock:
+    with _LIMIT_LOCKS_GUARD:  # два потока не должны завести для одной площадки два разных замка
+        return _LIMIT_LOCKS.setdefault(name, threading.Lock())
+
 USER_AGENT = f"CopyVideoFinder/{__version__} (https://github.com/r4v3r-63/copy-video-finder)"
 
 
@@ -64,9 +72,13 @@ class HttpSource(Source):
             raise AuthError(self.name, self.missing_key_message())
         while True:
             with self._slots:
-                wait = self.limiter.wait_seconds()
+                # Проверка и учёт запроса — атомарно для всех экземпляров площадки (поиск, проверка
+                # ссылок, пакетный поиск), иначе одновременные запросы превысят лимит.
+                with _limit_lock(self.name):
+                    wait = self.limiter.wait_seconds()
+                    if not wait:
+                        self.limiter.record()
                 if not wait:
-                    self.limiter.record()
                     try:
                         if method == "POST":
                             resp = self.session.post(url, data=params, headers=headers or {}, timeout=20)
