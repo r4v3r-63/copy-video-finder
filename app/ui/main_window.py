@@ -209,6 +209,14 @@ class MainWindow(QMainWindow):
         self.show_rejected.clicked.connect(self._show_off_topic)
         self.show_rejected.hide()
         self.statusBar().addPermanentWidget(self.show_rejected)
+        self.show_unlicensed = QPushButton()
+        self.show_unlicensed.setFlat(True)
+        self.show_unlicensed.setToolTip("Ролики по теме, но без свободной лицензии («все права защищены», NC, ND). "
+                                        "Только посмотреть: скачать и засчитать в покрытие нельзя, использовать — "
+                                        "с разрешения автора. Платные не показываются.")
+        self.show_unlicensed.clicked.connect(self._show_unlicensed)
+        self.show_unlicensed.hide()
+        self.statusBar().addPermanentWidget(self.show_unlicensed)
         self.statusBar().showMessage(f"Папка данных: {paths.data_dir()}")
         self._show_hint()
 
@@ -422,6 +430,7 @@ class MainWindow(QMainWindow):
             info += f" (без ключа пропущены: {', '.join(skipped)})"
         self.query_info.setText(info)
         self.show_rejected.hide()
+        self.show_unlicensed.hide()
         self.plan = plan
         self.plan_text = self.query.text().strip()
         self.results.clear()
@@ -466,7 +475,7 @@ class MainWindow(QMainWindow):
             lines.append(plan.note)
         return "\n".join(lines)
 
-    def _add_results(self, results: list[VideoResult], off_topic: bool = False):
+    def _add_results(self, results: list[VideoResult], off_topic: bool = False, view_only: bool = False):
         self._remove_placeholder()
         statuses = self.catalog.statuses()
         for r in results:
@@ -481,8 +490,11 @@ class MainWindow(QMainWindow):
             if off_topic:
                 r.relevance = -1  # в конец выдачи
                 text = "Не по теме · " + text
+            if view_only:
+                r.relevance = -2  # после всех свободных
+                text = f"Только посмотреть · {r.source}\n{r.license.name}"
             item = QListWidgetItem(text)
-            if off_topic:
+            if off_topic or view_only:
                 item.setForeground(self.palette().placeholderText())
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setToolTip(r.title or r.page_url)
@@ -783,6 +795,10 @@ class MainWindow(QMainWindow):
         if rejected:
             self.show_rejected.setText(f"Показать отсеянные «не по теме» ({rejected})")
             self.show_rejected.show()
+        unlicensed = len(self.worker.unlicensed_results())
+        if unlicensed:
+            self.show_unlicensed.setText(f"Без свободной лицензии ({unlicensed})")
+            self.show_unlicensed.show()
         if count == 0 and not self.problems:
             text = "Подходящих роликов не найдено."
             if self.plan and self.plan.process:
@@ -800,6 +816,11 @@ class MainWindow(QMainWindow):
         for i in reversed(range(self.results.count())):
             if self.results.item(i).data(Qt.ItemDataRole.UserRole) is None:
                 self.results.takeItem(i)
+
+    def _show_unlicensed(self):
+        if self.worker:
+            self._add_results(self.worker.unlicensed_results(), view_only=True)
+        self.show_unlicensed.hide()
 
     def _show_off_topic(self):
         if self.worker:

@@ -48,7 +48,10 @@ def _thumbnail(v: dict) -> str | None:
 def license_info(code: str | None) -> LicenseInfo:
     name, url = LICENSES.get((code or "").lower(), ("", None))
     status, note = licenses.evaluate(name)
-    return LicenseInfo(name=name or "не указана", url=url, status=status, note=note)
+    if not name:  # не Creative Commons — обычный ролик Vimeo
+        return LicenseInfo(name="все права защищены", url=None, status=licenses.REJECTED,
+                           note="Свободной лицензии нет — использовать можно только с разрешения автора.")
+    return LicenseInfo(name=name, url=url, status=status, note=note)
 
 
 def parse_video(v: dict) -> VideoResult:

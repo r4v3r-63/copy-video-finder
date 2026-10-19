@@ -33,10 +33,10 @@ TAVILY_MONTHLY = 900  # бесплатно 1000 в месяц
 # Бесплатные стоки, где поисковик находит страницы отдельных роликов (как «site:» в запросе).
 # Их страницы открываются модулями площадок: лицензия и ссылки на файлы — из их API.
 # Pexels сюда не входит: его страницы закрыты от программ (403), а новых ключей API он не выдаёт.
-# Vimeo — тоже: свободные ролики находит его собственный поиск с фильтром CC, а из поисковика
-# приходят почти одни «все права защищены», которые только расходуют лимит Vimeo (проверено вживую).
-FREE_STOCK_DOMAINS = ["pixabay.com", "videezy.com", "commons.wikimedia.org", "archive.org"]
-STOCK_DOMAINS = FREE_STOCK_DOMAINS + ["pexels.com", "coverr.co", "vimeo.com"]  # их страницы-не-ролики не открываем
+# С Vimeo из поисковика приходят в основном «все права защищены» — они видны по кнопке
+# «Без свободной лицензии» (только посмотреть); свободные Vimeo находит и его поиск с фильтром CC.
+FREE_STOCK_DOMAINS = ["pixabay.com", "videezy.com", "vimeo.com", "commons.wikimedia.org", "archive.org"]
+STOCK_DOMAINS = FREE_STOCK_DOMAINS + ["pexels.com", "coverr.co"]  # их страницы-не-ролики не открываем
 _WIKI_VIDEO = (".webm", ".ogv", ".ogg", ".mp4", ".mpg", ".mpeg")
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
 BRAVE_MONTHLY = 900

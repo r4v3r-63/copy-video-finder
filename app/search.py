@@ -152,6 +152,8 @@ class SearchWorker(QThread):
         self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         self.printing = printing or set()
         self.levels_used = 0  # до какого уровня расширения дошёл поиск
+        # По теме, длительности и размеру подходят, но лицензия не свободная — показываются по кнопке.
+        self.unlicensed: dict[tuple[str, str], VideoResult] = {}
 
     def cancel(self):
         self._cancel.set()
@@ -163,6 +165,14 @@ class SearchWorker(QThread):
     def rejection_counts(self) -> Counter:
         """Причины отсева по уникальным роликам, которые так и не попали в выдачу."""
         return Counter(reason for key, reason in self.rejections.items() if key not in self.seen)
+
+    def unlicensed_results(self) -> list[VideoResult]:
+        """По теме подходят, лицензия не свободная (платные — никогда): только посмотреть, ближе к теме — первыми."""
+        found = [r for key, r in self.unlicensed.items() if key not in self.seen]
+        for r in found:
+            r.view_only = True
+            r.relevance = relevance(r, self.stems, self.printing)
+        return sorted(found, key=lambda r: -r.relevance)
 
     def off_topic_results(self) -> list[VideoResult]:
         """Отсеянные только по теме (длительность, размер и лицензия подходят), ближе к полиграфии — первыми.
@@ -230,6 +240,11 @@ class SearchWorker(QThread):
             if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description, self.printing)
                                    or is_excluded(r, self.plan.exclude)):
                 reason = OFF_TOPIC
+            if reason == LICENSE and not licenses.is_paid(r.license.name if r.license else "") \
+                    and is_relevant(r, self.phrases, source.topic_in_description, self.printing) \
+                    and not is_excluded(r, self.plan.exclude):
+                r.match_hint, r.found_by = query.match, query.text
+                self.unlicensed[r.key] = r
             if reason:
                 # Ролик, не подошедший по одной фразе, может подойти по другой.
                 self.rejections[r.key] = reason

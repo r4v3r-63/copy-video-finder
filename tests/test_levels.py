@@ -149,3 +149,34 @@ def test_service_terms_now_pass(name, title):
     plan = build_plan(name, PROCS, Dictionary.load())
     phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
     assert is_relevant(video(1, title), phrases, domain=DOMAIN)
+
+
+def lic_video(i, title, name, status):
+    r = video(i, title)
+    r.license = LicenseInfo(name, status=status)
+    return r
+
+
+def test_unlicensed_shown_only_on_request():
+    """По теме, но без свободной лицензии — отдельно, «только посмотреть»; платные и не по теме — нет."""
+    plan = SearchPlan(None, [SearchQuery("wire binding", EN)])
+    answers = {"wire binding": [
+        video(1, "wire binding office"),
+        lic_video(2, "wire binding machine demo", "все права защищены", "Отклонено"),
+        lic_video(3, "wire binding paper", "CC BY-NC 3.0", "Отклонено"),
+        lic_video(4, "wire binding studio", "Coverr Premium", "Отклонено"),  # платный — никогда
+        lic_video(5, "cat on the sofa", "все права защищены", "Отклонено"),  # не по теме — никогда
+    ]}
+    worker, found = run(plan, [FakeSource(answers)])
+    assert [r.source_id for r in found] == ["1"]
+    extra = worker.unlicensed_results()
+    assert sorted(r.source_id for r in extra) == ["2", "3"]
+    assert all(r.view_only for r in extra) and not found[0].view_only
+
+
+def test_is_paid():
+    from app import licenses
+    for name in ("Coverr Premium", "Videezy Pro License", "Editorial", "платная лицензия"):
+        assert licenses.is_paid(name)
+    for name in ("все права защищены", "CC BY-NC 3.0", "Pixabay Content License", "Professional footage"):
+        assert not licenses.is_paid(name)

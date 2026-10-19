@@ -114,6 +114,13 @@ class PlayerPanel(QWidget):
         self._fill_qualities(result)
         self.set_download_state("", "")
         self.set_catalog_state("")
+        if result is not None and result.view_only:
+            # Лицензия не свободная: только посмотреть; «Не подходит» — можно.
+            self.download_button.setEnabled(False)
+            self.quality.setEnabled(False)
+            self.select_button.setEnabled(False)
+            self.catalog_status.setText("Свободной лицензии нет: скачать и добавить в каталог нельзя. "
+                                        "Использовать — только с разрешения автора (страница ролика ниже).")
         if result is None:
             self.info.setText("Выберите ролик в списке, чтобы посмотреть его.")
             return
@@ -174,7 +181,7 @@ class PlayerPanel(QWidget):
     def set_catalog_state(self, status: str, catalog_id: int | None = None):
         """Отметка ролика в каталоге: «выбрано», «отклонено» или пусто."""
         has = self.result is not None
-        self.select_button.setEnabled(has and status != SELECTED)
+        self.select_button.setEnabled(has and status != SELECTED and not self.result.view_only)
         self.reject_button.setEnabled(has and status != REJECTED)
         if status == SELECTED:
             self.catalog_status.setText(f"В каталоге, № {catalog_id}." if catalog_id else "В каталоге.")
@@ -188,7 +195,7 @@ class PlayerPanel(QWidget):
         self.download_status.setText(text)
         self.downloaded_path = path
         self.folder_button.setVisible(bool(path))
-        if self.result and self.result.files:
+        if self.result and self.result.files and not self.result.view_only:
             self.download_button.setEnabled(not busy and not path)
 
     def _download(self):

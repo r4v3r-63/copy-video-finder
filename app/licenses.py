@@ -46,6 +46,14 @@ def evaluate(name: str | None) -> tuple[str, str]:
     return REVIEW, "Лицензия не распознана — проверьте условия вручную."
 
 
+_PAID = re.compile(r"\b(PREMIUM|PRO|PAID|EDITORIAL)\b|ПЛАТН|РЕДАКЦИОН")
+
+
+def is_paid(name: str | None) -> bool:
+    """Платная или редакционная лицензия: такие ролики не показываются даже «только посмотреть»."""
+    return bool(_PAID.search((name or "").upper()))
+
+
 def attribution_text(author: str, title: str, license_name: str, url: str) -> str:
     """Готовый текст авторства: «Автор — Название — Лицензия — ссылка»."""
     return " — ".join(part for part in (author, title, license_name, url) if part)
