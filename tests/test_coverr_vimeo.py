@@ -33,19 +33,31 @@ def vimeo(cache, clock, *responses, token="vtoken"):
 
 # --- Coverr ---
 
-def test_coverr_parse(cache, clock):
+def test_coverr_parse_real_response(cache, clock):
     src = coverr(cache, clock, FakeResponse(text=fixture_text("coverr_search.json")))
-    press, portrait = src.search("printing press", SearchFilters())
-    assert press.key == ("Coverr", "Ab12Cd34")
-    assert press.title.startswith("Printing press in a print shop") and "print shop" in press.title
-    assert (press.width, press.height, press.duration) == (1920, 1080, 18.5)
-    assert press.license.name == "Coverr License" and press.license.status == licenses.ALLOWED
-    assert "обучения ИИ" in press.license.note
+    found = src.search("printing", SearchFilters())
+    first = found[0]
+    assert first.key[0] == "Coverr" and first.title
+    assert isinstance(first.duration, float) and first.duration > 0  # в ответе — строка
+    assert first.width and first.height
+    assert first.page_url.startswith("https://coverr.co/videos/") and first.page_url != "https://coverr.co/videos/"
+    assert first.license.name == "Coverr License" and first.license.status == licenses.ALLOWED
+    assert "обучения ИИ" in first.license.note
     # Скачивание — только через mp4_download (так Coverr учитывает скачивания), просмотр — mp4_preview.
-    assert [f.url for f in press.files] == ["https://storage.coverr.co/videos/ab12/download?token=x"]
-    assert preview_file(press).url == "https://storage.coverr.co/videos/ab12/preview.mp4"
-    assert portrait.files[0].quality == "Full HD"  # 1080×1920 — Full HD по короткой стороне
-    assert portrait.preview_video is None and preview_file(portrait).url.endswith("/download")
+    assert len(first.files) == 1 and first.files[0].url.startswith("https://cdn.coverr.co/")
+    assert preview_file(first).url == first.preview_video
+    # Все ролики проходят фильтр длительности без ошибок сравнения строки с числом.
+    from app.search import rejection_reason
+    for r in found:
+        rejection_reason(r, SearchFilters())
+
+
+def test_coverr_premium_rejected_ai_marked(cache, clock):
+    src = coverr(cache, clock, FakeResponse(text=fixture_text("coverr_search.json")))
+    by_id = {r.source_id: r for r in src.search("printing", SearchFilters())}
+    assert by_id["PREMIUM01"].license.status == licenses.REJECTED
+    assert by_id["AIGEN01"].license.status == licenses.ALLOWED
+    assert "создан ИИ" in by_id["AIGEN01"].license.note
 
 
 def test_coverr_request(cache, clock):
@@ -89,7 +101,9 @@ def test_vimeo_parse_and_licenses(cache, clock):
     src = vimeo(cache, clock, FakeResponse(text=fixture_text("vimeo_search.json")))
     by, by_sa, nc_nd = src.search("printing", SearchFilters())
     assert by.key == ("Vimeo", "111")
-    assert by.title == "Screen printing workshop, screen printing, posters"
+    assert by.title == "Screen printing workshop"
+    assert by.description.startswith("screen printing, posters")
+    assert VimeoSource.topic_in_description is False  # теги Vimeo ненадёжны
     assert by.page_url == "https://vimeo.com/111" and by.author == "Print Studio"
     assert by.preview_url == "https://i.vimeocdn.com/video/111_640x360"
     assert by.license.name == "CC BY" and by.license.status == licenses.ATTRIBUTION
@@ -131,3 +145,15 @@ def test_vimeo_token_required(cache, clock):
     src = vimeo(cache, clock, token="")
     with pytest.raises(AuthError, match="Токен Vimeo не задан"):
         src.search("x", SearchFilters())
+
+
+def test_not_downloadable_results_go_last(cache, clock):
+    QCoreApplication.instance() or QCoreApplication([])
+    src = vimeo(cache, clock, FakeResponse(text=fixture_text("vimeo_search.json")))
+    plan = SearchPlan(None, [SearchQuery("screen printing", EN), SearchQuery("bookbinding", EN)])
+    worker = SearchWorker(plan, [src], SearchFilters())
+    found = []
+    worker.found.connect(found.extend)
+    worker.run()
+    by_id = {r.source_id: r for r in found}
+    assert by_id["111"].relevance > by_id["222"].relevance  # 222 без ссылок на файл

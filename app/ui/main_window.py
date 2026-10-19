@@ -283,6 +283,8 @@ class MainWindow(QMainWindow):
         self._remove_placeholder()
         for r in results:
             text = f"{format_duration(r.duration)} · {r.width}×{r.height}\n{r.source} · {r.license.status}"
+            if not r.files:
+                text += "\nскачать на сайте"
             if off_topic:
                 r.relevance = -1  # в конец выдачи
                 text = "Не по теме · " + text

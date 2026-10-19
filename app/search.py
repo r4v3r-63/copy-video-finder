@@ -23,6 +23,7 @@ DURATION = "длительность"
 SIZE = "размер или ориентация"
 LICENSE = "лицензия"
 OFF_TOPIC = "не по теме"
+NO_FILES_PENALTY = 100  # ролики без ссылки на файл — после всех, которые можно скачать
 
 
 
@@ -74,6 +75,14 @@ def relevance(result: VideoResult, stems: set[str], printing: set[str]) -> int:
     return topic * 10 + domain
 
 
+def is_excluded(result: VideoResult, exclude) -> bool:
+    """Есть ли в названии или тегах слово-исключение услуги."""
+    if not exclude:
+        return False
+    tokens = _tokens(result)
+    return any(t == w.lower() or t.startswith(w.lower()) and len(w) >= 4 for t in tokens for w in exclude)
+
+
 def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True) -> bool:
     """Есть ли в названии или тегах ролика ВСЕ значимые слова хотя бы одной фразы поиска.
 
@@ -118,7 +127,7 @@ class SearchWorker(QThread):
         self.rejections: dict[tuple[str, str], str] = {}  # ролик → причина отсева
         self.off_topic: dict[tuple[str, str], VideoResult] = {}  # отсеянные «не по теме» — можно показать
         self.stems = topic_stems([q.text for q in plan.queries])
-        self.phrases = phrase_stems([q.text for q in plan.queries])
+        self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         self.printing = printing or set()
 
     def cancel(self):
@@ -176,7 +185,8 @@ class SearchWorker(QThread):
                     if r.key in self.seen:
                         continue
                     reason = rejection_reason(r, self.filters, self.only_without_attribution)
-                    if reason is None and not is_relevant(r, self.phrases, source.topic_in_description):
+                    if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description)
+                                           or is_excluded(r, self.plan.exclude)):
                         reason = OFF_TOPIC
                     if reason:
                         # Ролик, не подошедший по одной фразе, может подойти по другой.
@@ -186,6 +196,8 @@ class SearchWorker(QThread):
                         continue
                     self.seen.add(r.key)
                     r.relevance = relevance(r, self.stems, self.printing)
+                    if not r.files:
+                        r.relevance -= NO_FILES_PENALTY  # скачать можно только на сайте — ниже в выдаче
                     fresh.append(r)
                 if fresh:
                     self.found.emit(fresh)

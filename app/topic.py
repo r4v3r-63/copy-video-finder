@@ -58,29 +58,32 @@ OPTIONAL = {
 # на ценники и таблички, «calendar» — на новогодние открытки, «печать» — на что угодно.
 # Фраза из одного такого слова остаётся запросом, но ролик должен совпасть с другой фразой.
 BROAD = {
-    "печать", "печати", "печатей", "этикетки", "этикетка", "этикеток", "календарь", "календаря", "значки",
-    "значков", "магниты", "магнитов", "сублимация", "штамп", "баннер", "фото", "резка", "бумага", "принтер",
+    "печать", "печати", "печатей", "этикетки", "этикетка", "этикеток", "календарь", "календаря", "календарей",
+    "календари", "значки", "значков", "магниты", "магнитов", "сублимация", "штамп", "штампы", "штампов",
+    "баннер", "баннеры", "баннеров", "фото", "резка", "бумага", "бумаги", "принтер", "принтеры",
     "label", "labels", "calendar", "magnet", "magnets", "badge", "banner", "stamp", "photo", "cutting", "cut",
     "print", "sticker", "sublimation", "binding", "press", "heat", "laser", "vinyl", "hole", "corner", "foil",
     "spiral", "comb", "thermal", "paper", "printer",
 }
-_BROAD_STEMS = {stem(w) for w in BROAD}
 
 
-def phrase_stems(texts: list[str]) -> list[frozenset[str]]:
+def phrase_stems(texts: list[str], keep: set[str] | frozenset[str] = frozenset()) -> list[frozenset[str]]:
     """Для каждой фразы — основы её обязательных слов.
 
-    Пропускаются фразы без обязательных слов и фразы из одного широкого слова.
+    Пропускаются фразы без обязательных слов и фразы из одного широкого слова
+    (сравниваются целые слова: «фотокиоск» не широкое, хоть и начинается с «фото»).
+    Фразы из keep — ключевые слова услуги, подобранные вручную, — не пропускаются:
+    для лазерной печати «принтер» и есть предмет поиска.
     """
     def required(w: str) -> bool:
         return w not in OPTIONAL and not w.isdigit() and (len(w) >= 3 or is_significant(w))
-    sets = {frozenset(stem(w) for w in words(t) if required(w)) for t in texts}
-    return [s for s in sets if s and not (len(s) == 1 and _is_broad(next(iter(s))))]
-
-
-def _is_broad(word_stem: str) -> bool:
-    # Основы разных падежей разной длины: «календ» (календарей) и «кален» (календарь).
-    return any(word_stem.startswith(b) or b.startswith(word_stem) for b in _BROAD_STEMS)
+    result = set()
+    for t in texts:
+        req = [w for w in words(t) if required(w)]
+        if not req or (len(req) == 1 and req[0] in BROAD and t not in keep):
+            continue
+        result.add(frozenset(stem(w) for w in req))
+    return list(result)
 
 
 def key_words(phrases: list[str], limit: int = 1) -> list[str]:

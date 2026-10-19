@@ -68,8 +68,10 @@ def parse_video(v: dict) -> VideoResult:
     return VideoResult(
         source=VimeoSource.name,
         source_id=(v.get("uri") or "").rsplit("/", 1)[-1],
-        title=", ".join(t for t in (v.get("name") or "", tags) if t),
-        description=(v.get("description") or "")[:500],
+        title=v.get("name") or "",
+        # Теги Vimeo заполняют как попало («3d-printer, laser-engravers, cutters»), поэтому они
+        # только в описании, а тема проверяется по названию ролика.
+        description=", ".join(t for t in (tags, (v.get("description") or "")[:500]) if t),
         preview_url=_thumbnail(v),
         duration=v.get("duration"),
         width=v.get("width"),
@@ -86,6 +88,7 @@ def parse_video(v: dict) -> VideoResult:
 class VimeoSource(HttpSource):
     name = "Vimeo"
     homepage = "https://vimeo.com"
+    topic_in_description = False
     # Бесплатное приложение Vimeo: 50 запросов в минуту (заголовок X-RateLimit-Limit); точнее — по заголовкам.
     limits = [(50, 60, "в минуту")]
 

@@ -230,3 +230,36 @@ def test_off_topic_results_can_be_shown_but_never_bad_licenses():
     assert found == []
     shown = worker.off_topic_results()
     assert [r.source_id for r in shown] == ["1", "2"]  # «paper» ближе к полиграфии — выше
+
+
+def test_broad_words_compared_as_whole_words():
+    from app.topic import phrase_stems
+    assert phrase_stems(["фотокиоск"])  # начинается с «фото», но не широкое
+    assert phrase_stems(["сборка календарей"]) == []
+
+
+def test_curated_key_word_confirms_topic_even_if_broad():
+    from app import paths, processes
+    from app.query import Dictionary, build_plan
+    from app.search import is_relevant
+    from app.topic import phrase_stems
+    procs = processes.all_processes(processes.load_catalog(paths.resources_dir() / "processes.json"))
+    plan = build_plan("Цифровая цветная лазерная печать", procs, Dictionary.load())
+    phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
+    office_printer = tagged("1", "printing device, printer, office, cmyk")
+    assert is_relevant(office_printer, phrases)
+    # У термоэтикеток «этикетки» больше не ключевое слово — ценники не проходят.
+    plan = build_plan("Печать на термоэтикетках", procs, Dictionary.load())
+    phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
+    assert not is_relevant(tagged("2", "распродажа, цена, знак, этикетка"), phrases)
+
+
+def test_service_exclude_words():
+    from app import paths, processes
+    from app.query import Dictionary, build_plan
+    from app.search import is_excluded
+    procs = processes.all_processes(processes.load_catalog(paths.resources_dir() / "processes.json"))
+    plan = build_plan("Цифровая цветная лазерная печать", procs, Dictionary.load())
+    assert is_excluded(tagged("1", "принтер, 3д печать, 3d"), plan.exclude)
+    assert not is_excluded(tagged("2", "printer, office, paper"), plan.exclude)
+    assert build_plan("3D-печать", procs, Dictionary.load()).exclude == frozenset()

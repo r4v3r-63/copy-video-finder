@@ -27,6 +27,7 @@ _TOKEN = re.compile(r"[a-zа-яё0-9]+", re.IGNORECASE)
 class SearchQuery:
     text: str
     lang: str  # RU или EN; площадки передают его в параметр языка API
+    key: bool = False  # ключевое слово услуги из справочника (подтверждает тему даже одним словом)
 
 
 @dataclass
@@ -34,6 +35,7 @@ class SearchPlan:
     process: Process | None
     queries: list[SearchQuery]
     note: str = ""
+    exclude: frozenset[str] = frozenset()  # слова-исключения услуг плана
 
     def texts(self, lang: str) -> list[str]:
         return [q.text for q in self.queries if q.lang == lang]
@@ -97,8 +99,8 @@ def with_key_words(queries: list[SearchQuery], group: list[Process]) -> list[Sea
     """
     extra = []
     for p in group:
-        extra += [SearchQuery(w, RU) for w in (p.key_ru or key_words(p.phrases_ru))]
-        extra += [SearchQuery(w, EN) for w in (p.key_en or key_words(p.phrases_en))]
+        extra += [SearchQuery(w, RU, key=bool(p.key_ru)) for w in (p.key_ru or key_words(p.phrases_ru))]
+        extra += [SearchQuery(w, EN, key=bool(p.key_en)) for w in (p.key_en or key_words(p.phrases_en))]
     return queries + extra
 
 
@@ -126,7 +128,7 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
     proc = find_by_display(processes, text)
     if proc:
         queries = [SearchQuery(p, RU) for p in proc.phrases_ru] + [SearchQuery(p, EN) for p in proc.phrases_en]
-        return SearchPlan(proc, _unique(with_key_words(queries, [proc])))
+        return SearchPlan(proc, _unique(with_key_words(queries, [proc])), exclude=frozenset(proc.exclude))
 
     # В первую очередь — полиграфические услуги справочника: точное совпадение с категорией
     # или синонимом, иначе услуги, в названии которых есть все слова запроса.
@@ -141,7 +143,8 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
         queries += [SearchQuery(phrase, EN) for p in group for phrase in p.phrases_en[:2]]
         names = ", ".join(p.name for p in group)
         return SearchPlan(None, _unique(with_key_words(queries, group)), f"Запрос подходит к услугам: {names}. "
-                                                  "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.")
+                                                  "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.",
+                          exclude=frozenset(w for p in group for w in p.exclude))
 
     if is_russian(text):
         english = dictionary.translate(text)

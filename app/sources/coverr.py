@@ -17,8 +17,17 @@ from app.sources.http import HttpSource, quality_label
 
 API = "https://api.coverr.co"
 LICENSE_NAME = "Coverr License"
+PREMIUM_NAME = "Coverr Premium"  # платные ролики — по таблице лицензий «Отклонено»
 LICENSE_URL = "https://coverr.co/license"
 PER_PAGE = 20
+
+
+def _number(value) -> float | None:
+    """Coverr отдаёт длительность строкой («16.016000»)."""
+    try:
+        return float(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
 
 
 def parse_video(v: dict) -> VideoResult:
@@ -37,18 +46,19 @@ def parse_video(v: dict) -> VideoResult:
         title=", ".join(t for t in (title, tags) if t),
         description=v.get("description") or "",
         preview_url=v.get("thumbnail") or v.get("poster"),
-        duration=v.get("duration"),
+        duration=_number(v.get("duration")),
         width=width,
         height=height,
         has_audio=None,  # API Coverr не сообщает о звуковой дорожке
-        # Адреса страницы ролика в API нет; ведём на сайт площадки.
-        page_url=v.get("url") or CoverrSource.homepage,
+        # Страница ролика — по slug из ответа API (это страница, не файл).
+        page_url=f"{CoverrSource.homepage}/videos/{v['slug']}" if v.get("slug") else CoverrSource.homepage,
         files=files,
         author="Coverr",
         author_url=CoverrSource.homepage,
         preview_video=urls.get("mp4_preview") or None,
     )
-    result.license = CoverrSource.license_for(result)
+    result.license = CoverrSource.license_for(result, premium=bool(v.get("is_premium")),
+                                              ai=bool(v.get("is_ai_generated")))
     return result
 
 
@@ -80,10 +90,13 @@ class CoverrSource(HttpSource):
         return parse_video(data)
 
     @staticmethod
-    def license_for(result: VideoResult) -> LicenseInfo:
-        status, _ = licenses.evaluate(LICENSE_NAME)
-        return LicenseInfo(name=LICENSE_NAME, url=LICENSE_URL, status=status,
-                           note="Запрещено перепродавать ролики и использовать их для обучения ИИ.")
+    def license_for(result: VideoResult, premium: bool = False, ai: bool = False) -> LicenseInfo:
+        name = PREMIUM_NAME if premium else LICENSE_NAME
+        status, _ = licenses.evaluate(name)
+        note = "Запрещено перепродавать ролики и использовать их для обучения ИИ."
+        if ai:
+            note += " Ролик создан ИИ — это не съёмка настоящего производства."
+        return LicenseInfo(name=name, url=LICENSE_URL, status=status, note=note)
 
     def get_license(self, result: VideoResult) -> LicenseInfo:
         return self.license_for(result)

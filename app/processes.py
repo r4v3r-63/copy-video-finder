@@ -19,6 +19,8 @@ class Process:
     # Короткие ключевые слова: площадки находят по ним больше, чем по длинным фразам.
     key_ru: list[str] = field(default_factory=list)
     key_en: list[str] = field(default_factory=list)
+    # Слова, при которых ролик точно не про эту услугу (для лазерной печати — «3d»).
+    exclude: list[str] = field(default_factory=list)
 
     @property
     def display(self) -> str:
@@ -51,6 +53,7 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                 target=int(p.get("target", 3)),
                 key_ru=list(p.get("key_ru", [])),
                 key_en=list(p.get("key_en", [])),
+                exclude=list(p.get("exclude", [])),
             )
             for p in cat["processes"]
         ]
