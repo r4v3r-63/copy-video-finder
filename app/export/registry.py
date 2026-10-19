@@ -55,13 +55,6 @@ def _date(ts: float | None) -> str:
     return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M") if ts else ""
 
 
-def _parse_date(text: str) -> float | None:
-    try:
-        return datetime.strptime(text.strip(), "%Y-%m-%d %H:%M").timestamp() if text.strip() else None
-    except ValueError:
-        return None
-
-
 def _yes_no(value) -> str:
     return "" if value is None else (YES if value else NO)
 

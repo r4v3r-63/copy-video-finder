@@ -10,8 +10,12 @@ from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPalette
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from app import paths
-from app.design import *  # noqa: F403 — токены доступны и как theme.PRIMARY, theme.SPACE_L
-from app.design import LIGHT, PALETTES, Palette
+# Токены, которые виджеты берут как theme.PRIMARY, theme.SPACE_L и т. п., — тоже отсюда.
+from app.design import (  # noqa: F401 — часть импортов только для виджетов
+    CONTROL_HEIGHT, CONTROL_HEIGHT_LARGE, DARK, FONT_BODY, FONT_CAPTION, FONT_FALLBACK, FONT_FAMILY, FONT_FILES,
+    FONT_SUBTITLE, FONT_TITLE, LIGHT, PALETTES, PRIMARY, RADIUS_BUTTON, RADIUS_CARD, RADIUS_INPUT, SECONDARY, SPACE_L,
+    SPACE_M, SPACE_S, SPACE_XS, SYSTEM, TERTIARY, THEME_NAMES, Palette,
+)
 
 _current = LIGHT
 

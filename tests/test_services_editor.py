@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from app import paths, processes
 from app.processes import Level, Process
 

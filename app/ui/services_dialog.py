@@ -58,7 +58,6 @@ class ServicesDialog(QDialog):
         self.categories = copy.deepcopy(categories)
         self.link_counts = link_counts or {}
         self.current: Category | Process | None = None
-        self.reset_requested = False
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
@@ -356,7 +355,6 @@ class ServicesDialog(QDialog):
                                       "Удалить ваши правки и вернуть встроенный справочник услуг?")
         if answer == QMessageBox.StandardButton.Yes:
             paths.processes_file().unlink(missing_ok=True)
-            self.reset_requested = True
             self.accept()
 
 

@@ -26,3 +26,11 @@ ffmpeg/
 
 # Встроенные ключи API (сборка создаёт из секретов GitHub)
 defaults.json
+
+# Редакторы, системы, инструменты
+.idea/
+.vscode/
+.ruff_cache/
+*.log
+Thumbs.db
+.DS_Store
