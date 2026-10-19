@@ -4,6 +4,7 @@ import logging
 import sys
 
 from PyQt6.QtCore import QLockFile
+from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from app import paths, processes
@@ -29,6 +30,7 @@ def main() -> int:
     setup_logging()
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
+    QNetworkProxyFactory.setUseSystemConfiguration(True)
 
     lock = QLockFile(str(paths.lock_file()))
     lock.setStaleLockTime(0)

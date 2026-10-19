@@ -8,6 +8,31 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 
+class SourceError(Exception):
+    """Ошибка площадки; текст — понятное пользователю сообщение на русском."""
+
+    def __init__(self, source: str, message: str):
+        super().__init__(message)
+        self.source = source
+        self.message = message
+
+
+class AuthError(SourceError):
+    """Ключ не задан или неверный."""
+
+
+class RateLimitError(SourceError):
+    """Лимит запросов исчерпан."""
+
+
+class NetworkError(SourceError):
+    """Нет связи с площадкой."""
+
+
+class NotFoundError(SourceError):
+    """Ролик удалён с площадки."""
+
+
 @dataclass
 class VideoFile:
     quality: str  # например, "hd", "fhd", "4k" или подпись из API

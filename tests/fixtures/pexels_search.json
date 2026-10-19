@@ -1,0 +1,50 @@
+{
+  "_comment": "Составлено по формату ответа GET /videos/search из документации Pexels API; ссылки не настоящие.",
+  "page": 1,
+  "per_page": 20,
+  "total_results": 3,
+  "url": "https://api.pexels.com/videos/search?query=laminator",
+  "videos": [
+    {
+      "id": 1001,
+      "width": 1920,
+      "height": 1080,
+      "duration": 15,
+      "url": "https://www.pexels.com/video/woman-using-a-laminating-machine-1001/",
+      "image": "https://images.pexels.com/videos/1001/preview.jpeg",
+      "user": {"id": 77, "name": "Anna Example", "url": "https://www.pexels.com/@anna-example"},
+      "video_files": [
+        {"id": 1, "quality": "sd", "file_type": "video/mp4", "width": 640, "height": 360, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/sd_640_360.mp4"},
+        {"id": 2, "quality": "hd", "file_type": "video/mp4", "width": 1920, "height": 1080, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/hd_1920_1080.mp4"},
+        {"id": 3, "quality": "uhd", "file_type": "video/mp4", "width": 3840, "height": 2160, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/uhd_3840_2160.mp4"}
+      ],
+      "video_pictures": [{"id": 10, "picture": "https://images.pexels.com/videos/1001/pictures/preview-0.jpg", "nr": 0}]
+    },
+    {
+      "id": 1002,
+      "width": 1080,
+      "height": 1920,
+      "duration": 120,
+      "url": "https://www.pexels.com/video/printing-press-in-a-factory-1002/",
+      "image": "https://images.pexels.com/videos/1002/preview.jpeg",
+      "user": {"id": 78, "name": "Boris Example", "url": "https://www.pexels.com/@boris-example"},
+      "video_files": [
+        {"id": 4, "quality": "hd", "file_type": "video/mp4", "width": 1080, "height": 1920, "fps": 30, "link": "https://videos.pexels.com/video-files/1002/hd_1080_1920.mp4"}
+      ],
+      "video_pictures": []
+    },
+    {
+      "id": 1003,
+      "width": 1280,
+      "height": 720,
+      "duration": 30,
+      "url": "https://www.pexels.com/video/1003/",
+      "image": "https://images.pexels.com/videos/1003/preview.jpeg",
+      "user": {"id": 79, "name": "Clara Example", "url": "https://www.pexels.com/@clara-example"},
+      "video_files": [
+        {"id": 5, "quality": "hd", "file_type": "video/mp4", "width": 1280, "height": 720, "fps": 30, "link": "https://videos.pexels.com/video-files/1003/hd_1280_720.mp4"}
+      ],
+      "video_pictures": []
+    }
+  ]
+}
