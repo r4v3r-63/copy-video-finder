@@ -267,6 +267,12 @@ def test_service_exclude_words():
     assert is_excluded(tagged("3", "A man opens the shredder machine after cutting a sheet, paper"), guillotine.exclude)
     assert is_excluded(tagged("4", "automatic paper tube cutting machine"), guillotine.exclude)
     assert not is_excluded(tagged("5", "Paper cutting process in a press"), guillotine.exclude)
+    perforation = build_plan("Перфорация", procs, Dictionary.load())
+    assert is_excluded(tagged("6", "Tectonic Penetrating Keratoplasty for Corneal Perforation"), perforation.exclude)
+    assert is_excluded(tagged("7", "пощечина, перфоратор, бить, драка"), perforation.exclude)
+    eyelets = build_plan("Установка пикколо / люверсов", procs, Dictionary.load())
+    assert is_excluded(tagged("8", "Car Air Box Grommet Assembly"), eyelets.exclude)
+    assert not is_excluded(tagged("9", "Heavy_Duty_Grommet_Press"), eyelets.exclude)
 
 
 @pytest.mark.parametrize("tags, ok", [
@@ -292,6 +298,9 @@ def test_service_exclude_words():
     ("typewriter, typing, writing, print, printing, vintage", False),
     ("origami, paper art, fold, paper folding", False),
     ("DC Catwoman Lonely City Hardcover Comic Book Trailer", False),
+    ("crocus, blossom, bloom, yellow flower, rubber stamp, time lapse", False),
+    ("принтер, 3д принтер, зубы, протез, 3d, человек, искусственные зубы", False),
+    ("Wayne Rich - The Boardroom Surfboard Show - Chunk of Foam Challenge", False),
 ])
 def test_only_printing_domain(tags, ok):
     from app.search import is_relevant
@@ -317,12 +326,14 @@ def test_rejected_before_are_hidden():
     ("Creative Sandbox: Spider Plotter", False),
     ("A Scanner Darkly V12", False),
     ("Car Scanner // Product Video", False),
+    ("DTF ST. LOUIS - Georgia Entertainment Industries/Elephant Pictures", False),
+    ("DTF Printing on t-shirt", True),
     ("плоттер, принтер, наклейка, бумага", True),
     ("Wide format plotter printing banners", True),
 ])
 def test_single_key_word_needs_print_context(title, ok):
     from app.search import is_relevant
     from app.topic import phrase_stems
-    phrases = phrase_stems(["plotter", "scanner", "плоттер", "wide format plotter printing"],
-                           keep={"plotter", "scanner", "плоттер"})
+    phrases = phrase_stems(["plotter", "scanner", "плоттер", "dtf", "wide format plotter printing"],
+                           keep={"plotter", "scanner", "плоттер", "dtf"})
     assert is_relevant(tagged("1", title), phrases) is ok
