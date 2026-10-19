@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import paths, processes
+from app import paths, processes, query
 from app.settings import Settings
 from app.ui.settings_dialog import SettingsDialog
 
@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = settings
         self.processes = processes.all_processes(catalog)
+        self.dictionary = query.Dictionary.load()
         self.setWindowTitle("Поиск видео для копицентров Copy.ru")
         self.resize(1000, 700)
 
@@ -101,23 +102,26 @@ class MainWindow(QMainWindow):
         self.query.setText(text)
         self.run_search()
 
-    def search_phrases(self) -> tuple[processes.Process | None, list[str]]:
-        """Услуга из справочника и фразы для поиска; для произвольного текста — сам текст."""
-        text = self.query.text().strip()
-        proc = processes.find_by_display(self.processes, text)
-        if proc:
-            return proc, proc.phrases
-        return None, [text] if text else []
+    def search_plan(self) -> query.SearchPlan:
+        """Запросы на русском и английском для введённой услуги или свободного текста."""
+        return query.build_plan(self.query.text(), self.processes, self.dictionary)
 
     def run_search(self):
-        proc, phrases = self.search_phrases()
-        if not phrases:
+        plan = self.search_plan()
+        if not plan.queries:
             return
-        if proc:
-            header = f"Услуга: {proc.name} ({proc.category}). Поисковые фразы: {', '.join(phrases)}"
+        lines = []
+        if plan.process:
+            lines.append(f"Услуга: {plan.process.name} ({plan.process.category})")
         else:
-            header = f"Произвольный запрос: {phrases[0]}"
-        self.query_info.setText(header)
+            lines.append("Произвольный запрос")
+        for lang, title in ((query.RU, "по-русски"), (query.EN, "по-английски")):
+            texts = plan.texts(lang)
+            if texts:
+                lines.append(f"Ищем {title}: {', '.join(texts)}")
+        if plan.note:
+            lines.append(plan.note)
+        self.query_info.setText("\n".join(lines))
         self.results.clear()
         # Поиск по площадкам подключается на этапе 2.
         self.results.addItem("Поиск по площадкам будет подключён на следующем этапе.")

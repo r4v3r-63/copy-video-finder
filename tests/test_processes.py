@@ -17,15 +17,15 @@ def test_process_ids_unique_and_phrases_present():
     procs = processes.all_processes(catalog())
     assert len({p.id for p in procs}) == len(procs)
     for proc in procs:
-        assert proc.phrases, proc.id
-        assert all(p.strip() for p in proc.phrases), proc.id
+        assert proc.phrases_ru and proc.phrases_en, proc.id
+        assert all(p.strip() for p in proc.phrases_ru + proc.phrases_en), proc.id
         assert proc.target >= 2
 
 
 def test_generic_queries_not_used():
-    generic = {"printing", "print", "printer", "video"}
+    generic = {"printing", "print", "printer", "video", "печать", "видео"}
     for proc in processes.all_processes(catalog()):
-        assert not generic & {p.lower() for p in proc.phrases}, proc.id
+        assert not generic & {p.lower() for p in proc.phrases_ru + proc.phrases_en}, proc.id
 
 
 def test_suggest_by_name_prefix():
@@ -63,7 +63,7 @@ def test_find_by_display():
 
 def test_user_copy_overrides_builtin(data_dir):
     custom = {"categories": [{"id": "c", "name": "Кат", "processes": [
-        {"id": "p", "name": "Услуга", "phrases": ["x y"]}]}]}
+        {"id": "p", "name": "Услуга", "phrases_ru": ["икс"], "phrases_en": ["x y"]}]}]}
     paths.processes_file().write_text(json.dumps(custom, ensure_ascii=False), encoding="utf-8")
     cats = processes.load_catalog()
     assert [p.id for p in processes.all_processes(cats)] == ["p"]

@@ -12,7 +12,8 @@ class Process:
     id: str
     name: str
     category: str
-    phrases: list[str]
+    phrases_ru: list[str]
+    phrases_en: list[str]
     aliases: list[str] = field(default_factory=list)
     target: int = 3
 
@@ -41,7 +42,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                 id=p["id"],
                 name=p["name"],
                 category=cat["name"],
-                phrases=list(p["phrases"]),
+                phrases_ru=list(p.get("phrases_ru", [])),
+                phrases_en=list(p.get("phrases_en", p.get("phrases", []))),
                 aliases=list(p.get("aliases", [])),
                 target=int(p.get("target", 3)),
             )

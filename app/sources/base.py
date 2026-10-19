@@ -60,7 +60,8 @@ class Source(ABC):
     homepage: str = ""  # ссылка на площадку показывается рядом с её результатами
 
     @abstractmethod
-    def search(self, query: str, filters: SearchFilters, page: int = 1) -> list[VideoResult]:
+    def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
+        """Поиск по фразе; lang — язык фразы ("ru" или "en") для параметра языка API."""
         ...
 
     @abstractmethod
