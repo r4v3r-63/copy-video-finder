@@ -55,6 +55,23 @@ jobs:
           Copy-Item "$root/bin/ffmpeg.exe", "$root/bin/ffprobe.exe" $target
           Copy-Item "$root/LICENSE" "$target/LICENSE.txt"
 
+      - name: Встроенные ключи API из секретов репозитория
+        shell: pwsh
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          VIMEO_TOKEN: ${{ secrets.VIMEO_TOKEN }}
+          COVERR_API_KEY: ${{ secrets.COVERR_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          # Ключи не хранятся в коде: они берутся из Settings → Secrets репозитория.
+          $keys = [ordered]@{}
+          if ($env:PIXABAY_API_KEY) { $keys.pixabay_api_key = $env:PIXABAY_API_KEY }
+          if ($env:VIMEO_TOKEN) { $keys.vimeo_token = $env:VIMEO_TOKEN }
+          if ($env:COVERR_API_KEY) { $keys.coverr_api_key = $env:COVERR_API_KEY }
+          if ($env:PEXELS_API_KEY) { $keys.pexels_api_key = $env:PEXELS_API_KEY }
+          [IO.File]::WriteAllText("dist/CopyVideoFinder/defaults.json", ($keys | ConvertTo-Json))
+          Write-Host "Встроено ключей: $($keys.Count) ($($keys.Keys -join ', '))"
+
       - name: Проверка запуска
         shell: pwsh
         run: |

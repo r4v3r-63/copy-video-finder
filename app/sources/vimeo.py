@@ -86,8 +86,8 @@ def parse_video(v: dict) -> VideoResult:
 class VimeoSource(HttpSource):
     name = "Vimeo"
     homepage = "https://vimeo.com"
-    # Лимиты Vimeo зависят от приложения и приходят в заголовках; своё ограничение — с запасом.
-    limits = [(100, 60, "в минуту"), (1000, 3600, "в час")]
+    # Бесплатное приложение Vimeo: 50 запросов в минуту (заголовок X-RateLimit-Limit); точнее — по заголовкам.
+    limits = [(50, 60, "в минуту")]
 
     def __init__(self, token: str, cache: Cache, session: requests.Session | None = None, now=time.time):
         super().__init__(cache, session, now)

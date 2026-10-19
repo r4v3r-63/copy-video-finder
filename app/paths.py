@@ -57,6 +57,11 @@ def cache_dir() -> Path:
     return path
 
 
+def defaults_file() -> Path:
+    """Встроенные ключи API: сборка кладёт их рядом с exe из секретов GitHub, в репозитории их нет."""
+    return app_dir() / "defaults.json"
+
+
 def default_download_dir() -> Path:
     return data_dir() / "Видео"
 

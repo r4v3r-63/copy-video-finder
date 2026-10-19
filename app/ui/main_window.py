@@ -43,11 +43,11 @@ THUMB = QSize(256, 144)
 
 def all_sources(settings: Settings, cache: Cache) -> list[Source]:
     return [
-        PixabaySource(settings.pixabay_api_key, cache),
-        CoverrSource(settings.coverr_api_key, cache),
-        VimeoSource(settings.vimeo_token, cache),
+        PixabaySource(settings.key("pixabay_api_key"), cache),
+        CoverrSource(settings.key("coverr_api_key"), cache),
+        VimeoSource(settings.key("vimeo_token"), cache),
         WikimediaSource(cache),
-        PexelsSource(settings.pexels_api_key, cache),
+        PexelsSource(settings.key("pexels_api_key"), cache),
     ]
 
 

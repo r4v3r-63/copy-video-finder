@@ -23,3 +23,6 @@ dist/
 ffmpeg/
 *.zip
 Видео/
+
+# Встроенные ключи API (сборка создаёт из секретов GitHub)
+defaults.json

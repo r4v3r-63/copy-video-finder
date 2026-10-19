@@ -1,6 +1,8 @@
 """Настройки программы: ключи API и параметры поиска.
 
 Хранятся в «Данные/settings.json». Ключи в коде не хранятся и не коммитятся.
+Встроенные ключи сборка кладёт в defaults.json рядом с exe (из секретов GitHub);
+ключ, введённый пользователем, главнее встроенного.
 """
 
 import json
@@ -41,8 +43,27 @@ class Settings:
         known = {f.name for f in fields(cls)}
         return cls(**{k: v for k, v in raw.items() if k in known})
 
+    def key(self, name: str) -> str:
+        """Ключ API: введённый пользователем, иначе встроенный в сборку."""
+        return getattr(self, name) or built_in_keys().get(name, "")
+
     def save(self, path: Path | None = None) -> None:
         path = path or paths.settings_file()
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2), encoding="utf-8")
         tmp.replace(path)
+
+
+KEY_FIELDS = ("pexels_api_key", "pixabay_api_key", "coverr_api_key", "vimeo_token")
+
+
+def built_in_keys(path: Path | None = None) -> dict[str, str]:
+    path = path or paths.defaults_file()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as exc:
+        log.error("Не удалось прочитать встроенные ключи %s: %s", path, exc)
+        return {}
+    return {k: str(v).strip() for k, v in raw.items() if k in KEY_FIELDS and str(v).strip()}

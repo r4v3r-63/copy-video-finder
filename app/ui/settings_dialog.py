@@ -16,11 +16,13 @@ from PyQt6.QtWidgets import (
 )
 
 from app import paths
-from app.settings import Settings
+from app.settings import Settings, built_in_keys
 
 
-def _key_field(value: str) -> tuple[QWidget, QLineEdit]:
+def _key_field(value: str, built_in: bool = False) -> tuple[QWidget, QLineEdit]:
     edit = QLineEdit(value)
+    if built_in:
+        edit.setPlaceholderText("встроенный ключ — можно не заполнять")
     edit.setEchoMode(QLineEdit.EchoMode.Password)
     toggle = QPushButton("Показать")
     toggle.setCheckable(True)
@@ -52,16 +54,17 @@ class SettingsDialog(QDialog):
         self._settings = settings
 
         form = QFormLayout()
-        pexels_row, self.pexels_key = _key_field(settings.pexels_api_key)
+        built = built_in_keys()
+        pexels_row, self.pexels_key = _key_field(settings.pexels_api_key, "pexels_api_key" in built)
         form.addRow("Ключ API Pexels:", pexels_row)
         form.addRow("", _link("Получить ключ Pexels", "https://www.pexels.com/api/"))
-        pixabay_row, self.pixabay_key = _key_field(settings.pixabay_api_key)
+        pixabay_row, self.pixabay_key = _key_field(settings.pixabay_api_key, "pixabay_api_key" in built)
         form.addRow("Ключ API Pixabay:", pixabay_row)
         form.addRow("", _link("Получить ключ Pixabay", "https://pixabay.com/api/docs/"))
-        coverr_row, self.coverr_key = _key_field(settings.coverr_api_key)
+        coverr_row, self.coverr_key = _key_field(settings.coverr_api_key, "coverr_api_key" in built)
         form.addRow("Ключ API Coverr:", coverr_row)
         form.addRow("", _link("Получить ключ Coverr (бесплатно — 50 запросов в час)", "https://coverr.co/developers"))
-        vimeo_row, self.vimeo_token = _key_field(settings.vimeo_token)
+        vimeo_row, self.vimeo_token = _key_field(settings.vimeo_token, "vimeo_token" in built)
         form.addRow("Токен Vimeo:", vimeo_row)
         form.addRow("", _link("Создать приложение и личный токен Vimeo (права public)",
                               "https://developer.vimeo.com/apps"))
