@@ -12,10 +12,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app import paths
-from app.processes import Process, find_by_display
+from app.processes import Process, find_by_display, normalize, suggest
 
 RU = "ru"
 EN = "en"
+MAX_GROUP = 4  # больше услуг на один запрос — слишком много запросов к площадкам
 
 _CYRILLIC = re.compile(r"[а-яё]", re.IGNORECASE)
 _TOKEN = re.compile(r"[a-zа-яё0-9]+", re.IGNORECASE)
@@ -96,6 +97,12 @@ def _unique(queries: list[SearchQuery]) -> list[SearchQuery]:
     return result
 
 
+def matching_group(processes: list[Process], text: str) -> list[Process]:
+    """Услуги, у которых запрос совпал с названием категории или с синонимом."""
+    norm = normalize(text)
+    return [p for p in processes if norm == normalize(p.category) or norm in (normalize(a) for a in p.aliases)]
+
+
 def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> SearchPlan:
     text = " ".join(text.split())
     if not text:
@@ -105,6 +112,21 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
     if proc:
         queries = [SearchQuery(p, RU) for p in proc.phrases_ru] + [SearchQuery(p, EN) for p in proc.phrases_en]
         return SearchPlan(proc, _unique(queries))
+
+    # В первую очередь — полиграфические услуги справочника: точное совпадение с категорией
+    # или синонимом, иначе услуги, в названии которых есть все слова запроса.
+    group = matching_group(processes, text)
+    if not group and len(text) >= 4:
+        group = suggest(processes, text, limit=MAX_GROUP)
+    if len(group) == 1:
+        return build_plan(group[0].display, processes, dictionary)
+    if group:
+        # По главной русской и двум английским фразам каждой услуги — чтобы не тратить лимиты.
+        queries = [SearchQuery(p.phrases_ru[0], RU) for p in group if p.phrases_ru]
+        queries += [SearchQuery(phrase, EN) for p in group for phrase in p.phrases_en[:2]]
+        names = ", ".join(p.name for p in group)
+        return SearchPlan(None, _unique(queries), f"Запрос подходит к услугам: {names}. "
+                                                  "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.")
 
     if is_russian(text):
         english = dictionary.translate(text)

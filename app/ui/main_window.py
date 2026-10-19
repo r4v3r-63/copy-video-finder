@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import (
 from app import paths, processes, query
 from app.cache import Cache
 from app.downloader import DownloadJob, DownloadQueue
-from app.search import SearchWorker
+from app.search import SearchWorker, print_stems
 from app.settings import Settings
 from app.sources.base import SearchFilters, Source, VideoResult
 from app.sources.pexels import PexelsSource
@@ -56,6 +56,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = settings
         self.processes = processes.all_processes(catalog)
+        self.printing = print_stems(self.processes)
+        self._thumb_items: dict[str, QListWidgetItem] = {}
         self.dictionary = query.Dictionary.load()
         self.cache = cache or Cache()
         self.worker: SearchWorker | None = None
@@ -207,8 +209,9 @@ class MainWindow(QMainWindow):
         self.sources_seen = {}
         self.source_links.setText("")
 
+        self._thumb_items = {}
         self.worker = SearchWorker(plan, self.sources, self.filters(),
-                                   self.settings.only_without_attribution, self)
+                                   self.settings.only_without_attribution, self, printing=self.printing)
         self.worker.found.connect(self._add_results)
         self.worker.problem.connect(self._on_problem)
         self.worker.progress.connect(self._on_progress)
@@ -244,10 +247,16 @@ class MainWindow(QMainWindow):
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setToolTip(r.title or r.page_url)
             item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 56))
-            self.results.addItem(item)
+            # Ближе к теме и к полиграфии — выше в выдаче.
+            row = next((i for i in range(self.results.count())
+                        if (self.results.item(i).data(Qt.ItemDataRole.UserRole).relevance < r.relevance)),
+                       self.results.count())
+            self.results.insertItem(row, item)
             if r.preview_url:
+                token = f"{r.source}|{r.source_id}"
+                self._thumb_items[token] = item
                 request = QNetworkRequest(QUrl(r.preview_url))
-                request.setAttribute(QNetworkRequest.Attribute.User, self.results.count() - 1)
+                request.setAttribute(QNetworkRequest.Attribute.User, token)
                 self.network.get(request)
             # Рядом с результатами площадки всегда ссылка на неё (требование Pexels и Pixabay).
             homepage = next((s.homepage for s in self.sources if s.name == r.source), "")
@@ -257,12 +266,12 @@ class MainWindow(QMainWindow):
         self.source_links.setText("Видео предоставлены: " + ", ".join(links))
 
     def _on_thumbnail(self, reply: QNetworkReply):
-        row = reply.request().attribute(QNetworkRequest.Attribute.User)
-        if reply.error() == QNetworkReply.NetworkError.NoError and row is not None:
+        token = reply.request().attribute(QNetworkRequest.Attribute.User)
+        if reply.error() == QNetworkReply.NetworkError.NoError and token is not None:
             pixmap = QPixmap()
             if pixmap.loadFromData(reply.readAll()):
-                item = self.results.item(int(row))
-                if item:
+                item = self._thumb_items.get(str(token))
+                if item and self.results.row(item) >= 0:
                     item.setIcon(QIcon(pixmap.scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
                                                      Qt.TransformationMode.SmoothTransformation)))
         reply.deleteLater()
@@ -327,8 +336,10 @@ class MainWindow(QMainWindow):
             return
         count = self.results.count()
         message = f"Найдено подходящих роликов: {count}"
-        if self.worker.rejected:
-            message += f" (отсеяно по длительности, размеру или лицензии: {self.worker.rejected})"
+        counts = self.worker.rejection_counts()
+        if counts:
+            details = ", ".join(f"{reason} — {n}" for reason, n in counts.most_common())
+            message += f". Отсеяно: {details}"
         self.statusBar().showMessage(message)
         if self.problems:
             self.query_info.setText(self.query_info.text() + "\n" + "\n".join(self.problems))

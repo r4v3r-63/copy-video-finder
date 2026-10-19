@@ -95,6 +95,8 @@ def parse_page(page: dict) -> VideoResult:
 class WikimediaSource(HttpSource):
     name = "Wikimedia Commons"
     homepage = "https://commons.wikimedia.org"
+    # Описания Commons слишком широкие («laminated» в научных роликах) — тема по названию файла.
+    topic_in_description = False
     # Своё вежливое ограничение: у Wikimedia нет фиксированного лимита для анонимных запросов,
     # но частые запросы с одного адреса получают 429.
     limits = [(30, 60, "в минуту"), (500, 3600, "в час")]

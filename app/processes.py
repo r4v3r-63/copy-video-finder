@@ -57,7 +57,7 @@ def all_processes(categories: list[Category]) -> list[Process]:
     return [p for c in categories for p in c.processes]
 
 
-def _normalize(text: str) -> str:
+def normalize(text: str) -> str:
     return " ".join(text.lower().replace("ё", "е").split())
 
 
@@ -68,17 +68,17 @@ def suggest(processes: list[Process], text: str, limit: int = 10) -> list[Proces
     должно встречаться хотя бы как начало слова. Сначала идут услуги, у которых
     название начинается с запроса.
     """
-    query = _normalize(text)
+    query = normalize(text)
     if not query:
         return []
     words = query.split()
     scored = []
     for order, proc in enumerate(processes):
-        haystacks = [_normalize(s) for s in (proc.name, proc.category, *proc.aliases)]
+        haystacks = [normalize(s) for s in (proc.name, proc.category, *proc.aliases)]
         tokens = [t for h in haystacks for t in h.replace("/", " ").replace("-", " ").split()]
         if not all(any(t.startswith(w) for t in tokens) for w in words):
             continue
-        name = _normalize(proc.name)
+        name = normalize(proc.name)
         if name.startswith(query):
             rank = 0
         elif any(h.startswith(query) for h in haystacks):
@@ -92,8 +92,8 @@ def suggest(processes: list[Process], text: str, limit: int = 10) -> list[Proces
 
 def find_by_display(processes: list[Process], text: str) -> Process | None:
     """Точное совпадение с подсказкой или названием услуги."""
-    norm = _normalize(text)
+    norm = normalize(text)
     for proc in processes:
-        if norm in (_normalize(proc.display), _normalize(proc.name)):
+        if norm in (normalize(proc.display), normalize(proc.name)):
             return proc
     return None

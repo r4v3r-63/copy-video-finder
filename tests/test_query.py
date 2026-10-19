@@ -27,10 +27,10 @@ def test_every_service_has_both_languages():
 
 
 def test_free_russian_text_is_translated():
-    plan = build_plan("брошюровка на пружину", PROCS, DICT)
+    plan = build_plan("брошюровка на скобу и пружину", PROCS, DICT)
     assert plan.process is None
-    assert plan.texts(RU) == ["брошюровка на пружину"]
-    assert plan.texts(EN) == ["spiral binding"]
+    assert plan.texts(RU) == ["брошюровка на скобу и пружину"]
+    assert plan.texts(EN) == ["binding staple spiral"]
 
 
 def test_translation_examples():
@@ -70,3 +70,33 @@ def test_empty_and_duplicates():
 def test_is_russian():
     assert is_russian("3D печать")
     assert not is_russian("3d printing")
+
+
+def test_category_word_searches_all_its_services():
+    plan = build_plan("ламинация", PROCS, DICT)
+    assert plan.process is None
+    lam = [by_id(i) for i in ("lam_pouch", "lam_roll", "lam_wide")]
+    assert plan.texts(RU) == [p.phrases_ru[0] for p in lam]
+    assert plan.texts(EN) == [ph for p in lam for ph in p.phrases_en[:2]]
+    assert "Запрос подходит к услугам" in plan.note
+
+
+def test_alias_of_one_service_is_that_service():
+    plan = build_plan("люверсы", PROCS, DICT)
+    assert plan.process is by_id("eyelets")
+    plan = build_plan("брошюровка на пружину", PROCS, DICT)  # синоним двух услуг
+    assert {by_id("wire_binding").phrases_ru[0], by_id("comb_binding").phrases_ru[0]} <= set(plan.texts(RU))
+
+
+def test_free_text_goes_to_catalog_services_first():
+    plan = build_plan("гравировка", PROCS, DICT)  # часть названия одной услуги
+    assert plan.process is by_id("laser_engraving")
+    plan = build_plan("термо", PROCS, DICT)  # начало слов нескольких услуг
+    assert plan.process is None and "Запрос подходит к услугам" in plan.note
+    assert len(plan.texts(RU)) <= 4
+
+
+def test_text_without_service_is_translated():
+    plan = build_plan("офсетная машина", PROCS, DICT)
+    assert plan.texts(RU) == ["офсетная машина"]
+    assert plan.texts(EN) == ["machine"]

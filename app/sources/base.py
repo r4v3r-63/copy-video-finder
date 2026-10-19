@@ -66,6 +66,7 @@ class VideoResult:
     author: str = ""
     author_url: str | None = None
     license: LicenseInfo | None = None
+    relevance: int = 0  # близость к теме поиска и к полиграфии; по ней сортируется выдача
 
     @property
     def key(self) -> tuple[str, str]:
@@ -83,6 +84,8 @@ class SearchFilters:
 class Source(ABC):
     name: str = ""
     homepage: str = ""  # ссылка на площадку показывается рядом с её результатами
+    # Искать ли слова темы и в описании ролика, а не только в названии/тегах.
+    topic_in_description: bool = True
 
     def is_configured(self) -> bool:
         """Есть ли всё нужное для запросов (например, ключ API)."""
