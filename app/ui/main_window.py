@@ -143,6 +143,13 @@ class MainWindow(QMainWindow):
         central.setLayout(layout)
         self.setCentralWidget(central)
 
+        self.show_rejected = QPushButton()
+        self.show_rejected.setFlat(True)
+        self.show_rejected.setToolTip("Ролики, у которых в названии и тегах нет слов услуги. "
+                                      "Лицензия, длительность и размер у них подходят.")
+        self.show_rejected.clicked.connect(self._show_off_topic)
+        self.show_rejected.hide()
+        self.statusBar().addPermanentWidget(self.show_rejected)
         self.statusBar().showMessage(f"Папка данных: {paths.data_dir()}")
         self._show_hint()
 
@@ -228,6 +235,7 @@ class MainWindow(QMainWindow):
         if skipped:
             info += f" (без ключа пропущены: {', '.join(skipped)})"
         self.query_info.setText(info)
+        self.show_rejected.hide()
         self.plan = plan
         self.plan_text = self.query.text().strip()
         self.results.clear()
@@ -267,16 +275,23 @@ class MainWindow(QMainWindow):
             lines.append(plan.note)
         return "\n".join(lines)
 
-    def _add_results(self, results: list[VideoResult]):
+    def _add_results(self, results: list[VideoResult], off_topic: bool = False):
+        self._remove_placeholder()
         for r in results:
             text = f"{format_duration(r.duration)} · {r.width}×{r.height}\n{r.source} · {r.license.status}"
+            if off_topic:
+                r.relevance = -1  # в конец выдачи
+                text = "Не по теме · " + text
             item = QListWidgetItem(text)
+            if off_topic:
+                item.setForeground(self.palette().placeholderText())
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setToolTip(r.title or r.page_url)
             item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 56))
             # Ближе к теме и к полиграфии — выше в выдаче.
             row = next((i for i in range(self.results.count())
-                        if (self.results.item(i).data(Qt.ItemDataRole.UserRole).relevance < r.relevance)),
+                        if self.results.item(i).data(Qt.ItemDataRole.UserRole) is not None
+                        and self.results.item(i).data(Qt.ItemDataRole.UserRole).relevance < r.relevance),
                        self.results.count())
             self.results.insertItem(row, item)
             if r.preview_url:
@@ -370,8 +385,32 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(message)
         if self.problems:
             self.query_info.setText(self.query_info.text() + "\n" + "\n".join(self.problems))
+        rejected = len(self.worker.off_topic_results())
+        if rejected:
+            self.show_rejected.setText(f"Показать отсеянные «не по теме» ({rejected})")
+            self.show_rejected.show()
         if count == 0 and not self.problems:
-            self.results.addItem("Ничего не найдено. Попробуйте другую формулировку.")
+            text = "Подходящих роликов не найдено."
+            if self.plan and self.plan.process:
+                text += " На бесплатных стоках по этой услуге роликов почти нет."
+            if rejected:
+                text += "\nМожно посмотреть отсеянные «не по теме» — кнопка внизу справа."
+            else:
+                text += " Попробуйте другую формулировку."
+            placeholder = QListWidgetItem(text)
+            placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
+            placeholder.setSizeHint(QSize(THUMB.width() * 2, 80))
+            self.results.addItem(placeholder)
+
+    def _remove_placeholder(self):
+        for i in reversed(range(self.results.count())):
+            if self.results.item(i).data(Qt.ItemDataRole.UserRole) is None:
+                self.results.takeItem(i)
+
+    def _show_off_topic(self):
+        if self.worker:
+            self._add_results(self.worker.off_topic_results(), off_topic=True)
+        self.show_rejected.hide()
 
     def _clear_cache(self):
         self.cache.clear_responses()

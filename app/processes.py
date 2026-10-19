@@ -16,6 +16,9 @@ class Process:
     phrases_en: list[str]
     aliases: list[str] = field(default_factory=list)
     target: int = 3
+    # Короткие ключевые слова: площадки находят по ним больше, чем по длинным фразам.
+    key_ru: list[str] = field(default_factory=list)
+    key_en: list[str] = field(default_factory=list)
 
     @property
     def display(self) -> str:
@@ -46,6 +49,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                 phrases_en=list(p.get("phrases_en", p.get("phrases", []))),
                 aliases=list(p.get("aliases", [])),
                 target=int(p.get("target", 3)),
+                key_ru=list(p.get("key_ru", [])),
+                key_en=list(p.get("key_en", [])),
             )
             for p in cat["processes"]
         ]

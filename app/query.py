@@ -13,6 +13,7 @@ from pathlib import Path
 
 from app import paths
 from app.processes import Process, find_by_display, normalize, suggest
+from app.topic import key_words
 
 RU = "ru"
 EN = "en"
@@ -87,6 +88,20 @@ def is_russian(text: str) -> bool:
     return bool(_CYRILLIC.search(text))
 
 
+def with_key_words(queries: list[SearchQuery], group: list[Process]) -> list[SearchQuery]:
+    """Добавить ключевые слова услуг («laminator», «ламинатор»).
+
+    Длинные фразы площадки понимают плохо (Pixabay ищет по любому слову фразы),
+    а по короткому ключевому слову находятся хотя бы близкие ролики. Ключевые слова
+    задаются в справочнике; если их нет — берётся самое частое значимое слово фраз.
+    """
+    extra = []
+    for p in group:
+        extra += [SearchQuery(w, RU) for w in (p.key_ru or key_words(p.phrases_ru))]
+        extra += [SearchQuery(w, EN) for w in (p.key_en or key_words(p.phrases_en))]
+    return queries + extra
+
+
 def _unique(queries: list[SearchQuery]) -> list[SearchQuery]:
     seen, result = set(), []
     for q in queries:
@@ -111,7 +126,7 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
     proc = find_by_display(processes, text)
     if proc:
         queries = [SearchQuery(p, RU) for p in proc.phrases_ru] + [SearchQuery(p, EN) for p in proc.phrases_en]
-        return SearchPlan(proc, _unique(queries))
+        return SearchPlan(proc, _unique(with_key_words(queries, [proc])))
 
     # В первую очередь — полиграфические услуги справочника: точное совпадение с категорией
     # или синонимом, иначе услуги, в названии которых есть все слова запроса.
@@ -125,7 +140,7 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
         queries = [SearchQuery(p.phrases_ru[0], RU) for p in group if p.phrases_ru]
         queries += [SearchQuery(phrase, EN) for p in group for phrase in p.phrases_en[:2]]
         names = ", ".join(p.name for p in group)
-        return SearchPlan(None, _unique(queries), f"Запрос подходит к услугам: {names}. "
+        return SearchPlan(None, _unique(with_key_words(queries, group)), f"Запрос подходит к услугам: {names}. "
                                                   "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.")
 
     if is_russian(text):

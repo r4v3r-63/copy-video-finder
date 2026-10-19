@@ -5,7 +5,6 @@
 """
 
 import logging
-import re
 import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -14,6 +13,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
+from app.topic import WORD as _WORD, stem as _stem, topic_stems
 from app.sources.base import AuthError, RateLimitError, SearchFilters, Source, SourceError, VideoResult
 
 log = logging.getLogger(__name__)
@@ -24,18 +24,6 @@ SIZE = "размер или ориентация"
 LICENSE = "лицензия"
 OFF_TOPIC = "не по теме"
 
-# Слова, по которым нельзя судить о теме ролика: площадки находят по ним что угодно
-# (по «wide», «large», «cold» Pixabay отдаёт пляжи и города).
-_GENERIC = {
-    "machine", "machines", "process", "printing", "print", "printer", "paper", "video", "equipment",
-    "making", "office", "shop", "and", "the", "for", "with", "wide", "large", "format", "cold", "hot",
-    "small", "big", "color", "colour", "digital", "roll", "sheet", "hand", "manual", "automatic",
-    "professional", "stand", "pull", "taking", "production", "output", "press", "photo", "studio",
-    "машина", "станок", "печать", "бумага", "видео", "оборудование", "для", "на", "широкоформатный",
-    "широкоформатная", "холодная", "горячая", "цветная", "цифровая", "большой", "рулонный", "листовой",
-    "установка", "сборка", "изготовление", "фото",
-}
-_WORD = re.compile(r"[a-zа-яё0-9]+", re.IGNORECASE)
 
 
 def rejection_reason(result: VideoResult, filters: SearchFilters, only_without_attribution: bool = False) -> str | None:
@@ -58,21 +46,6 @@ def rejection_reason(result: VideoResult, filters: SearchFilters, only_without_a
 
 def is_suitable(result: VideoResult, filters: SearchFilters, only_without_attribution: bool = False) -> bool:
     return rejection_reason(result, filters, only_without_attribution) is None
-
-
-def _stem(word: str) -> str:
-    """Грубая основа слова: lamination/laminated/laminator → lamina, ламинация → ламина."""
-    return word if len(word) <= 5 else word[: max(5, len(word) - 4)]
-
-
-def topic_stems(texts: list[str]) -> set[str]:
-    """Основы значимых слов всех фраз поиска — на обоих языках сразу.
-
-    Pixabay отдаёт английские теги и на русский запрос, поэтому ролик, найденный
-    по русской фразе, проверяется и по английским словам той же услуги.
-    """
-    words = {w.lower().replace("ё", "е") for text in texts for w in _WORD.findall(text)}
-    return {_stem(w) for w in words if len(w) >= 3 and w not in _GENERIC and not w.isdigit()}
 
 
 # Слова полиграфии вообще: для темы поиска они слишком общие, но ролик с ними ближе к делу.
@@ -139,6 +112,7 @@ class SearchWorker(QThread):
         self._cancel = threading.Event()
         self.seen: set[tuple[str, str]] = set()  # ролики, попавшие в выдачу
         self.rejections: dict[tuple[str, str], str] = {}  # ролик → причина отсева
+        self.off_topic: dict[tuple[str, str], VideoResult] = {}  # отсеянные «не по теме» — можно показать
         self.stems = topic_stems([q.text for q in plan.queries])
         self.printing = printing or set()
 
@@ -152,6 +126,16 @@ class SearchWorker(QThread):
     def rejection_counts(self) -> Counter:
         """Причины отсева по уникальным роликам, которые так и не попали в выдачу."""
         return Counter(reason for key, reason in self.rejections.items() if key not in self.seen)
+
+    def off_topic_results(self) -> list[VideoResult]:
+        """Отсеянные только по теме (длительность, размер и лицензия подходят), ближе к полиграфии — первыми.
+
+        Ролики с неподходящей лицензией сюда не попадают и не показываются никогда.
+        """
+        found = [r for key, r in self.off_topic.items() if key not in self.seen]
+        for r in found:
+            r.relevance = relevance(r, self.stems, self.printing)
+        return sorted(found, key=lambda r: -r.relevance)
 
     def run(self):
         tasks = [(s, q) for s in self.sources for q in self.plan.queries]
@@ -192,6 +176,8 @@ class SearchWorker(QThread):
                     if reason:
                         # Ролик, не подошедший по одной фразе, может подойти по другой.
                         self.rejections[r.key] = reason
+                        if reason == OFF_TOPIC:
+                            self.off_topic[r.key] = r
                         continue
                     self.seen.add(r.key)
                     r.relevance = relevance(r, self.stems, self.printing)

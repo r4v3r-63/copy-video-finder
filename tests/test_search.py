@@ -69,7 +69,10 @@ class FakeSource(Source):
 
 def run_worker(plan, sources):
     QCoreApplication.instance() or QCoreApplication([])
-    worker = SearchWorker(plan, sources, SearchFilters())
+    from app import paths, processes
+    from app.search import print_stems
+    procs = processes.all_processes(processes.load_catalog(paths.resources_dir() / "processes.json"))
+    worker = SearchWorker(plan, sources, SearchFilters(), printing=print_stems(procs))
     found, problems = [], []
     worker.found.connect(found.extend)
     worker.problem.connect(problems.append)
@@ -166,3 +169,22 @@ def test_results_ranked_by_topic_then_printing():
     nothing = tagged("4", "beach, sea")
     scores = [relevance(v, stems, printing) for v in (exact, loose, other, nothing)]
     assert scores[0] > scores[1] > scores[2] > scores[3] == 0
+
+
+def test_short_mixed_words_are_significant():
+    from app.search import topic_stems
+    assert "3d" in topic_stems(["3d printer"])
+    assert "dtf" in topic_stems(["dtf printing"])
+
+
+def test_off_topic_results_can_be_shown_but_never_bad_licenses():
+    plan = SearchPlan(None, [SearchQuery("laminator", EN)])
+    beach = tagged("1", "beach, sea, paper")
+    city = tagged("2", "city, aerial")
+    bad_license = tagged("3", "beach")
+    bad_license.license.status = licenses.REJECTED
+    src = FakeSource({"laminator": [city, beach, bad_license]})
+    worker, found, _ = run_worker(plan, [src])
+    assert found == []
+    shown = worker.off_topic_results()
+    assert [r.source_id for r in shown] == ["1", "2"]  # «paper» ближе к полиграфии — выше

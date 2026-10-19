@@ -16,8 +16,9 @@ def test_service_searches_in_both_languages():
     proc = by_id("wire_binding")
     plan = build_plan(proc.display, PROCS, DICT)
     assert plan.process is proc
-    assert plan.texts(RU) == proc.phrases_ru
-    assert plan.texts(EN) == proc.phrases_en
+    # Сначала фразы услуги, затем её ключевые слова.
+    assert plan.texts(RU)[:len(proc.phrases_ru)] == proc.phrases_ru
+    assert plan.texts(EN)[:len(proc.phrases_en)] == proc.phrases_en
 
 
 def test_every_service_has_both_languages():
@@ -76,8 +77,8 @@ def test_category_word_searches_all_its_services():
     plan = build_plan("ламинация", PROCS, DICT)
     assert plan.process is None
     lam = [by_id(i) for i in ("lam_pouch", "lam_roll", "lam_wide")]
-    assert plan.texts(RU) == [p.phrases_ru[0] for p in lam]
-    assert plan.texts(EN) == [ph for p in lam for ph in p.phrases_en[:2]]
+    assert plan.texts(RU) == [p.phrases_ru[0] for p in lam] + ["ламинатор"]
+    assert plan.texts(EN) == [ph for p in lam for ph in p.phrases_en[:2]] + ["laminator"]
     assert "Запрос подходит к услугам" in plan.note
 
 
@@ -93,10 +94,24 @@ def test_free_text_goes_to_catalog_services_first():
     assert plan.process is by_id("laser_engraving")
     plan = build_plan("термо", PROCS, DICT)  # начало слов нескольких услуг
     assert plan.process is None and "Запрос подходит к услугам" in plan.note
-    assert len(plan.texts(RU)) <= 4
+    assert len(plan.texts(RU)) <= 2 * 4  # до 4 услуг: главная фраза + ключевое слово каждой
 
 
 def test_text_without_service_is_translated():
     plan = build_plan("офсетная машина", PROCS, DICT)
     assert plan.texts(RU) == ["офсетная машина"]
     assert plan.texts(EN) == ["machine"]
+
+
+def test_every_service_has_key_words_and_they_are_searched():
+    for proc in PROCS:
+        assert proc.key_ru and proc.key_en, proc.id
+        plan = build_plan(proc.display, PROCS, DICT)
+        lower = lambda texts: {t.lower() for t in texts}
+        assert lower(proc.key_en) <= lower(plan.texts(EN)), proc.id
+        assert lower(proc.key_ru) <= lower(plan.texts(RU)), proc.id
+
+
+def test_lamination_searched_by_short_key_word():
+    plan = build_plan("Широкоформатная ламинация (Ламинация)", PROCS, DICT)
+    assert "laminator" in plan.texts(EN) and "ламинатор" in plan.texts(RU)
