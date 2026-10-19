@@ -51,7 +51,7 @@
         {"id": "wf_aqueous", "name": "Широкоформатная печать водными чернилами", "aliases": ["водные чернила", "интерьерная печать"],
          "phrases_ru": ["широкоформатная печать", "струйный плоттер"],
          "phrases_en": ["large format inkjet printer", "wide format inkjet printing", "aqueous ink printer"],
-         "key_ru": ["плоттер"], "key_en": ["inkjet printer"]},
+         "key_ru": ["плоттер"], "key_en": ["inkjet printer"], "exclude": ["handheld", "ручной"]},
         {"id": "wf_latex", "name": "Латексная печать", "aliases": ["латекс"],
          "phrases_ru": ["латексная печать", "латексный принтер"],
          "phrases_en": ["latex printer", "latex large format printing", "latex ink printing"],

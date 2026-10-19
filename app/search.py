@@ -13,7 +13,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
-from app.topic import WORD as _WORD, in_print_domain, phrase_stems, stem as _stem, topic_stems
+from app.topic import AMBIGUOUS, WORD as _WORD, domain_words, in_print_domain, phrase_stems, stem as _stem, topic_stems
 from app.sources.base import AuthError, NotFoundError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
 
 log = logging.getLogger(__name__)
@@ -84,6 +84,8 @@ def is_excluded(result: VideoResult, exclude) -> bool:
     return any(t == w.lower() or t.startswith(w.lower()) and len(w) >= 4 for t in tokens for w in exclude)
 
 
+_AMBIGUOUS = {_stem(w) for w in AMBIGUOUS}
+
 def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True) -> bool:
     """Есть ли в названии или тегах ролика ВСЕ значимые слова хотя бы одной фразы поиска.
 
@@ -102,7 +104,13 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
         return False
     if not phrases:
         return True
-    return any(all(any(t.startswith(s) for t in tokens) for s in phrase) for phrase in phrases)
+    matched = [p for p in phrases if all(any(t.startswith(s) for t in tokens) for s in p)]
+    if not matched:
+        return False
+    # Совпало только многозначное слово («plotter», «scanner») — нужно ещё слово полиграфии рядом.
+    if any(len(p) > 1 or next(iter(p)) not in _AMBIGUOUS for p in matched):
+        return True
+    return domain_words(tokens) >= 2
 
 
 def preview_file(result: VideoResult):

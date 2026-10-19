@@ -288,6 +288,10 @@ def test_service_exclude_words():
     ("laser engraving, acrylic, souvenir, gift, keychain", True),
     ("лазерная гравировка, металлическая ручка, сувенир, подарок", True),
     ("How to Properly Cut a Cigar with a Guillotine Cutter", False),
+    ("mother board, electronic, computer, board, chips, digital, circuit, printed circuit board", False),
+    ("typewriter, typing, writing, print, printing, vintage", False),
+    ("origami, paper art, fold, paper folding", False),
+    ("DC Catwoman Lonely City Hardcover Comic Book Trailer", False),
 ])
 def test_only_printing_domain(tags, ok):
     from app.search import is_relevant
@@ -305,3 +309,20 @@ def test_rejected_before_are_hidden():
     worker.run()
     assert [r.source_id for r in found] == ["2"]
     assert worker.rejection_counts() == {REJECTED_BEFORE: 1}
+
+
+@pytest.mark.parametrize("title, ok", [
+    # Настоящие промахи Vimeo и Internet Archive: одно слово «plotter»/«scanner» без полиграфии рядом.
+    ("Meet Fethullah Gulen, Deep State Plotter", False),
+    ("Creative Sandbox: Spider Plotter", False),
+    ("A Scanner Darkly V12", False),
+    ("Car Scanner // Product Video", False),
+    ("плоттер, принтер, наклейка, бумага", True),
+    ("Wide format plotter printing banners", True),
+])
+def test_single_key_word_needs_print_context(title, ok):
+    from app.search import is_relevant
+    from app.topic import phrase_stems
+    phrases = phrase_stems(["plotter", "scanner", "плоттер", "wide format plotter printing"],
+                           keep={"plotter", "scanner", "плоттер"})
+    assert is_relevant(tagged("1", title), phrases) is ok
