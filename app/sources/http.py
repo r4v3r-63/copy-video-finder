@@ -31,6 +31,10 @@ class HttpSource(Source):
         self.limiter = RateLimiter(cache, self.name, self.limits, now=now)
         self._now = now
         self._slots = threading.Semaphore(self.max_parallel)
+        # Сколько секунд можно подождать, пока лимит освободится, вместо ошибки. В обычном поиске 0 —
+        # пользователь сразу видит «повторите через…»; пакетный поиск ждёт поминутные лимиты сам.
+        self.max_wait = 0.0
+        self.stop = threading.Event()  # прервать ожидание лимита
 
     def missing_key_message(self) -> str:
         return f"Ключ API {self.name} не задан — укажите его в настройках."
@@ -44,17 +48,22 @@ class HttpSource(Source):
             return json.loads(cached)
         if not self.is_configured():
             raise AuthError(self.name, self.missing_key_message())
-        with self._slots:
-            wait = self.limiter.wait_seconds()
+        while True:
+            with self._slots:
+                wait = self.limiter.wait_seconds()
+                if not wait:
+                    self.limiter.record()
+                    try:
+                        resp = self.session.get(url, params=params, headers=headers or {}, timeout=20)
+                    except requests.RequestException as exc:
+                        raise NetworkError(self.name, f"Нет связи с {self.name}: {_short(exc)}") from exc
             if wait:
-                seconds, label = wait
-                raise RateLimitError(self.name, f"Исчерпан лимит {self.name} ({label}). {_retry_text(seconds)}")
-            self.limiter.record()
-            try:
-                resp = self.session.get(url, params=params, headers=headers or {}, timeout=20)
-            except requests.RequestException as exc:
-                raise NetworkError(self.name, f"Нет связи с {self.name}: {_short(exc)}") from exc
-        self._after_response(resp)
+                self._wait_for_limit(*wait)  # лимит не обходится: запрос уходит только после ожидания
+                continue
+            self._after_response(resp)
+            if resp.status_code == 429 and self.max_wait and self.limiter.wait_seconds():
+                continue  # площадка назвала время (Retry-After) — подождём его
+            break
         error = self._status_error(resp)
         if error:
             raise error
@@ -64,6 +73,11 @@ class HttpSource(Source):
             raise SourceError(self.name, f"{self.name}: непонятный ответ площадки.") from exc
         self.cache.put(cache_key, resp.text)
         return data
+
+    def _wait_for_limit(self, seconds: float, label: str) -> None:
+        """Подождать, пока лимит освободится, или сообщить об исчерпанном лимите."""
+        if seconds > self.max_wait or self.stop.wait(seconds + 0.5):
+            raise RateLimitError(self.name, f"Исчерпан лимит {self.name} ({label}). {_retry_text(seconds)}")
 
     def _after_response(self, resp) -> None:
         """Учесть заголовки лимитов площадки. Retry-After понимают все."""

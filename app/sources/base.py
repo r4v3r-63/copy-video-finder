@@ -79,7 +79,7 @@ class VideoResult:
 class SearchFilters:
     min_duration: int = 5
     max_duration: int = 45
-    orientation: str = "all"  # "landscape", "portrait", "all"
+    orientation: str = "landscape"  # только горизонтальные; "portrait", "all" — для тестов и будущих настроек
     min_height: int = 720
 
 

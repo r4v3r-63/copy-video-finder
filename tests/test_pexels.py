@@ -58,7 +58,7 @@ def test_request_params_and_language(cache, clock):
     assert call["params"]["locale"] == "ru-RU"
     assert call["params"]["orientation"] == "landscape"
     assert call["params"]["size"] == "medium"
-    src.search("laminator", SearchFilters(), lang="en")
+    src.search("laminator", SearchFilters(orientation="all"), lang="en")
     assert src.session.calls[1]["params"]["locale"] == "en-US"
     assert "orientation" not in src.session.calls[1]["params"]
 

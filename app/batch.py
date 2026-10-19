@@ -6,6 +6,7 @@
 """
 
 import logging
+import re
 import threading
 
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -16,6 +17,9 @@ from app.search import SearchWorker
 from app.sources.base import SearchFilters, Source
 
 log = logging.getLogger(__name__)
+
+# Поминутные лимиты пакетный поиск пережидает; часовые (Coverr — 50 в час) — нет, площадка пропускается.
+MAX_WAIT = 70
 
 
 class BatchWorker(QThread):
@@ -37,9 +41,15 @@ class BatchWorker(QThread):
         self._cancel = threading.Event()
         self._current: SearchWorker | None = None
         self.problems: list[str] = []
+        for source in sources:
+            if hasattr(source, "max_wait"):
+                source.max_wait = MAX_WAIT
 
     def cancel(self):
         self._cancel.set()
+        for source in self.sources:
+            if hasattr(source, "stop"):
+                source.stop.set()
         if self._current:
             self._current.cancel()
 
@@ -66,6 +76,8 @@ class BatchWorker(QThread):
             self.done_service.emit(proc.id, len(found), fresh)
 
     def _on_problem(self, message: str):
+        # «Повторите через 12 с.» меняется от услуги к услуге — одна и та же беда показывается один раз.
+        message = re.sub(r"\s*Повторите через [^.]*\.", "", message).strip()
         if message not in self.problems:
             self.problems.append(message)
             self.problem.emit(message)

@@ -157,3 +157,44 @@ def test_not_downloadable_results_go_last(cache, clock):
     worker.run()
     by_id = {r.source_id: r for r in found}
     assert by_id["111"].relevance > by_id["222"].relevance  # 222 без ссылок на файл
+
+
+def test_batch_waits_for_minute_limit(cache, clock):
+    """Пакетный поиск пережидает поминутный лимит, а не пропускает площадку; лимит не обходится."""
+    from datetime import datetime, timezone
+    reset = datetime.fromtimestamp(clock.t + 40, timezone.utc).isoformat()
+    headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
+    src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers), FakeResponse(text='{"data": []}'))
+    waited = []
+
+    class Stop:  # вместо настоящего ожидания — сдвиг часов
+        def wait(self, seconds):
+            waited.append(seconds)
+            clock.t += seconds
+            return False
+
+    src.stop = Stop()
+    src.search("a", SearchFilters())
+    src.max_wait = 70
+    src.search("b", SearchFilters())
+    assert waited and 39 <= waited[0] <= 42
+    assert len(src.session.calls) == 2
+
+
+def test_long_limit_not_waited(cache, clock):
+    from datetime import datetime, timezone
+    reset = datetime.fromtimestamp(clock.t + 3600, timezone.utc).isoformat()
+    headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
+    src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers))
+    src.search("a", SearchFilters())
+    src.max_wait = 70
+    with pytest.raises(RateLimitError):
+        src.search("b", SearchFilters())
+
+
+def test_batch_problem_shown_once():
+    from app.batch import BatchWorker
+    worker = BatchWorker([], [], [], SearchFilters(), None, None, set())
+    worker._on_problem("Исчерпан лимит Vimeo (50 запросов в минуту). Повторите через 12 с.")
+    worker._on_problem("Исчерпан лимит Vimeo (50 запросов в минуту). Повторите через 3 с.")
+    assert worker.problems == ["Исчерпан лимит Vimeo (50 запросов в минуту)."]

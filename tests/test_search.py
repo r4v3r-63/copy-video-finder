@@ -17,7 +17,8 @@ def video(sid="1", duration=15, w=1920, h=1080, status=licenses.ALLOWED, source=
     (video(), True),
     (video(duration=4), False),
     (video(duration=46), False),
-    (video(w=1080, h=1920), True),
+    (video(w=1080, h=1920), False),  # вертикальные не нужны — только горизонтальные
+    (video(w=1080, h=1080), False),
     (video(w=640, h=360), False),
     (video(status=licenses.ATTRIBUTION), True),
     (video(status=licenses.REVIEW), False),
