@@ -46,6 +46,6 @@ pyinstaller build.spec --noconfirm
 
 FFmpeg для разработки: положите `ffmpeg.exe` и `ffprobe.exe` в папку `ffmpeg` в корне проекта или установите их в PATH.
 
-Сборка для Windows идёт в GitHub Actions (`.github/workflows/build.yml`): ручной запуск даёт ZIP в артефактах, тег `v*` публикует ZIP в Releases.
+Сборка для Windows идёт в GitHub Actions (`.github/workflows/build.yml`). Вкладка **Actions → Сборка для Windows → Run workflow**: без версии — ZIP в артефактах запуска; с версией (например, `0.4.1`) — ещё и выпуск в Releases с тегом `v0.4.1`.
 
 Правила проекта и устройство кода — в [CLAUDE.md](CLAUDE.md), полное ТЗ — по ссылке оттуда.

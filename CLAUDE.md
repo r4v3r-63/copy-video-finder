@@ -101,7 +101,7 @@ pytest
 pyinstaller build.spec --noconfirm
 ```
 
-Выпуск версии: обновить `app/__version__`, затем `git tag vX.Y.Z && git push origin vX.Y.Z` — GitHub Actions соберёт ZIP и опубликует его в Releases.
+Выпуск версии: обновить `__version__` в `app/__init__.py`, затем запустить workflow «Сборка для Windows» с полем «version» (Actions → Run workflow, или `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f inputs[version]=X.Y.Z`). Workflow сам создаст тег vX.Y.Z и выпуск в Releases. Тег `v*`, отправленный вручную, работает так же; из облачного сеанса Claude отправка тегов запрещена.
 
 ## Git и GitHub
 

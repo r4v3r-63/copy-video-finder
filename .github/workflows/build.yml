@@ -1,13 +1,22 @@
 name: Сборка для Windows
 
-# Ручной запуск собирает ZIP как артефакт; тег v* — ещё и публикует его в Releases.
+# Ручной запуск без версии собирает ZIP как артефакт.
+# Ручной запуск с версией (например, 0.4.0) или тег v* — ещё и публикует ZIP в Releases.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия для выпуска в Releases, например 0.4.0 (пусто — только собрать)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.version != '' && format('v{0}', github.event.inputs.version) || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}
 
 jobs:
   build:
@@ -61,7 +70,9 @@ jobs:
 
       - name: ZIP
         shell: pwsh
-        run: Compress-Archive -Path dist/CopyVideoFinder -DestinationPath "CopyVideoFinder-${{ github.ref_name }}-windows.zip"
+        run: |
+          $name = if ($env:RELEASE_TAG) { $env:RELEASE_TAG } else { "${{ github.ref_name }}-${{ github.run_number }}" }
+          Compress-Archive -Path dist/CopyVideoFinder -DestinationPath "CopyVideoFinder-$name-windows.zip"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -69,7 +80,10 @@ jobs:
           path: CopyVideoFinder-*.zip
 
       - name: Публикация в Releases
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Поиск видео Copy.ru ${{ env.RELEASE_TAG }}
           files: CopyVideoFinder-*.zip
