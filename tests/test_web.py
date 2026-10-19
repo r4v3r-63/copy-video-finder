@@ -191,7 +191,8 @@ def test_tavily_first_when_key_given(cache, clock):
     assert len(src.search("wire binding", SearchFilters(), lang="de")) == 1
     call = src.engines[0].session.calls[0]
     assert call["headers"]["Authorization"] == "Bearer tvly-key"
-    assert call["params"]["query"] == "wire binding kostenlos Video"
+    assert call["params"]["query"] == "wire binding"  # как есть: «free stock video» тянет страницы поиска стоков
+    assert "pixabay.com" in call["params"]["include_domains"]  # только бесплатные стоки
 
 
 def test_free_limits_stay_free(cache, clock):
@@ -216,3 +217,13 @@ def test_downloader_takes_file_from_page(tmp_path):
     assert path.suffix == ".mov" and path.read_bytes() == b"movdata"
     assert session.calls[0]["url"] == url
 
+
+
+def test_stock_listing_pages_not_opened(cache, clock):
+    src = web(cache, clock)
+    for url in ("https://www.pexels.com/search/binding%20machine", "https://pixabay.com/images/search/bind",
+                "https://vimeo.com/ondemand/12gbw1", "https://archive.org/download/x/y.pdf",
+                "https://www.pexels.com/video/laser-engraving-34240702/",  # без ключа Pexels не открыть
+                "https://commons.wikimedia.org/wiki/File:Laser_engraving_machine.jpg"):
+        assert src.open(url) is None
+    assert src.pages.session.calls == []

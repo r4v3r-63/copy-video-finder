@@ -30,6 +30,14 @@ from app.sources.videezy import BROWSER_UA
 DDG_URL = "https://html.duckduckgo.com/html/"
 TAVILY_URL = "https://api.tavily.com/search"
 TAVILY_MONTHLY = 900  # бесплатно 1000 в месяц
+# Бесплатные стоки, где поисковик находит страницы отдельных роликов (как «site:» в запросе).
+# Их страницы открываются модулями площадок: лицензия и ссылки на файлы — из их API.
+# Pexels сюда не входит: его страницы закрыты от программ (403), а новых ключей API он не выдаёт.
+# Vimeo — тоже: свободные ролики находит его собственный поиск с фильтром CC, а из поисковика
+# приходят почти одни «все права защищены», которые только расходуют лимит Vimeo (проверено вживую).
+FREE_STOCK_DOMAINS = ["pixabay.com", "videezy.com", "commons.wikimedia.org", "archive.org"]
+STOCK_DOMAINS = FREE_STOCK_DOMAINS + ["pexels.com", "coverr.co", "vimeo.com"]  # их страницы-не-ролики не открываем
+_WIKI_VIDEO = (".webm", ".ogv", ".ogg", ".mp4", ".mpg", ".mpeg")
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
 BRAVE_MONTHLY = 900
 MAX_PAGES = 8  # страниц из выдачи поисковика на один запрос
@@ -76,6 +84,11 @@ def parse_ddg(page: str) -> list[tuple[str, str]]:
         if href.startswith("http"):
             result.append((href, html.unescape(_TAGS.sub("", title)).strip()))
     return result
+
+
+def _free_words(lang: str) -> str:
+    """Уточнение для поисковиков по всему интернету: ищем бесплатные ролики."""
+    return {"de": "kostenlos Video", "fr": "vidéo gratuite"}.get(lang, "free stock video")
 
 
 def ddg_blocked(page: str, status: int) -> bool:
@@ -210,7 +223,7 @@ class Engine(HttpSource):
         if hasattr(self.session, "headers"):
             self.session.headers["User-Agent"] = BROWSER_UA
 
-    def find(self, text: str) -> list[tuple[str, str]]:
+    def find(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
         raise NotImplementedError
 
     def _blocked(self, resp, test) -> RateLimitError | None:
@@ -243,8 +256,11 @@ class TavilyEngine(Engine):
     def is_configured(self) -> bool:
         return bool(self.key)
 
-    def find(self, text: str) -> list[tuple[str, str]]:
-        data = json.loads(self._fetch_text(TAVILY_URL, {"query": text, "max_results": 20, "search_depth": "basic"},
+    def find(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
+        # Только бесплатные стоки, как «site:»; запрос как есть: со словами «free stock video»
+        # в выдаче в основном страницы поиска стоков, а не ролики.
+        data = json.loads(self._fetch_text(TAVILY_URL, {"query": query, "max_results": 20, "search_depth": "basic",
+                                                        "include_domains": FREE_STOCK_DOMAINS},
                                            headers={"Authorization": f"Bearer {self.key}"}, method="POST_JSON"))
         return [(r.get("url", ""), r.get("title", "")) for r in data.get("results", [])]
 
@@ -262,8 +278,8 @@ class BraveEngine(Engine):
     def is_configured(self) -> bool:
         return bool(self.key)
 
-    def find(self, text: str) -> list[tuple[str, str]]:
-        data = json.loads(self._fetch_text(BRAVE_URL, {"q": text, "count": 20}, headers={
+    def find(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
+        data = json.loads(self._fetch_text(BRAVE_URL, {"q": f"{query} {_free_words(lang)}", "count": 20}, headers={
             "X-Subscription-Token": self.key, "Accept": "application/json"}))
         return [(r.get("url", ""), r.get("title", "")) for r in (data.get("web") or {}).get("results", [])]
 
@@ -274,8 +290,8 @@ class DuckDuckGoEngine(Engine):
     homepage = "https://duckduckgo.com"
     limits = [(6, 60, "в минуту"), (200, 86400, "в сутки")]
 
-    def find(self, text: str) -> list[tuple[str, str]]:
-        page = self._fetch_text(DDG_URL, {"q": text}, method="POST",
+    def find(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
+        page = self._fetch_text(DDG_URL, {"q": f"{query} {_free_words(lang)}"}, method="POST",
                                 check=lambda r: self._blocked(r, lambda x: ddg_blocked(x.text, x.status_code)))
         return parse_ddg(page)
 
@@ -301,8 +317,7 @@ class WebSource(HttpSource):
         return self.engines[0].name
 
     def search(self, query: str, filters: SearchFilters, page: int = 1, lang: str = "en") -> list[VideoResult]:
-        words = {"de": "kostenlos Video", "fr": "vidéo gratuite"}.get(lang, "free stock video")
-        found, results = self.find_pages(f"{query} {words}"), []
+        found, results = self.find_pages(query, lang), []
         for url, _title in found[:MAX_PAGES]:
             try:
                 r = self.open(url)
@@ -312,13 +327,13 @@ class WebSource(HttpSource):
                 results.append(r)
         return results
 
-    def find_pages(self, text: str) -> list[tuple[str, str]]:
+    def find_pages(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
         """Ссылки из выдачи первого ответившего поисковика без платных стоков, соцсетей, YouTube и Mixkit."""
         problems = []
         for engine in self.engines:
             engine.max_wait, engine.stop = self.max_wait, self.stop  # пакетный поиск ждёт и здесь
             try:
-                pairs = engine.find(text)
+                pairs = engine.find(query, lang)
             except SourceError as exc:
                 problems.append(exc.message)
                 continue
@@ -340,8 +355,12 @@ class WebSource(HttpSource):
             if source is None or not source.is_configured():
                 return None
             if name == "Wikimedia Commons":
+                if not source_id.lower().endswith(_WIKI_VIDEO):
+                    return None  # картинка или документ, а не ролик
                 return source.get_by_title(source_id)
             return source.get_details(source_id)
+        if any(d in urlparse(url).netloc.lower() for d in STOCK_DOMAINS):
+            return None  # страница поиска или картинок стока, а не ролик — не открываем
         return parse_page(self.pages.read(url), url)
 
     def get_details(self, source_id: str) -> VideoResult:
