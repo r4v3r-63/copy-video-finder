@@ -63,6 +63,7 @@ jobs:
           COVERR_API_KEY: ${{ secrets.COVERR_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           EUROPEANA_API_KEY: ${{ secrets.EUROPEANA_API_KEY }}
+          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
         run: |
           # Ключи не хранятся в коде: они берутся из Settings → Secrets репозитория.
           $keys = [ordered]@{}
@@ -71,6 +72,7 @@ jobs:
           if ($env:COVERR_API_KEY) { $keys.coverr_api_key = $env:COVERR_API_KEY }
           if ($env:PEXELS_API_KEY) { $keys.pexels_api_key = $env:PEXELS_API_KEY }
           if ($env:EUROPEANA_API_KEY) { $keys.europeana_api_key = $env:EUROPEANA_API_KEY }
+          if ($env:BRAVE_API_KEY) { $keys.brave_api_key = $env:BRAVE_API_KEY }
           [IO.File]::WriteAllText("dist/CopyVideoFinder/defaults.json", ($keys | ConvertTo-Json))
           Write-Host "Встроено ключей: $($keys.Count) ($($keys.Keys -join ', '))"
 

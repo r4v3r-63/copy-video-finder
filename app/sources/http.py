@@ -81,7 +81,7 @@ class HttpSource(Source):
             if resp.status_code == 429 and self.max_wait and self.limiter.wait_seconds():
                 continue  # площадка назвала время (Retry-After) — подождём его
             break
-        error = self._status_error(resp) or (check(resp) if check else None)
+        error = (check(resp) if check else None) or self._status_error(resp)
         if error:
             raise error
         self.cache.put(cache_key, resp.text)

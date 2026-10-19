@@ -73,7 +73,11 @@ class SettingsDialog(QDialog):
         europeana_row, self.europeana_key = _key_field(settings.europeana_api_key, "europeana_api_key" in built)
         form.addRow("Ключ API Europeana:", europeana_row)
         form.addRow("", _link("Получить ключ Europeana (бесплатно)", "https://pro.europeana.eu/page/get-api"))
-        form.addRow("", QLabel("Wikimedia Commons и Internet Archive работают без ключа."))
+        brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
+        form.addRow("Ключ Brave Search:", brave_row)
+        form.addRow("", _link("Поиск по интернету надёжнее с ключом Brave (бесплатно ~2000 запросов в месяц); "
+                              "без ключа — через DuckDuckGo", "https://brave.com/search/api/"))
+        form.addRow("", QLabel("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
 
         self.min_duration = QSpinBox()
         self.min_duration.setRange(1, 600)
@@ -153,6 +157,7 @@ class SettingsDialog(QDialog):
         self._settings.coverr_api_key = self.coverr_key.text().strip()
         self._settings.vimeo_token = self.vimeo_token.text().strip()
         self._settings.europeana_api_key = self.europeana_key.text().strip()
+        self._settings.brave_api_key = self.brave_key.text().strip()
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

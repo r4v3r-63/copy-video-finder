@@ -96,17 +96,19 @@
 | [Wikimedia Commons](https://commons.wikimedia.org/) | CC0, CC BY, CC BY-SA, общественное достояние |
 | [Europeana](https://www.europeana.eu/) | архивные ролики с открытыми лицензиями |
 | [Internet Archive](https://archive.org/) | CC и общественное достояние, скачивание на странице ролика |
+| [Videezy](https://www.videezy.com/) | бесплатные ролики Videezy Free License — с указанием Videezy.com в титрах |
+| Интернет | поиск через Brave Search (по ключу) или DuckDuckGo: ролики с любых сайтов, если на странице есть файл и открытая лицензия Creative Commons |
 | [Pexels](https://www.pexels.com/) | включится, когда Pexels снова начнёт выдавать ключи |
 
 | Лицензия | Статус |
 | --- | --- |
 | CC0, Public Domain, Pexels License, Pixabay Content License, Coverr License | Разрешено |
-| CC BY | Разрешено с атрибуцией |
+| CC BY, Videezy Free License | Разрешено с атрибуцией |
 | CC BY-SA | Разрешено с атрибуцией (с пометкой про share-alike) |
 | С NC или ND; Editorial, Personal, Premium, платные | Отклонено — не показываются |
 | Не распознана, «Royalty Free» | Требует проверки — в покрытие не засчитывается |
 
-Программа работает только через официальные API площадок и соблюдает их лимиты; ответы кэшируются на сутки.
+Поиск идёт по уровням, как у опытного редактора: сначала по названию услуги, если роликов мало — по оборудованию, затем по действию и отдельным этапам, в конце — по похожим операциям; на английском, русском, немецком и французском. Ролик, найденный только по похожим операциям, предлагается в каталог как «смежный процесс». Лимиты площадок соблюдаются, ответы кэшируются на сутки.
 
 ## Обновления
 
@@ -122,7 +124,8 @@
 | Coverr | https://coverr.co/developers |
 | Vimeo | https://developer.vimeo.com/apps — создать приложение, затем личный токен с правами public |
 | Europeana | https://pro.europeana.eu/page/get-api |
-| Wikimedia Commons, Internet Archive | ключ не нужен |
+| Brave Search (поиск по интернету) | https://brave.com/search/api/ — без ключа поиск идёт через DuckDuckGo, но тот может временно ограничивать частые запросы |
+| Wikimedia Commons, Internet Archive, Videezy | ключ не нужен |
 | Pexels | https://www.pexels.com/api/ (выдача новых ключей сейчас приостановлена) |
 
 ## Для разработчика

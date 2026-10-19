@@ -22,7 +22,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses, paths
 from app.processes import Process
-from app.sources.base import VideoFile, VideoResult
+from app.sources.base import SourceError, VideoFile, VideoResult
 from app.sources.http import USER_AGENT
 
 log = logging.getLogger(__name__)
@@ -56,6 +56,8 @@ class DownloadJob:
     id: int = 0
     cancel: threading.Event = field(default_factory=threading.Event)
     loop_hint: bool | None = None  # подсказка «подходит для зацикливания» после скачивания
+    # Для файла со страницы сайта (VideoFile.page): функция источника (файл, сессия) → ссылка на файл.
+    resolver: object = None
 
 
 def short_side(f: VideoFile) -> int:
@@ -259,14 +261,25 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     folder = target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
     stem = file_stem(job.process, job.result, job.catalog_id)
-    ext = extension(job.file)
+    file = job.file
+    if file.page:
+        if not job.resolver:
+            raise DownloadError("Ссылку на файл даёт только страница ролика — скачайте его в браузере.")
+        try:
+            url = job.resolver(file, session)
+        except SourceError as exc:
+            raise DownloadError(exc.message) from exc
+        except requests.RequestException as exc:
+            raise DownloadError(f"Не удалось открыть страницу ролика: {exc}") from exc
+        file = VideoFile(file.quality, url, file.width, file.height, file.mime)
+    ext = extension(file)
     want_mp4 = job.convert and ext != ".mp4"
     final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))
     if final.exists():
         return final, "уже был скачан"
 
     raw = folder / (stem + ext)
-    fetch(job.file.url, raw, session, progress, job.cancel)
+    fetch(file.url, raw, session, progress, job.cancel)
     note = ""
     if want_mp4:
         if ffmpeg:

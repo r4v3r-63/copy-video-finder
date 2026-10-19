@@ -149,5 +149,13 @@ class WikimediaSource(HttpSource):
             raise NotFoundError(self.name, "Wikimedia Commons: файл удалён с площадки.")
         return parse_page(pages[0])
 
+    def get_by_title(self, title: str) -> VideoResult:
+        """Файл по названию из ссылки («File:Paper Cutter.webm») — для страниц, найденных в интернете."""
+        data = self._query({"titles": title})
+        pages = data.get("query", {}).get("pages", [])
+        if not pages or pages[0].get("missing"):
+            raise NotFoundError(self.name, "Wikimedia Commons: файл не найден.")
+        return parse_page(pages[0])
+
     def get_license(self, result: VideoResult) -> LicenseInfo:
         return result.license or self.get_details(result.source_id).license

@@ -41,6 +41,8 @@ from app.sources.coverr import CoverrSource
 from app.sources.europeana import EuropeanaSource
 from app.sources.pixabay import PixabaySource
 from app.sources.vimeo import VimeoSource
+from app.sources.videezy import VideezySource
+from app.sources.web import WebSource
 from app.sources.wikimedia import WikimediaSource
 from app.batch import BatchWorker
 from app.export import html_catalog, playlist, registry, summary
@@ -72,15 +74,18 @@ def load_image(data: bytes) -> QImage:
 
 
 def all_sources(settings: Settings, cache: Cache) -> list[Source]:
-    return [
+    sources = [
         PixabaySource(settings.key("pixabay_api_key"), cache),
         CoverrSource(settings.key("coverr_api_key"), cache),
         VimeoSource(settings.key("vimeo_token"), cache),
         WikimediaSource(cache),
         EuropeanaSource(settings.key("europeana_api_key"), cache),
         ArchiveSource(cache),
+        VideezySource(cache),
         PexelsSource(settings.key("pexels_api_key"), cache),
     ]
+    # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
+    return sources + [WebSource(settings.key("brave_api_key"), cache, delegates=sources)]
 
 
 def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[str]]:
@@ -376,7 +381,7 @@ class MainWindow(QMainWindow):
         if skipped:
             self.query_info.setText(
                 f"Без ключа API пропускаются: {', '.join(skipped)}. Ключи вводятся в меню «Файл → Настройки». "
-                "Wikimedia Commons и Internet Archive работают без ключа."
+                "Wikimedia Commons, Internet Archive, Videezy и поиск по интернету работают без ключа."
             )
         else:
             self.query_info.setText("")
@@ -698,9 +703,11 @@ class MainWindow(QMainWindow):
         video_id = self.catalog.select(result, process.id if process else None,
                                        license_confirmed=bool(entry and entry.license_confirmed))
         self.player.set_catalog_state(cat.SELECTED, video_id)
+        source = next((s for s in all_sources(self.settings, self.cache) if s.name == result.source), None)
         job = DownloadJob(result=result, file=file, process=process,
                           query_text=self.plan_text, base_dir=self.download_dir(),
-                          convert=self.settings.convert_to_mp4, catalog_id=video_id)
+                          convert=self.settings.convert_to_mp4, catalog_id=video_id,
+                          resolver=getattr(source, "resolve_download", None))
         self.downloads.add(job)
         self._set_download_state(result.key, "В очереди на скачивание…", "", True)
 

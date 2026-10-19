@@ -40,6 +40,9 @@ class VideoFile:
     width: int | None = None
     height: int | None = None
     mime: str | None = None
+    # url — страница ролика: ссылку на файл программа берёт с неё при скачивании (Videezy:
+    # ссылка живёт только в сессии сайта). Источник умеет это в resolve_download().
+    page: bool = False
 
 
 @dataclass

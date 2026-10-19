@@ -15,7 +15,8 @@ SUITABLE = {ALLOWED, ATTRIBUTION}
 
 SHARE_ALIKE_NOTE = "Смонтированный ролик тоже должен распространяться под BY-SA."
 
-_REJECT_WORDS = {"NC", "ND", "NONCOMMERCIAL", "NODERIVS", "NODERIVATIVES", "EDITORIAL", "PERSONAL", "PREMIUM", "PAID"}
+_REJECT_WORDS = {"NC", "ND", "NONCOMMERCIAL", "NODERIVS", "NODERIVATIVES", "EDITORIAL", "PERSONAL", "PREMIUM", "PAID",
+                 "PRO"}  # Videezy Pro License — платная
 _REJECT_PHRASES = ("NON COMMERCIAL", "NO DERIVATIVES", "NO DERIVS", "ПЛАТН", "РЕДАКЦИОН", "ЛИЧН")
 
 
@@ -36,6 +37,8 @@ def evaluate(name: str | None) -> tuple[str, str]:
         return ALLOWED, ""
     if "CC0" in words or "PUBLIC DOMAIN" in text or (words and words[0] in ("PD", "PDM")):
         return ALLOWED, ""
+    if text == "VIDEEZY FREE LICENSE":  # коммерческое использование с указанием Videezy.com
+        return ATTRIBUTION, ""
     if text.startswith("CC BY SA") or text.startswith("CREATIVE COMMONS ATTRIBUTION SHARE ALIKE"):
         return ATTRIBUTION, SHARE_ALIKE_NOTE
     if text.startswith("CC BY") or text.startswith("CREATIVE COMMONS ATTRIBUTION"):
