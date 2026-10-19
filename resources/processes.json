@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "photo",
+      "name": "Фотографии",
+      "processes": [
+        {"id": "photo_id", "name": "Фотосъёмка на документы", "aliases": ["фото на паспорт", "фото на документы"],
+         "phrases": ["passport photo studio", "taking id photo", "passport photo camera"]},
+        {"id": "photo_kiosk", "name": "Фотопечать через фотокиоск", "aliases": ["печать фото", "фотокиоск"],
+         "phrases": ["photo printing kiosk", "photo kiosk", "dye sublimation photo printer"]}
+      ]
+    },
+    {
+      "id": "digital",
+      "name": "Цифровая печать",
+      "processes": [
+        {"id": "digital_color_laser", "name": "Цифровая цветная лазерная печать", "aliases": ["лазерная печать", "цветная печать"],
+         "phrases": ["color laser printer printing", "digital printing press", "production printer output"]}
+      ]
+    },
+    {
+      "id": "drawings",
+      "name": "Чертежи",
+      "processes": [
+        {"id": "drawing_print", "name": "Широкоформатная печать чертежей", "aliases": ["печать чертежей", "плоттер"],
+         "phrases": ["wide format plotter printing", "blueprint printing plotter", "engineering drawing plotter"]},
+        {"id": "drawing_scan", "name": "Широкоформатное сканирование чертежей", "aliases": ["сканирование чертежей"],
+         "phrases": ["large format scanner", "wide format scanning", "blueprint scanner"]},
+        {"id": "drawing_folding", "name": "Фальцовка чертежей", "aliases": ["складывание чертежей"],
+         "phrases": ["drawing folding machine", "blueprint folding", "paper folding machine"]}
+      ]
+    },
+    {
+      "id": "wide_format",
+      "name": "Ш/Ф печать и материалы",
+      "processes": [
+        {"id": "wf_aqueous", "name": "Широкоформатная печать водными чернилами", "aliases": ["водные чернила", "интерьерная печать"],
+         "phrases": ["large format inkjet printer", "wide format inkjet printing", "aqueous ink printer"]},
+        {"id": "wf_latex", "name": "Латексная печать", "aliases": ["латекс"],
+         "phrases": ["latex printer", "latex large format printing", "latex ink printing"]},
+        {"id": "wf_ecosolvent", "name": "Экосольвентная печать", "aliases": ["экосольвент", "печать баннеров"],
+         "phrases": ["eco solvent printer", "solvent printer banner printing", "vinyl printing machine"]}
+      ]
+    },
+    {
+      "id": "plotter_cutting",
+      "name": "Плоттерная резка",
+      "processes": [
+        {"id": "plotter_roll", "name": "Рулонная плоттерная резка", "aliases": ["резка плёнки", "оракал"],
+         "phrases": ["vinyl cutter plotter", "cutting plotter vinyl", "vinyl sticker cutting"]},
+        {"id": "plotter_sheet", "name": "Листовая плоттерная резка", "aliases": ["резка наклеек"],
+         "phrases": ["sheet cutting plotter", "sticker sheet cutting", "digital die cutting paper"]}
+      ]
+    },
+    {
+      "id": "flatbed_cutting",
+      "name": "Планшетная резка",
+      "processes": [
+        {"id": "flatbed_cutting", "name": "Планшетная резка", "aliases": ["резка пенокартона", "резка картона"],
+         "phrases": ["flatbed cutter", "flatbed cutting table", "cnc knife cutting"]}
+      ]
+    },
+    {
+      "id": "lamination",
+      "name": "Ламинация",
+      "processes": [
+        {"id": "lam_pouch", "name": "Пакетная ламинация", "aliases": ["ламинирование"],
+         "phrases": ["pouch laminator", "laminating pouch", "laminating document"]},
+        {"id": "lam_roll", "name": "Рулонная ламинация листовой продукции", "aliases": ["ламинирование"],
+         "phrases": ["roll laminator", "thermal laminating machine", "sheet lamination"]},
+        {"id": "lam_wide", "name": "Широкоформатная ламинация", "aliases": ["ламинирование"],
+         "phrases": ["wide format laminator", "cold laminator", "large format lamination"]}
+      ]
+    },
+    {
+      "id": "binding",
+      "name": "Переплёт",
+      "processes": [
+        {"id": "saddle_stitch", "name": "Скоба внакидку", "aliases": ["брошюровка на скобу", "сшивка скобой"],
+         "phrases": ["saddle stitching", "saddle stitcher", "booklet stapler"]},
+        {"id": "metal_bind", "name": "Твёрдый переплёт Metal Bind", "aliases": ["твёрдый переплёт", "металбинд"],
+         "phrases": ["hardcover binding", "metal bind", "hard cover binding machine"]},
+        {"id": "wire_binding", "name": "Брошюровка на металлическую пружину", "aliases": ["брошюровка на пружину", "металлическая пружина"],
+         "phrases": ["wire binding machine", "wire o binding", "spiral binding"]},
+        {"id": "comb_binding", "name": "Брошюровка на пластиковую пружину", "aliases": ["брошюровка на пружину", "пластиковая пружина"],
+         "phrases": ["comb binding machine", "plastic comb binding", "comb binder"]},
+        {"id": "perfect_binding", "name": "Клеевое бесшвейное скрепление (КБС)", "aliases": ["КБС", "клеевой переплёт"],
+         "phrases": ["perfect binding machine", "perfect binder", "glue binding"]},
+        {"id": "thermal_binding", "name": "Термопереплёт Unibind", "aliases": ["термопереплёт", "юнибинд"],
+         "phrases": ["thermal binding machine", "thermal binder", "unibind"]}
+      ]
+    },
+    {
+      "id": "postpress",
+      "name": "Послепечатные работы",
+      "processes": [
+        {"id": "guillotine", "name": "Гильотинная резка", "aliases": ["резка бумаги", "гильотина"],
+         "phrases": ["guillotine paper cutter", "paper cutting machine", "guillotine cutter"]},
+        {"id": "badge_punch", "name": "Вырубка отверстий под бейджи", "aliases": ["бейджи", "отверстие под бейдж"],
+         "phrases": ["slot punch", "badge hole punch", "id card slot punch"]},
+        {"id": "creasing", "name": "Биговка", "aliases": ["бигование"],
+         "phrases": ["creasing machine", "paper creasing", "scoring machine"]},
+        {"id": "perforation", "name": "Перфорация", "aliases": ["перфорирование"],
+         "phrases": ["perforating machine", "paper perforation", "perforation tear off"]},
+        {"id": "corner_rounding", "name": "Скругление углов", "aliases": ["углы"],
+         "phrases": ["corner rounding machine", "corner rounder", "corner cutter"]},
+        {"id": "foil", "name": "Выборочное фольгирование", "aliases": ["фольгирование", "тиснение фольгой"],
+         "phrases": ["foil stamping process", "hot foil stamping", "digital foiling"]},
+        {"id": "drilling", "name": "Сверление отверстий", "aliases": ["сверление бумаги"],
+         "phrases": ["paper drilling machine", "paper drill", "hole drilling paper stack"]},
+        {"id": "eyelets", "name": "Установка пикколо / люверсов", "aliases": ["люверсы", "пикколо"],
+         "phrases": ["eyelet setting machine", "grommet press", "grommet machine"]},
+        {"id": "calendar_rigel", "name": "Установка ригеля на календарь", "aliases": ["ригель", "календарь"],
+         "phrases": ["calendar binding", "calendar hanger", "wire binding calendar"]},
+        {"id": "foamboard_mounting", "name": "Накатка на пенокартон и ПВХ", "aliases": ["накатка", "пенокартон", "ПВХ"],
+         "phrases": ["foam board mounting", "mounting print on foam board", "pvc board mounting"]},
+        {"id": "banner_finishing", "name": "Обработка баннеров", "aliases": ["баннер", "проварка баннера"],
+         "phrases": ["banner welding", "banner hemming", "banner grommets"]},
+        {"id": "rollup", "name": "Сборка роллапов", "aliases": ["роллап", "мобильный стенд"],
+         "phrases": ["roll up banner stand assembly", "roll up banner", "pull up banner"]},
+        {"id": "thermal_labels", "name": "Печать на термоэтикетках", "aliases": ["этикетки", "термоэтикетки"],
+         "phrases": ["thermal label printer", "label printing machine", "barcode label printer"]}
+      ]
+    },
+    {
+      "id": "souvenirs",
+      "name": "Сувенирная продукция",
+      "processes": [
+        {"id": "sublimation", "name": "Сублимационный перенос", "aliases": ["сублимация", "печать на кружках"],
+         "phrases": ["sublimation printing", "mug heat press", "sublimation transfer"]},
+        {"id": "dtf", "name": "DTF-нанесение на текстиль", "aliases": ["DTF", "печать на футболках"],
+         "phrases": ["dtf printing", "dtf transfer", "direct to film printing"]},
+        {"id": "heat_transfer", "name": "Термотрансферная аппликация", "aliases": ["термоплёнка", "термотрансфер"],
+         "phrases": ["heat transfer vinyl", "heat press t-shirt", "htv application"]},
+        {"id": "laser_engraving", "name": "Лазерная гравировка", "aliases": ["гравировка"],
+         "phrases": ["laser engraving", "laser engraver", "co2 laser engraving"]},
+        {"id": "vinyl_magnets", "name": "Виниловые магниты", "aliases": ["магниты"],
+         "phrases": ["fridge magnet printing", "magnetic vinyl", "printed magnets"]},
+        {"id": "button_badges", "name": "Закатные металлические значки", "aliases": ["значки"],
+         "phrases": ["button badge maker", "pin button machine", "badge press"]},
+        {"id": "immortal_regiment", "name": "Транспаранты «Бессмертный полк»", "aliases": ["бессмертный полк", "транспарант"],
+         "phrases": ["portrait poster printing", "placard on stick", "photo poster mounting"]},
+        {"id": "stamps", "name": "Печати и штампы", "aliases": ["печать", "штамп"],
+         "phrases": ["rubber stamp making", "self inking stamp", "stamp laser engraving"]}
+      ]
+    },
+    {
+      "id": "extra",
+      "name": "Доп. услуги",
+      "processes": [
+        {"id": "printing_3d", "name": "3D-печать", "aliases": ["3д печать", "3D принтер"],
+         "phrases": ["3d printer printing", "3d printing timelapse", "fdm 3d printer"]}
+      ]
+    }
+  ]
+}

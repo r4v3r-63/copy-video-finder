@@ -1,0 +1,24 @@
+# Данные пользователя: настройки, ключи API, кэш, журнал, каталог
+Данные/
+**/Данные/
+*.key
+.env
+
+# Скачанные ролики
+*.mp4
+*.webm
+*.ogv
+*.mov
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Сборка
+build/
+dist/
+ffmpeg/
+*.zip
