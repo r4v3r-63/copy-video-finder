@@ -317,7 +317,10 @@ class MainWindow(QMainWindow):
             for pid in e.links:
                 counts[pid] = counts.get(pid, 0) + 1
         if ServicesDialog(self.categories, counts, self).exec():
-            self.set_categories(processes.load_catalog())
+            categories = processes.load_catalog()
+            removed = {p.id for p in self.processes} - {p.id for p in processes.all_processes(categories)}
+            self.catalog.drop_links(removed)  # ролики удалённых услуг — в «Без услуги»
+            self.set_categories(categories)
             self.statusBar().showMessage("Справочник услуг обновлён.")
 
     def set_categories(self, categories: list[processes.Category]):
@@ -518,7 +521,7 @@ class MainWindow(QMainWindow):
     def stop_search(self):
         if self.worker and self.worker.isRunning():
             self.worker.cancel()
-            self.worker.wait(5000)
+            self.worker.wait()  # отмена прерывает ожидание лимитов; запросы — с тайм-аутом
             self.statusBar().showMessage("Поиск остановлен.")
 
     @staticmethod
@@ -760,7 +763,7 @@ class MainWindow(QMainWindow):
     def stop_batch(self):
         if self.batch and self.batch.isRunning():
             self.batch.cancel()
-            self.batch.wait(10000)
+            self.batch.wait()
 
     def _batch_finished(self):
         self.coverage_view.set_running(False)
@@ -941,12 +944,18 @@ class MainWindow(QMainWindow):
             self._show_hint()
 
     def closeEvent(self, event):
+        # Все фоновые потоки отменяются и дожидаются полностью: поток, живой после удаления окна-родителя,
+        # роняет программу («QThread: Destroyed while thread is still running»). Окно прячем сразу.
+        self.hide()
         self.stop_search()
         self.stop_batch()
-        for worker in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker):
-            if worker and worker.isRunning():
-                worker.cancel.set()
-                worker.wait(3000)
+        workers = [w for w in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker)
+                   if w and w.isRunning()]
+        for worker in workers:
+            worker.cancel.set()
+        for worker in workers:
+            worker.wait()
+        self.updates.stop()
         self.downloads.stop()
         self.player.player.stop()
         self.player.frames.stop()

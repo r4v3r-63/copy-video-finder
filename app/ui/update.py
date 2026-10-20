@@ -65,6 +65,14 @@ class UpdateController:
         self.downloader: DownloadWorker | None = None
         self.dialog: QProgressDialog | None = None
 
+    def stop(self):
+        """Перед закрытием окна: потоки должны завершиться раньше, чем окно-родитель будет удалено."""
+        if self.downloader and self.downloader.isRunning():
+            self.downloader.cancel.set()
+            self.downloader.wait()
+        if self.checker and self.checker.isRunning():
+            self.checker.wait()  # один запрос к GitHub с тайм-аутом
+
     def check(self, manual: bool = False):
         if self.checker and self.checker.isRunning():
             return

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from app import licenses
@@ -159,3 +161,46 @@ def test_has_history(cat):
     assert not cat.has_history()
     cat.record_search("x", [])
     assert cat.has_history()
+
+
+def test_downloaded_path_survives_moving_program_folder(tmp_path, monkeypatch):
+    """Файлы внутри папки программы хранятся относительными: папку можно перенести целиком."""
+    from app import paths
+    old = tmp_path / "old" / "Данные"
+    monkeypatch.setenv("COPYVF_DATA_DIR", str(old))
+    video_file = old / "Видео" / "1.mp4"
+    video_file.parent.mkdir(parents=True)
+    video_file.write_bytes(b"x")
+    store = Catalog(old / "catalog.sqlite")
+    vid = store.add(VideoResult(source="Pixabay", source_id="1", title="x", description="", preview_url=None,
+                                duration=10, width=1920, height=1080, has_audio=None, page_url=""))
+    store.set_downloaded(vid, str(video_file))
+    assert store._db.execute("SELECT downloaded_path FROM videos").fetchone()[0] == "Данные/Видео/1.mp4"
+    store.set_downloaded(vid, "D:/Ролики/2.mp4")  # вне папки программы — как есть
+    assert store.get(vid).downloaded_path == "D:/Ролики/2.mp4"
+    store.set_downloaded(vid, str(video_file))
+    store.close()
+    new = tmp_path / "new"
+    (tmp_path / "old").rename(new)
+    monkeypatch.setenv("COPYVF_DATA_DIR", str(new / "Данные"))
+    moved = Catalog(new / "Данные" / "catalog.sqlite")
+    e = moved.get(vid)
+    assert Path(e.downloaded_path) == new / "Данные" / "Видео" / "1.mp4" and e.has_file
+    assert paths.portable_path(e.downloaded_path) == "Данные/Видео/1.mp4"
+    moved.close()
+
+
+def test_old_absolute_paths_become_portable(tmp_path, monkeypatch):
+    data = tmp_path / "Данные"
+    monkeypatch.setenv("COPYVF_DATA_DIR", str(data))
+    data.mkdir()
+    store = Catalog(data / "catalog.sqlite")
+    vid = store.add(VideoResult(source="Pixabay", source_id="1", title="x", description="", preview_url=None,
+                                duration=10, width=1920, height=1080, has_audio=None, page_url=""))
+    store._db.execute("UPDATE videos SET downloaded_path = ?", (str(data / "Видео" / "a.mp4"),))
+    store._db.commit()
+    store.close()
+    store = Catalog(data / "catalog.sqlite")
+    assert store._db.execute("SELECT downloaded_path FROM videos").fetchone()[0] == "Данные/Видео/a.mp4"
+    assert store.get(vid).downloaded_path == str(data / "Видео" / "a.mp4")
+    store.close()

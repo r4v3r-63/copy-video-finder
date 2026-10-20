@@ -4,6 +4,7 @@
 """
 
 import re
+from urllib.parse import urlsplit
 
 ALLOWED = "Разрешено"
 ATTRIBUTION = "Разрешено с атрибуцией"
@@ -59,7 +60,9 @@ def attribution_text(author: str, title: str, license_name: str, url: str) -> st
     return " — ".join(part for part in (author, title, license_name, url) if part)
 
 
-_CC_URL = re.compile(r"creativecommons\.org/(licenses|publicdomain)/([a-z\-]+)/?([\d.]+)?", re.IGNORECASE)
+_CC_HOSTS = {"creativecommons.org", "www.creativecommons.org"}
+_CC_CODES = {"by", "by-sa", "by-nd", "by-nc", "by-nc-sa", "by-nc-nd", "by-sa-nc", "by-nd-nc"}
+_CC_PATH = re.compile(r"/(licenses|publicdomain)/([a-z\-]+)(?:/([\d.]+))?(?:/.*)?", re.IGNORECASE)
 
 
 def name_from_url(url: str | None) -> str:
@@ -67,10 +70,19 @@ def name_from_url(url: str | None) -> str:
 
     Для прочих ссылок (rightsstatements.org и т.п.) — пустая строка: такая лицензия «требует проверки».
     """
-    m = _CC_URL.search(url or "")
+    try:
+        parts = urlsplit((url or "").strip())
+    except ValueError:
+        return ""
+    # Только настоящий домен Creative Commons: «not-creativecommons.org» или ссылка в параметре — не лицензия.
+    if parts.scheme.lower() not in ("http", "https", "") or (parts.hostname or "") not in _CC_HOSTS:
+        return ""
+    m = _CC_PATH.fullmatch(parts.path)
     if not m:
         return ""
     kind, code, version = m.group(1).lower(), m.group(2).lower(), m.group(3) or ""
     if kind == "publicdomain":
         return "CC0" if code == "zero" else "Public Domain" if code == "mark" else ""
+    if code not in _CC_CODES:
+        return ""
     return f"CC {code.upper()} {version}".strip()

@@ -144,17 +144,32 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
 
 def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event | None = None,
           retries: int = RETRIES, pause: float = 2.0) -> None:
-    """Скачать в dest.part с докачкой (Range) и повторами, затем переименовать в dest."""
+    """Скачать в dest.part с докачкой (Range) и повторами, затем переименовать в dest.
+
+    Докачка — только того же файла: с If-Range (ETag или дата изменения от первого ответа);
+    если файл на сервере изменился, сервер отдаёт его целиком (200) и скачивание начинается заново.
+    """
     part = dest.with_name(dest.name + ".part")
+    validator_file = dest.with_name(dest.name + ".part.etag")
     for attempt in range(1, retries + 1):
         have = part.stat().st_size if part.exists() else 0
         headers = {"User-Agent": USER_AGENT}
+        validator = validator_file.read_text(encoding="utf-8").strip() if have and validator_file.exists() else ""
         if have:
             headers["Range"] = f"bytes={have}-"
+            if validator:
+                headers["If-Range"] = validator
         try:
             with session.get(url, headers=headers, stream=True, timeout=30) as resp:
-                if resp.status_code == 416 and have:  # уже скачано полностью
-                    break
+                if resp.status_code == 416 and have:
+                    # «Диапазон за концом файла»: готово, только если размер на сервере совпадает с нашим.
+                    if _range_total(resp.headers) == have:
+                        break
+                    part.unlink(missing_ok=True)
+                    validator_file.unlink(missing_ok=True)
+                    if attempt == retries:
+                        raise DownloadError("Файл на площадке изменился — скачайте ещё раз.")
+                    continue
                 if resp.status_code == 404:
                     raise DownloadError("Файл удалён с площадки.")
                 if resp.status_code == 429:
@@ -167,7 +182,12 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
                 if resp.status_code not in (200, 206):
                     raise DownloadError(f"Площадка вернула ошибку {resp.status_code}.")
                 if resp.status_code == 200:
-                    have = 0  # сервер не умеет докачку — начинаем заново
+                    have = 0  # сервер не умеет докачку или файл изменился — начинаем заново
+                    new_validator = resp.headers.get("ETag") or resp.headers.get("Last-Modified") or ""
+                    if new_validator:
+                        validator_file.write_text(new_validator, encoding="utf-8")
+                    else:
+                        validator_file.unlink(missing_ok=True)
                 total = have + int(resp.headers.get("Content-Length") or 0)
                 with open(part, "ab" if have else "wb") as out:
                     for chunk in resp.iter_content(CHUNK):
@@ -188,6 +208,13 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
     if not part.exists() or part.stat().st_size == 0:
         raise DownloadError("Скачан пустой файл.")
     part.replace(dest)
+    validator_file.unlink(missing_ok=True)
+
+
+def _range_total(headers) -> int | None:
+    """Полный размер файла из «Content-Range: bytes */1234» (или «bytes 0-9/1234»)."""
+    m = re.search(r"/(\d+)\s*$", headers.get("Content-Range") or "")
+    return int(m.group(1)) if m else None
 
 
 def _retry_after(headers) -> float:
@@ -291,13 +318,20 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     prepare = job.trim > 0 or job.mute  # подготовка к показу: обрезать, убрать звук
     want_mp4 = (job.convert and ext != ".mp4") or prepare
     final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))
+    license_file = folder / (stem + ".txt")
+    wanted = variant(file, job.trim if ffmpeg else 0, job.mute and bool(ffmpeg))
     if final.exists():
-        return final, "уже был скачан"
+        saved = saved_variant(license_file)
+        if saved == wanted or (saved is None and _legacy_same(license_file, file, wanted)):
+            return final, "уже был скачан"
+        note_replaced = "заменён: прежний файл был в другом качестве или с другой подготовкой к показу"
+    else:
+        note_replaced = ""
 
     # Исходник — под отдельным именем, если его будут перекодировать в файл с тем же расширением.
     raw = folder / (stem + (".download" if want_mp4 and ffmpeg else "") + ext)
     fetch(file.url, raw, session, progress, job.cancel)
-    note = ""
+    note = note_replaced
     if want_mp4:
         if ffmpeg:
             if progress:
@@ -306,14 +340,45 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
             raw.unlink(missing_ok=True)
             job.prepared = prepare
         else:
-            note = "FFmpeg не найден — файл сохранён как есть, без конвертации и подготовки к показу"
+            note = (note + "; " if note else "") + \
+                "FFmpeg не найден — файл сохранён как есть, без конвертации и подготовки к показу"
     info = probe(final, ffprobe)
     if ffprobe and info is None:
         note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"
     elif ffmpeg:
         job.loop_hint = loop_hint(final, ffmpeg)
-    (folder / (stem + ".txt")).write_text(license_text(job, final, now(), info), encoding="utf-8")
+    license_file.write_text(license_text(job, final, now(), info) + f"{VARIANT_PREFIX}{wanted}\n",
+                            encoding="utf-8")
     return final, note
+
+
+VARIANT_PREFIX = "Вариант файла: "
+
+
+def variant(file: VideoFile, trim: int, mute: bool) -> str:
+    """Чем этот файл отличается от других скачиваний того же ролика: качество и подготовка к показу."""
+    size = f"{file.width}×{file.height}" if file.width and file.height else "?"
+    return f"{file.quality} {size}, обрезка {trim} с, без звука: {'да' if mute else 'нет'}"
+
+
+def _legacy_same(license_file: Path, file: VideoFile, wanted: str) -> bool:
+    """Файл версий до 0.18 (без строки варианта): то же качество и без подготовки к показу."""
+    try:
+        text = license_file.read_text(encoding="utf-8")
+    except OSError:
+        return not license_file.exists()  # файла лицензии нет вовсе — сравнить не с чем, считаем тем же
+    unprepared = wanted.endswith("обрезка 0 с, без звука: нет")
+    return f"Качество: {file.quality}" in text and ("Подготовлен к показу" not in text) == unprepared
+
+
+def saved_variant(license_file: Path) -> str | None:
+    """Вариант уже скачанного файла — из последней строки его файла лицензии (None — не записан)."""
+    try:
+        lines = license_file.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    found = [line[len(VARIANT_PREFIX):] for line in lines if line.startswith(VARIANT_PREFIX)]
+    return found[-1] if found else None
 
 
 class DownloadQueue(QThread):
@@ -343,7 +408,7 @@ class DownloadQueue(QThread):
         for job in self.jobs.values():
             job.cancel.set()
         self._jobs.put(None)
-        self.wait(10000)
+        self.wait()  # отмена прерывает и скачивание, и FFmpeg
 
     def run(self):
         ffmpeg, ffprobe = paths.ffmpeg_tool("ffmpeg"), paths.ffmpeg_tool("ffprobe")

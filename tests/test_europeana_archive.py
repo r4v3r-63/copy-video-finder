@@ -27,6 +27,11 @@ def cache(tmp_path, clock):
     ("http://creativecommons.org/publicdomain/mark/1.0/", "Public Domain", licenses.ALLOWED),
     ("https://creativecommons.org/licenses/by-nc-sa/4.0/", "CC BY-NC-SA 4.0", licenses.REJECTED),
     ("http://rightsstatements.org/vocab/InC/1.0/", "", licenses.REVIEW),
+    ("//creativecommons.org/licenses/by/4.0/deed.ru", "CC BY 4.0", licenses.ATTRIBUTION),
+    ("https://not-creativecommons.org/licenses/by/4.0/", "", licenses.REVIEW),
+    ("https://evil.example/?u=https://creativecommons.org/licenses/by/4.0/", "", licenses.REVIEW),
+    ("https://creativecommons.org.evil.example/licenses/by/4.0/", "", licenses.REVIEW),
+    ("https://creativecommons.org/licenses/whatever/4.0/", "", licenses.REVIEW),
 ])
 def test_license_from_url(url, name, status):
     assert licenses.name_from_url(url) == name

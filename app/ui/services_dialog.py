@@ -288,7 +288,9 @@ class ServicesDialog(QDialog):
     # --- кнопки ---
 
     def _ids(self) -> set[str]:
-        return {c.id for c in self.categories} | {p.id for c in self.categories for p in c.processes}
+        # Коды с роликами в каталоге тоже заняты: новая услуга не должна унаследовать чужие ролики.
+        return ({c.id for c in self.categories} | {p.id for c in self.categories for p in c.processes}
+                | set(self.link_counts))
 
     def _add_category(self):
         self._commit()  # дерево всё равно перестраивается ниже

@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app import catalog as cat
-from app import licenses
+from app import licenses, paths
 from app.sources.base import LicenseInfo, VideoFile, VideoResult
 
 # (ключ, заголовок столбца)
@@ -76,7 +76,7 @@ def rows(store: cat.Catalog, processes) -> list[dict]:
             if lic.status == licenses.ATTRIBUTION else "",
             "page_url": r.page_url, "preview_url": r.preview_url or "",
             "files": json.dumps([f.__dict__ for f in r.files], ensure_ascii=False) if r.files else "",
-            "status": e.status, "downloaded_path": e.downloaded_path, "comment": e.comment,
+            "status": e.status, "downloaded_path": paths.portable_path(e.downloaded_path), "comment": e.comment,
             "added_at": _date(e.added_at), "checked_at": _date(e.checked_at),
         }
         links = sorted(e.links.items()) or [(None, None)]
@@ -88,12 +88,26 @@ def rows(store: cat.Catalog, processes) -> list[dict]:
     return result
 
 
+# Строка с таким началом в Excel — формула. Названия и описания приходят с площадок, поэтому
+# в CSV перед ними ставится апостроф (при импорте он снимается), а в XLSX они пишутся как текст.
+_FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+REQUIRED = ("source", "source_id")
+
+
+def _csv_safe(value):
+    return "'" + value if isinstance(value, str) and value.startswith(_FORMULA_START) else value
+
+
+def _csv_value(value: str) -> str:
+    return value[1:] if value.startswith("'") and value[1:].startswith(_FORMULA_START) else value
+
+
 def write_csv(path: Path, data: list[dict]) -> None:
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerow(HEADERS)
         for row in data:
-            writer.writerow([row.get(key, "") for key, _ in COLUMNS])
+            writer.writerow([_csv_safe(row.get(key, "")) for key, _ in COLUMNS])
 
 
 def write_xlsx(path: Path, data: list[dict], summary: list[tuple[str, str]] | None = None) -> None:
@@ -109,6 +123,9 @@ def write_xlsx(path: Path, data: list[dict], summary: list[tuple[str, str]] | No
         cell.font = Font(bold=True)
     for row in data:
         ws.append([row.get(key, "") for key, _ in COLUMNS])
+        for cell in ws[ws.max_row]:
+            if cell.data_type == "f":  # строка с «=» — текст с площадки, а не формула
+                cell.data_type = "s"
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = ws.dimensions
     widths = {"title": 40, "description": 40, "service": 32, "license_note": 30, "attribution": 40, "files": 30,
@@ -137,11 +154,16 @@ def import_csv(path: Path, store: cat.Catalog, processes) -> tuple[int, int]:
     known = {p.id for p in processes}
     videos, links = set(), 0
     with open(path, encoding="utf-8-sig", newline="") as f:
-        sample = f.read(4096)
+        delimiter = _delimiter(f.readline())
         f.seek(0)
-        delimiter = ";" if sample.count(";") >= sample.count(",") else ","
-        for raw in csv.DictReader(f, delimiter=delimiter):
-            row = {_BY_TITLE.get(k.strip(), k.strip()): (v or "").strip() for k, v in raw.items() if k}
+        reader = csv.DictReader(f, delimiter=delimiter)
+        columns = {_BY_TITLE.get(k.strip(), k.strip()) for k in reader.fieldnames or [] if k}
+        missing = [title for key, title in COLUMNS if key in REQUIRED and key not in columns]
+        if missing:
+            raise ValueError("это не реестр программы — нет столбцов: " + ", ".join(missing))
+        for raw in reader:
+            row = {_BY_TITLE.get(k.strip(), k.strip()): _csv_value((v or "").strip())
+                   for k, v in raw.items() if k and isinstance(v, str)}
             if not row.get("source") or not row.get("source_id"):
                 continue
             try:
@@ -162,18 +184,28 @@ def import_csv(path: Path, store: cat.Catalog, processes) -> tuple[int, int]:
             videos.add(video_id)
             if row.get("status") in (cat.SELECTED, cat.REJECTED, cat.NEW):
                 store.set_status(video_id, row["status"])
-            if row.get("license_confirmed") == YES:
-                store.confirm_license(video_id)
-            if row.get("comment"):
-                store.set_comment(video_id, row["comment"])
-            if row.get("downloaded_path"):
-                store.set_downloaded(video_id, row["downloaded_path"])
+            # Столбец есть — значение из файла, даже «нет» и пустое; столбца нет — в каталоге как было.
+            if "license_confirmed" in columns:
+                store.confirm_license(video_id, row.get("license_confirmed") == YES)
+            if "comment" in columns:
+                store.set_comment(video_id, row.get("comment", ""))
+            if "downloaded_path" in columns:
+                store.set_downloaded(video_id, row.get("downloaded_path", ""))
             service = row.get("service_id", "")
             if service in known:
                 match = row.get("match") if row.get("match") in cat.MATCHES else cat.EXACT
                 store.link(video_id, service, match)
                 links += 1
     return len(videos), links
+
+
+def _delimiter(header: str) -> str:
+    """Разделитель — по строке заголовков: в ней нет данных с запятыми, как в названиях и тегах."""
+    for delimiter in (";", ",", "\t"):
+        names = next(csv.reader([header], delimiter=delimiter), [])
+        if sum(name.strip() in _BY_TITLE for name in names) >= 2:
+            return delimiter
+    return ";" if header.count(";") >= header.count(",") else ","
 
 
 def _float(text) -> float | None:

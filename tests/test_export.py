@@ -105,7 +105,8 @@ def test_xlsx(store, cats, tmp_path):
 
 def test_summary_and_added_since_previous(store, cats, clock, tmp_path):
     s = summary.build(store, cats, now=clock)
-    assert s["stats"]["counted"] == 2 and len(s["added"]) == 3 and s["since"] is None
+    # ролик 2 привязан только как «готовая продукция» — в покрытие не засчитан
+    assert s["stats"]["counted"] == 1 and len(s["added"]) == 3 and s["since"] is None
     need = [p.id for p, _ in s["need_search"]]
     assert "lam_pouch" in need and need.index("lam_wide") < need.index("lam_pouch")  # без роликов — раньше
     summary.write_html(tmp_path / "сводка.html", s)
@@ -130,3 +131,56 @@ def test_html_catalog_is_self_contained(store, cats, tmp_path):
     item = next(i for i in data["items"] if i["id"] == 1)
     assert item["services"][0] == {"category": "Ламинация", "name": "Пакетная ламинация", "match": cat.EXACT}
     assert item["files"][0]["url"] == "https://cdn/1.mp4"
+
+
+def test_formulas_from_sites_stay_text(tmp_path, cats, clock):
+    from openpyxl import load_workbook
+    s = cat.Catalog(tmp_path / "c.sqlite", now=clock)
+    s.select(video("1", title="=1+1"), "lam_pouch", cat.EXACT)
+    data = registry.rows(s, procs(cats))
+    registry.write_xlsx(tmp_path / "r.xlsx", data)
+    cell = load_workbook(tmp_path / "r.xlsx").active["I2"]
+    assert cell.value == "=1+1" and cell.data_type == "s"
+    registry.write_csv(tmp_path / "r.csv", data)
+    assert ";'=1+1;" in (tmp_path / "r.csv").read_text(encoding="utf-8-sig")
+    other = cat.Catalog(tmp_path / "o.sqlite", now=clock)
+    registry.import_csv(tmp_path / "r.csv", other, procs(cats))
+    assert other.entries()[0].result.title == "=1+1"  # апостроф при импорте снимается
+    s.close()
+    other.close()
+
+
+def test_import_with_commas_in_data(tmp_path, cats, clock):
+    """Теги через запятую в названии и описании не сбивают определение разделителя."""
+    s = cat.Catalog(tmp_path / "c.sqlite", now=clock)
+    v = video("1", title="laminator, office, laminating, pouch, machine, work, paper, a4, hot")
+    v.description = "a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p"
+    s.select(v, "lam_pouch", cat.EXACT)
+    registry.write_csv(tmp_path / "r.csv", registry.rows(s, procs(cats)))
+    other = cat.Catalog(tmp_path / "o.sqlite", now=clock)
+    assert registry.import_csv(tmp_path / "r.csv", other, procs(cats)) == (1, 1)
+    (tmp_path / "bad.csv").write_text("a;b\n1;2\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="нет столбцов"):
+        registry.import_csv(tmp_path / "bad.csv", other, procs(cats))
+    s.close()
+    other.close()
+
+
+def test_import_applies_no_and_empty_values(tmp_path, cats, clock):
+    s = cat.Catalog(tmp_path / "c.sqlite", now=clock)
+    vid = s.select(video("1"), "lam_pouch", cat.EXACT)
+    s.set_comment(vid, "старый")
+    s.set_downloaded(vid, "old.mp4")
+    target = cat.Catalog(tmp_path / "t.sqlite", now=clock)
+    registry.write_csv(tmp_path / "r.csv", registry.rows(s, procs(cats)))
+    registry.import_csv(tmp_path / "r.csv", target, procs(cats))
+    assert target.entries()[0].license_confirmed and target.entries()[0].comment == "старый"
+    s.confirm_license(vid, False)
+    s.set_comment(vid, "")
+    s.set_downloaded(vid, "")
+    registry.write_csv(tmp_path / "r.csv", registry.rows(s, procs(cats)))
+    registry.import_csv(tmp_path / "r.csv", target, procs(cats))
+    e = target.entries()[0]
+    assert not e.license_confirmed and e.comment == "" and e.downloaded_path == ""
+    s.close()
+    target.close()

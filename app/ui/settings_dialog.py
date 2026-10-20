@@ -1,5 +1,6 @@
 """Окно настроек: ключи API и параметры поиска."""
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -7,10 +8,12 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -159,9 +162,22 @@ class SettingsDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
 
+        # Форма длинная: на экране 1366×768 она прокручивается, а кнопки всегда видны внизу.
+        body = QWidget()
+        body.setLayout(form)
+        scroll = QScrollArea()
+        scroll.setWidget(body)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
+        layout.addWidget(scroll, 1)
         layout.addWidget(buttons)
+        screen = self.screen().availableGeometry() if self.screen() else None
+        height = body.sizeHint().height() + buttons.sizeHint().height() + 48
+        if screen:
+            height = min(height, screen.height() - 80)
+        self.resize(max(body.sizeHint().width() + 40, 640), height)
 
     def _browse(self):
         start = self.download_dir.text() or str(paths.default_download_dir())

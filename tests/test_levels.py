@@ -180,3 +180,20 @@ def test_is_paid():
         assert licenses.is_paid(name)
     for name in ("все права защищены", "CC BY-NC 3.0", "Pixabay Content License", "Professional footage"):
         assert not licenses.is_paid(name)
+
+
+def test_match_from_matched_phrase_not_from_query():
+    """«Calendar printing» на запрос «calendar binding»: фраза совпала только у «похожих операций».
+
+    На уровне названия ролик не по теме; найденный позже, он предлагается как «смежный процесс», а не «точное».
+    """
+    plan = build_plan("Установка ригеля на календарь (Послепечатные работы)", PROCS, Dictionary.load())
+    r = video(1, "Calendar printing")
+    source = FakeSource({"calendar binding": [r], "calendar printing": [r]})
+    QCoreApplication.instance() or QCoreApplication([])
+    worker = SearchWorker(plan, [source], SearchFilters(max_duration=180), printing=DOMAIN)
+    found = []
+    worker.found.connect(found.extend)
+    worker.run()
+    assert [f.key for f in found] == [r.key]
+    assert found[0].match_hint == "смежный процесс" and found[0].found_by == "calendar printing"

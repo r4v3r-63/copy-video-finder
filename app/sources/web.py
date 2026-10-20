@@ -167,6 +167,16 @@ def _duration(text) -> float | None:
     return total or None
 
 
+def _object_license(obj: dict) -> str:
+    """Лицензия из разметки VideoObject: строка, {"url"/"@id": …} или список таких значений."""
+    value = obj.get("license")
+    if isinstance(value, list):
+        value = value[0] if value else ""
+    if isinstance(value, dict):
+        value = value.get("url") or value.get("@id") or value.get("name") or ""
+    return value.strip() if isinstance(value, str) else ""
+
+
 def parse_page(page: str, url: str) -> VideoResult | None:
     """Ролик с произвольной страницы: нужен файл ролика и открытая лицензия, иначе None."""
     meta, objects = _meta(page), _video_objects(page)
@@ -176,17 +186,26 @@ def parse_page(page: str, url: str) -> VideoResult | None:
                   if isinstance(v, str) and urlparse(v).path.lower().endswith(_VIDEO_EXT)), None)
     if not video:
         return None
-    license_url = obj.get("license") if isinstance(obj.get("license"), str) else ""
-    if not license_url:
+    own = _object_license(obj)
+    page_wide = False
+    if own:
+        # Лицензия задана у самого ролика: её и берём. Нераспознанные условия («все права защищены»)
+        # нельзя подменять ссылкой на Creative Commons из другого блока страницы.
+        license_url = own
+    else:
         m = _LICENSE_LINK.search(page)
         license_url = (m.group(1) or m.group(2)) if m else ""
-    if not licenses.name_from_url(license_url):
-        m = _CC_ANY.search(page)
-        license_url = m.group(0) if m else license_url
+        if not licenses.name_from_url(license_url):
+            m = _CC_ANY.search(page)  # ссылка где-то на странице — может относиться к тексту или фото
+            license_url, page_wide = (m.group(0), True) if m else (license_url, False)
     name = licenses.name_from_url(license_url)
     if not name:
         return None  # лицензия не распознана — такой ролик всё равно не показывается
     status, note = licenses.evaluate(name)
+    if page_wide and status != licenses.REJECTED:
+        status = licenses.REVIEW
+        note = ("Ссылка на лицензию есть на странице, но не у ролика: она может относиться к тексту или фото. "
+                + note).strip()
     title = obj.get("name") or meta.get("og:title") or html.unescape(_TAGS.sub("", (_TITLE.search(page) or [0, ""])[1]))
     thumb = obj.get("thumbnailUrl") or meta.get("og:image")
     if isinstance(thumb, list):

@@ -100,10 +100,15 @@ class Entry:
     @property
     def counts_for_coverage(self) -> bool:
         lic = self.result.license
-        # Удалённый с площадки ролик засчитывается, только если он уже скачан.
+        # Удалённый с площадки ролик засчитывается, только если его файл есть на диске.
         return (self.status != REJECTED and self.license_confirmed
                 and lic is not None and lic.status in licenses.SUITABLE
-                and (self.available or bool(self.downloaded_path)))
+                and (self.available or self.has_file))
+
+    @property
+    def has_file(self) -> bool:
+        """Скачанный файл на месте (путь уже разрешён от папки программы)."""
+        return bool(self.downloaded_path) and Path(self.downloaded_path).is_file()
 
 
 def _files_to_json(files: list[VideoFile]) -> str:
@@ -131,6 +136,12 @@ class Catalog:
             for column, decl in _ADDED_COLUMNS.items():
                 if column not in have:
                     self._db.execute(f"ALTER TABLE videos ADD COLUMN {column} {decl}")
+            # Старые записи с абсолютным путём внутри папки программы — в переносимый вид.
+            rows = self._db.execute("SELECT id, downloaded_path FROM videos WHERE downloaded_path != ''").fetchall()
+            for row in rows:
+                stored = paths.portable_path(row["downloaded_path"])
+                if stored != row["downloaded_path"]:
+                    self._db.execute("UPDATE videos SET downloaded_path = ? WHERE id = ?", (stored, row["id"]))
 
     def close(self) -> None:
         self._db.close()
@@ -200,7 +211,8 @@ class Catalog:
         self._update(video_id, title=title)
 
     def set_downloaded(self, video_id: int, path: str) -> None:
-        self._update(video_id, downloaded_path=path)
+        """Путь внутри папки программы хранится относительным (`paths.portable_path`)."""
+        self._update(video_id, downloaded_path=paths.portable_path(path))
 
     def set_available(self, video_id: int, available: bool) -> None:
         """Результат проверки ссылки: ролик есть на площадке или удалён."""
@@ -227,6 +239,15 @@ class Catalog:
         with self._lock, self._db:
             self._db.execute("DELETE FROM links WHERE video_id = ? AND process_id = ?", (video_id, process_id))
 
+    def drop_links(self, process_ids) -> int:
+        """Снять привязки к удалённым из справочника услугам; ролики остаются (в «Без услуги»)."""
+        ids = list(process_ids)
+        if not ids:
+            return 0
+        with self._lock, self._db:
+            cur = self._db.execute(f"DELETE FROM links WHERE process_id IN ({','.join('?' * len(ids))})", ids)
+            return cur.rowcount
+
     def delete(self, video_id: int) -> None:
         with self._lock, self._db:
             self._db.execute("DELETE FROM videos WHERE id = ?", (video_id,))
@@ -249,7 +270,8 @@ class Catalog:
         optional = lambda v: None if v is None else bool(v)  # noqa: E731
         return Entry(id=row["id"], result=result, status=row["status"],
                      license_confirmed=bool(row["license_confirmed"]),
-                     comment=row["comment"], downloaded_path=row["downloaded_path"], added_at=row["added_at"],
+                     comment=row["comment"], downloaded_path=paths.resolve_path(row["downloaded_path"]),
+                     added_at=row["added_at"],
                      checked_at=row["checked_at"], links=links, available=bool(row["available"]),
                      link_checked_at=row["link_checked_at"], phash=row["phash"] or "", loop=optional(row["loop"]),
                      loop_hint=optional(row["loop_hint"]))
@@ -373,12 +395,17 @@ def statistics(catalog: "Catalog", categories) -> dict:
     by_source: dict[str, int] = {}
     for e in entries:
         by_source[e.result.source] = by_source.get(e.result.source, 0) + 1
+    ids = {p.id for p in processes}
+    # Засчитан — ролик хотя бы с одной засчитываемой привязкой к услуге справочника
+    # (не «только готовая продукция»), как в покрытии.
+    counted = [e for e in entries if e.counts_for_coverage
+               and any(pid in ids and match != PRODUCT for pid, match in e.links.items())]
     return {
         "categories": len(categories),
         "services": len(processes),
         "videos": len(entries),
-        "counted": sum(1 for e in entries if e.counts_for_coverage),
-        "exact": sum(1 for e in entries if e.counts_for_coverage and EXACT in e.links.values()),
+        "counted": len(counted),
+        "exact": sum(1 for e in counted if any(pid in ids and m == EXACT for pid, m in e.links.items())),
         "services_by_count": by_level,
         "services_done": sum(1 for p in processes if coverage.get(p.id, 0) >= p.target),
         "by_source": dict(sorted(by_source.items(), key=lambda kv: -kv[1])),

@@ -228,3 +228,21 @@ def test_stock_listing_pages_not_opened(cache, clock):
                 "https://commons.wikimedia.org/wiki/File:Laser_engraving_machine.jpg"):
         assert src.open(url) is None
     assert src.pages.session.calls == []
+
+
+def test_video_own_terms_not_replaced_by_page_license():
+    """У ролика «все права защищены», CC BY в подвале — для текста: ролик не со свободной лицензией."""
+    ld = ('<script type="application/ld+json">{"@type": "VideoObject", "name": "Wire binding", '
+          '"contentUrl": "https://media.example.org/wire-binding.mp4", "license": "%s"}</script>')
+    footer = '<footer>Text: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY</a></footer>'
+    page = f"<html><head>{ld % 'All rights reserved'}</head><body>{footer}</body></html>"
+    assert parse_page(page, "https://example.org/clips/8") is None
+    page = f"<html><head>{ld % 'https://example.org/terms'}</head><body>{footer}</body></html>"
+    assert parse_page(page, "https://example.org/clips/8") is None
+    # без лицензии у ролика ссылка из подвала — только «требует проверки»
+    page = f"<html><head>{ld.replace(', \"license\": \"%s\"', '')}</head><body>{footer}</body></html>"
+    r = parse_page(page, "https://example.org/clips/8")
+    assert r.license.status == licenses.REVIEW and "не у ролика" in r.license.note
+    # лицензия у самого ролика — принимается
+    page = f"<html><head>{ld % 'https://creativecommons.org/publicdomain/zero/1.0/'}</head></html>"
+    assert parse_page(page, "https://example.org/clips/8").license.status == licenses.ALLOWED

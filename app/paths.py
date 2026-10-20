@@ -8,7 +8,7 @@
 import os
 import shutil
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 DATA_DIR_NAME = "Данные"
 
@@ -76,6 +76,40 @@ def ffmpeg_tool(name: str) -> Path | None:
             return path
     found = shutil.which(name)
     return Path(found) if found else None
+
+
+def _is_absolute(path: str) -> bool:
+    """Абсолютный путь этой системы или Windows («C:/…», «\\\\сервер\\…») — и при импорте с другого компьютера."""
+    return Path(path).is_absolute() or PureWindowsPath(path).is_absolute()
+
+
+def _portable_base() -> Path:
+    """Папка программы (где лежат «Данные»): пути внутри неё хранятся относительными."""
+    return data_dir().parent
+
+
+def portable_path(path: str | Path) -> str:
+    """Путь для хранения в каталоге: внутри папки программы — относительный (с «/»), иначе как есть.
+
+    Тогда папку программы вместе с «Данными» и роликами можно перенести или запустить с флешки
+    под другой буквой — каталог найдёт файлы на новом месте.
+    """
+    if not path:
+        return ""
+    p = Path(path)
+    if not _is_absolute(str(path)):
+        return p.as_posix()
+    try:
+        return p.resolve().relative_to(_portable_base().resolve()).as_posix()
+    except (ValueError, OSError):
+        return str(p)
+
+
+def resolve_path(stored: str) -> str:
+    """Настоящий путь файла по сохранённому в каталоге (относительный — от папки программы)."""
+    if not stored:
+        return ""
+    return stored if _is_absolute(stored) else str(_portable_base() / stored)
 
 
 def log_file() -> Path:

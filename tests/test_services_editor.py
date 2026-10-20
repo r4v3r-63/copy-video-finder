@@ -80,3 +80,25 @@ def test_dialog_refuses_service_without_phrases(data_dir):
     dialog._add_service()
     dialog._commit()
     assert any("нет поисковых фраз" in p for p in dialog.problems())
+
+
+def test_new_service_does_not_take_code_with_videos(data_dir, tmp_path):
+    """Удалённая услуга «service» с роликами: новая услуга получает другой код, привязки удалённой снимаются."""
+    from app import catalog as cat
+    from app.sources.base import LicenseInfo, VideoResult
+    from app.ui.services_dialog import ServicesDialog
+
+    dialog = ServicesDialog(processes.load_catalog(), {"service": 2})
+    dialog.tree.setCurrentItem(dialog.tree.topLevelItem(0))
+    dialog._add_service()
+    assert dialog.current.id == "service_2"
+
+    store = cat.Catalog(tmp_path / "c.sqlite")
+    r = VideoResult(source="Pixabay", source_id="1", title="x", description="", preview_url=None, duration=10,
+                    width=1920, height=1080, has_audio=None, page_url="",
+                    license=LicenseInfo("CC0", status="Разрешено"))
+    vid = store.select(r, "service")
+    store.link(vid, "lam_roll")
+    assert store.drop_links({"service"}) == 1
+    assert store.get(vid).links == {"lam_roll": cat.EXACT}
+    store.close()

@@ -1,6 +1,7 @@
 import io
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -115,7 +116,7 @@ class Checker:
         return video(source_id)
 
 
-def test_check_links_marks_only_confirmed_removals(store, clock):
+def test_check_links_marks_only_confirmed_removals(store, clock, tmp_path):
     for sid in "1234":
         store.select(video(sid), "lam_pouch")
     store.select(video("9", source="Coverr"), "lam_pouch")  # площадка без проверки — пропуск
@@ -126,7 +127,10 @@ def test_check_links_marks_only_confirmed_removals(store, clock):
     assert by_sid["3"].available and by_sid["3"].link_checked_at is None  # сбой сети — не трогаем
     # Удалённый и не скачанный ролик не засчитывается, скачанный — засчитывается.
     assert store.coverage() == {"lam_pouch": 4}
-    store.set_downloaded(by_sid["2"].id, "C:/v/2.mp4")
+    store.set_downloaded(by_sid["2"].id, str(tmp_path / "нет-файла.mp4"))
+    assert store.coverage() == {"lam_pouch": 4}  # путь есть, файла нет — не засчитывается
+    (tmp_path / "2.mp4").write_bytes(b"x")
+    store.set_downloaded(by_sid["2"].id, str(tmp_path / "2.mp4"))
     assert store.coverage() == {"lam_pouch": 5}
     counts = check_links(store, [Checker()])
     assert counts["restored"] == 1
@@ -262,3 +266,34 @@ def test_frames_from_video(tmp_path):
     with Image.open(io.BytesIO(frames[0][1])) as img:
         assert img.size == (320, 180)
     assert len(extract_frames(str(src), None, Path(FFMPEG))) == 1  # 1 с есть, 5 и 10 с — нет
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="фальшивый FFmpeg — скрипт sh")
+def test_frames_stop_kills_slow_ffmpeg(tmp_path, monkeypatch):
+    """Закрытие окна во время получения кадров: FFmpeg прерывается, поток завершается до удаления окна."""
+    import time
+
+    from app.ui.frames_view import FramesStrip
+    slow = tmp_path / "ffmpeg"
+    slow.write_text("#!/bin/sh\nsleep 30\n")
+    slow.chmod(0o755)
+    monkeypatch.setattr("app.ui.frames_view.paths.ffmpeg_tool", lambda name: slow)
+    strip = FramesStrip()
+    strip.set_video(("Pixabay", "1"), "https://cdn/x.mp4", 12.0)
+    strip.load()
+    worker = strip.workers[0]
+    time.sleep(0.3)
+    started = time.monotonic()
+    strip.stop()
+    assert worker.isFinished() and time.monotonic() - started < 3
+
+
+def test_settings_dialog_fits_small_screen(tmp_path, monkeypatch):
+    """Окно настроек на экране высотой 768: форма прокручивается, кнопки остаются видны."""
+    from PyQt6.QtWidgets import QScrollArea
+
+    from app.settings import Settings
+    from app.ui.settings_dialog import SettingsDialog
+    dialog = SettingsDialog(Settings(), None)
+    assert dialog.findChild(QScrollArea) is not None
+    assert dialog.minimumSizeHint().height() < 700

@@ -38,7 +38,7 @@ def suitable(e: cat.Entry) -> bool:
     """В шоурил идёт скачанный, не отклонённый ролик со свободной лицензией, подтверждённой пользователем."""
     lic = e.result.license
     return (e.status != cat.REJECTED and e.license_confirmed and lic is not None
-            and lic.status in licenses.SUITABLE and bool(e.downloaded_path) and Path(e.downloaded_path).is_file())
+            and lic.status in licenses.SUITABLE and e.has_file)
 
 
 def showreel_entries(store: cat.Catalog, process_ids: list[str]) -> list[cat.Entry]:

@@ -6,7 +6,9 @@ FFmpeg читает ролик прямо по ссылке для просмо�
 
 import subprocess
 import sys
+import tempfile
 import threading
+import time
 from pathlib import Path
 
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -25,15 +27,29 @@ def frame_times(duration: float | None, count: int = 3) -> list[float]:
     return [round(duration * (0.1 + 0.8 * i / (count - 1)), 2) for i in range(count)]
 
 
-def extract_frame(source: str, at: float, ffmpeg: Path, timeout: float = TIMEOUT) -> bytes | None:
-    """Один кадр в PNG; None — если взять не удалось (ролик короче, нет связи, битый файл)."""
+def extract_frame(source: str, at: float, ffmpeg: Path, timeout: float = TIMEOUT,
+                  cancel: threading.Event | None = None) -> bytes | None:
+    """Один кадр в PNG; None — если взять не удалось (ролик короче, нет связи, битый файл) или отменено.
+
+    FFmpeg по сети может думать долго, поэтому отмена (закрытие окна) сразу завершает его процесс.
+    """
     cmd = [str(ffmpeg), "-v", "error", "-ss", f"{at:.2f}", "-i", source, "-frames:v", "1",
            "-vf", f"scale={FRAME_WIDTH}:-2", "-f", "image2pipe", "-vcodec", "png", "-"]
     try:
-        done = subprocess.run(cmd, capture_output=True, timeout=timeout, creationflags=_NO_WINDOW)
-    except (OSError, subprocess.TimeoutExpired):
+        with tempfile.TemporaryFile() as out:
+            proc = subprocess.Popen(cmd, stdout=out, stderr=subprocess.DEVNULL, creationflags=_NO_WINDOW)
+            deadline = time.monotonic() + timeout
+            while proc.poll() is None:
+                if (cancel and cancel.is_set()) or time.monotonic() > deadline:
+                    proc.kill()
+                    proc.wait()
+                    return None
+                time.sleep(0.05)
+            out.seek(0)
+            data = out.read()
+    except OSError:
         return None
-    return done.stdout if done.returncode == 0 and done.stdout else None
+    return data if proc.returncode == 0 and data else None
 
 
 def extract_frames(source: str, duration: float | None, ffmpeg: Path, cancel: threading.Event | None = None,
@@ -43,7 +59,7 @@ def extract_frames(source: str, duration: float | None, ffmpeg: Path, cancel: th
     for at in frame_times(duration, count):
         if cancel and cancel.is_set():
             break
-        image = extract_frame(source, at, ffmpeg)
+        image = extract_frame(source, at, ffmpeg, cancel=cancel)
         if image:
             frames.append((at, image))
     return frames

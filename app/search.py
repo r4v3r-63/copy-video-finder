@@ -161,6 +161,14 @@ class SearchWorker(QThread):
         self.stems = topic_stems([q.text for q in plan.queries])
         self.hidden = hidden or set()  # ролики, отклонённые пользователем, — не показываются
         self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
+        # Фразы по уровням: ролик проверяется только фразами уже запущенных уровней, а степень
+        # соответствия — по самому раннему уровню, фраза которого совпала (а не по запросу, вернувшему ролик).
+        self._levels = sorted({q.level for q in plan.queries})
+        self._level_phrases = {
+            level: phrase_stems([q.text for q in plan.queries if q.level == level],
+                                keep={q.text for q in plan.queries if q.key and q.level == level})
+            for level in self._levels}
+        self._level_match = {level: next(q.match for q in plan.queries if q.level == level) for level in self._levels}
         self.printing = printing or set()
         self.levels_used = 0  # до какого уровня расширения дошёл поиск
         # По теме, длительности и размеру подходят, но лицензия не свободная — показываются по кнопке.
@@ -246,15 +254,14 @@ class SearchWorker(QThread):
         for r in results:
             if r.key in self.seen:
                 continue
+            level = self.matched_level(r, query.level, source.topic_in_description)
+            on_topic = level is not None and not is_excluded(r, self.plan.exclude)
             reason = REJECTED_BEFORE if r.key in self.hidden else \
                 rejection_reason(r, self.filters, self.only_without_attribution)
-            if reason is None and (not is_relevant(r, self.phrases, source.topic_in_description, self.printing)
-                                   or is_excluded(r, self.plan.exclude)):
+            if reason is None and not on_topic:
                 reason = OFF_TOPIC
-            if reason == LICENSE and not licenses.is_paid(r.license.name if r.license else "") \
-                    and is_relevant(r, self.phrases, source.topic_in_description, self.printing) \
-                    and not is_excluded(r, self.plan.exclude):
-                r.match_hint, r.found_by = query.match, query.text
+            if reason == LICENSE and not licenses.is_paid(r.license.name if r.license else "") and on_topic:
+                r.match_hint, r.found_by = self._level_match[level], query.text
                 self.unlicensed[r.key] = r
             if reason:
                 # Ролик, не подошедший по одной фразе, может подойти по другой.
@@ -263,13 +270,26 @@ class SearchWorker(QThread):
                     self.off_topic[r.key] = r
                 continue
             self.seen.add(r.key)
-            r.match_hint, r.found_by = query.match, query.text
+            r.match_hint, r.found_by = self._level_match[level], query.text
             r.relevance = relevance(r, self.stems, self.printing)
             if not r.files:
                 r.relevance -= NO_FILES_PENALTY  # скачать можно только на сайте — ниже в выдаче
             fresh.append(r)
         if fresh:
             self.found.emit(fresh)
+
+    def matched_level(self, r: VideoResult, upto: int, use_description: bool = True) -> int | None:
+        """Самый ранний уровень (не дальше запущенного), фраза которого есть у ролика; None — не по теме."""
+        for level in self._levels:
+            if level > upto:
+                break
+            if self._level_phrases[level] and is_relevant(r, self._level_phrases[level], use_description,
+                                                          self.printing):
+                return level
+        # Ни у одного уровня нет значимых слов — судить не по чему, как в is_relevant.
+        if not any(self._level_phrases[lv] for lv in self._levels if lv <= upto):
+            return upto if is_relevant(r, [], use_description, self.printing) else None
+        return None
 
     def _run_one(self, source: Source, query) -> list[VideoResult]:
         if self._cancel.is_set():

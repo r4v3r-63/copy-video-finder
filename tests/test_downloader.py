@@ -214,3 +214,38 @@ def test_no_preparation_keeps_mp4_as_is(tmp_path):
     job = DownloadJob(result=video(FILES), file=FILES[1], process=PROC, query_text="", base_dir=tmp_path)
     path, _ = run_job(job, StreamSession(StreamResponse(b"videodata")))
     assert path.read_bytes() == b"videodata" and not job.prepared
+
+
+def test_other_quality_replaces_file(tmp_path):
+    """Full HD уже скачан, выбран 4K: файл скачивается заново, а не «уже был скачан»."""
+    job = DownloadJob(result=video(FILES), file=FILES[1], process=PROC, query_text="", base_dir=tmp_path)
+    path, _ = run_job(job, StreamSession(StreamResponse(b"fullhd")))
+    assert run_job(job, StreamSession()) == (path, "уже был скачан")
+    job4k = DownloadJob(result=video(FILES), file=FILES[0], process=PROC, query_text="", base_dir=tmp_path,
+                        convert=False)
+    path4k, note = run_job(job4k, StreamSession(StreamResponse(b"ultra-hd-data")))
+    assert path4k == path and path.read_bytes() == b"ultra-hd-data" and "заменён" in note
+    assert "Вариант файла: 4K 3840×2160" in path.with_suffix(".txt").read_text(encoding="utf-8")
+
+
+def test_416_with_other_size_restarts(tmp_path):
+    """416, но на сервере 3 байта, а у нас 17: частичный файл не принимается за готовый."""
+    dest = tmp_path / "a.mp4"
+    (tmp_path / "a.mp4.part").write_bytes(b"x" * 17)
+    session = StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"}),
+                            StreamResponse(b"abc"))
+    fetch("u", dest, session, pause=0)
+    assert dest.read_bytes() == b"abc" and "Range" not in session.calls[1]["headers"]
+    (tmp_path / "b.mp4.part").write_bytes(b"abc")
+    fetch("u", tmp_path / "b.mp4", StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"})))
+    assert (tmp_path / "b.mp4").read_bytes() == b"abc"  # размер совпал — готово
+
+
+def test_resume_only_same_file(tmp_path):
+    """Докачка с If-Range: изменившийся на сервере файл приходит целиком (200) и пишется заново."""
+    dest = tmp_path / "a.mp4"
+    session = StreamSession(StreamResponse(b"abcdefgh", headers={"ETag": '"v1"'}, cut_after=4),
+                            StreamResponse(b"NEWFILE!", headers={"ETag": '"v2"'}))
+    fetch("u", dest, session, pause=0)
+    assert session.calls[1]["headers"]["If-Range"] == '"v1"' and session.calls[1]["headers"]["Range"] == "bytes=4-"
+    assert dest.read_bytes() == b"NEWFILE!" and not (tmp_path / "a.mp4.part.etag").exists()

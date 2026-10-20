@@ -97,6 +97,8 @@ class FramesStrip(QWidget):
                 item.widget().deleteLater()
 
     def stop(self):
-        for worker in self.workers:
+        """Перед закрытием окна: отменить и дождаться потоков — FFmpeg при отмене завершается сразу."""
+        for worker in list(self.workers):
             worker.cancel.set()
-            worker.wait(2000)
+        for worker in list(self.workers):
+            worker.wait()
