@@ -52,6 +52,7 @@ from app.ui.add_link_dialog import AddLinkDialog
 from app.ui.batch_view import BatchView
 from app.ui.catalog_view import CatalogView
 from app.ui.player import PlayerPanel, format_duration
+from app.ui.result_filters import ResultFilters
 from app.ui.services_dialog import ServicesDialog
 from app.ui.settings_dialog import SettingsDialog
 from app.ui.showreel_dialog import ShowreelDialog
@@ -167,6 +168,12 @@ class MainWindow(QMainWindow):
         search_row = QHBoxLayout()
         search_row.addWidget(self.query, 1)
         search_row.addWidget(self.search_button)
+        filter_button = QPushButton("Фильтры…")
+        filter_button.setCheckable(True)
+        search_row.addWidget(filter_button)
+        self.result_filters = ResultFilters()
+        self.result_filters.hide()
+        filter_button.toggled.connect(self.result_filters.setVisible)
 
         self.query_info = QLabel()
         self.query_info.setWordWrap(True)
@@ -202,6 +209,7 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addLayout(search_row)
+        layout.addWidget(self.result_filters)
         layout.addWidget(self.query_info)
         layout.addWidget(self.source_links)
         layout.addWidget(splitter, 1)
@@ -245,6 +253,7 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.show_unlicensed)
         self.statusBar().showMessage(f"Папка данных: {paths.data_dir()}")
         self._show_hint()
+        self.result_filters.changed.connect(self._filter_results)
 
         self.updates = UpdateController(self, settings)
         # «Как в системе»: тема переключается вслед за Windows.
@@ -565,6 +574,7 @@ class MainWindow(QMainWindow):
         self.player.show_result(None)
         self.problems = []
         self.sources_seen = {}
+        self.result_filters.set_sources([])
         self.source_links.setText("")
 
         self._thumb_items = {}
@@ -573,6 +583,7 @@ class MainWindow(QMainWindow):
                                    self.settings.only_without_attribution, self, printing=self.printing,
                                    hidden=hidden)
         self.worker.found.connect(self._on_found)
+        self.worker.previously_rejected_found.connect(self._on_found)
         self.worker.problem.connect(self._on_problem)
         self.worker.progress.connect(self._on_progress)
         self.worker.finished.connect(self._on_finished)
@@ -626,6 +637,8 @@ class MainWindow(QMainWindow):
                 text += f"\n{r.match_hint}"
             if statuses.get(r.key) == cat.SELECTED:
                 text += "\nв каталоге"
+            elif statuses.get(r.key) == cat.REJECTED:
+                text += "\nотклонён ранее"
             if off_topic:
                 r.relevance = -1  # в конец выдачи
                 text = "Не по теме · " + text
@@ -656,6 +669,33 @@ class MainWindow(QMainWindow):
         links = [f'<a href="{escape(url)}">{escape(name)}</a>' if url else escape(name)
                  for name, url in self.sources_seen.items()]
         self.source_links.setText("Видео предоставлены: " + ", ".join(links))
+        self.result_filters.set_sources(self.sources_seen)
+        self._filter_results()
+
+    def _filter_results(self):
+        statuses = self.catalog.statuses()
+        current = self.results.currentItem()
+        items = [self.results.item(i) for i in range(self.results.count())]
+        real = [item for item in items if item.data(Qt.ItemDataRole.UserRole) is not None]
+        ordered = sorted(real, key=lambda item: self.result_filters.sort_key(item.data(Qt.ItemDataRole.UserRole)))
+        # Переставляем те же карточки: загруженные превью и ссылки фоновых запросов сохраняются.
+        if real != ordered:
+            self.results.blockSignals(True)
+            for item in real:
+                self.results.takeItem(self.results.row(item))
+            for item in ordered:
+                self.results.addItem(item)
+            if current in ordered:
+                self.results.setCurrentItem(current)
+            self.results.blockSignals(False)
+        for item in ordered:
+            item.setHidden(not self.result_filters.allows(item.data(Qt.ItemDataRole.UserRole), statuses))
+        for item in items:
+            if item.data(Qt.ItemDataRole.UserRole) is None:
+                item.setHidden(any(not card.isHidden() for card in ordered))
+        if current and current.isHidden():
+            self.results.setCurrentItem(None)
+            self.player.show_result(None)
 
     def _on_thumbnail(self, reply: QNetworkReply):
         token = reply.request().attribute(QNetworkRequest.Attribute.User)
@@ -788,6 +828,8 @@ class MainWindow(QMainWindow):
             self.catalog_view.refresh()
         elif page is self.batch_view:
             self.batch_view.refresh()
+        else:
+            self._filter_results()
 
     def open_service(self, process_id: str):
         """Открыть ролики услуги на вкладке «Поиск» (после пакетного поиска — из кэша)."""
@@ -869,8 +911,11 @@ class MainWindow(QMainWindow):
         row = next((i for i in range(self.results.count())
                     if (self.results.item(i).data(Qt.ItemDataRole.UserRole) or None) is result), -1)
         if row >= 0:
-            self.results.takeItem(row)
-        self.statusBar().showMessage("Ролик отклонён и больше не появится в поиске.")
+            item = self.results.item(row)
+            if "отклонён ранее" not in item.text():
+                item.setText(item.text() + "\nотклонён ранее")
+        self._filter_results()
+        self.statusBar().showMessage("Ролик отклонён. Его можно показать через фильтр «Показать ранее отклонённые».")
 
     def _mark_item(self, result: VideoResult, mark: str):
         for i in range(self.results.count()):
@@ -976,7 +1021,8 @@ class MainWindow(QMainWindow):
         self.search_button.setText("Найти")
         count = self.results.count()
         shown = [self.results.item(i).data(Qt.ItemDataRole.UserRole) for i in range(count)]
-        shown = [r for r in shown if r is not None]
+        shown = [r for r in shown if r is not None and r.key in self.worker.seen]
+        count = len(shown)
         had_history = self.catalog.has_history()
         new = self.catalog.record_search(self.plan_text, [r.key for r in shown])
         if had_history:  # на самом первом поиске новыми были бы все — не помечаем

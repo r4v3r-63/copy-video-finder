@@ -152,6 +152,7 @@ ENOUGH = 12
 
 class SearchWorker(QThread):
     found = pyqtSignal(list)  # list[VideoResult] — новые подходящие ролики
+    previously_rejected_found = pyqtSignal(list)
     problem = pyqtSignal(str)  # сообщение об ошибке площадки
     progress = pyqtSignal(int, int)  # выполнено запросов, всего
 
@@ -169,6 +170,7 @@ class SearchWorker(QThread):
         self.off_topic: dict[tuple[str, str], VideoResult] = {}  # отсеянные «не по теме» — можно показать
         self.stems = topic_stems([q.text for q in plan.queries])
         self.hidden = hidden or set()  # ролики, отклонённые пользователем, — не показываются
+        self.hidden_results: dict[tuple[str, str], VideoResult] = {}
         self.phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         # Фразы по уровням: ролик проверяется только фразами уже запущенных уровней, а степень
         # соответствия — по самому раннему уровню, фраза которого совпала (а не по запросу, вернувшему ролик).
@@ -259,16 +261,23 @@ class SearchWorker(QThread):
             log.exception("Ошибка поиска на %s", source.name)
             self.problem.emit(f"Непредвиденная ошибка при поиске на {source.name}, подробности в журнале.")
             results = []
-        fresh = []
+        fresh, rejected_before = [], []
         for r in results:
-            if r.key in self.seen:
+            if r.key in self.seen or r.key in self.hidden_results:
                 continue
             level = self.matched_level(r, query.level, source.topic_in_description)
             on_topic = level is not None and not is_excluded(r, self.plan.exclude)
-            reason = REJECTED_BEFORE if r.key in self.hidden else \
-                rejection_reason(r, self.filters, self.only_without_attribution)
+            reason = rejection_reason(r, self.filters, self.only_without_attribution)
             if reason is None and not on_topic:
                 reason = OFF_TOPIC
+            if reason is None and r.key in self.hidden:
+                r.match_hint, r.found_by = self._level_match[level], query.text
+                r.relevance = relevance(r, self.stems, self.printing)
+                r.relevance -= (0 if r.files else NO_FILES_PENALTY) + (0 if is_free(r) else NOT_FREE_PENALTY)
+                self.hidden_results[r.key] = r
+                self.rejections[r.key] = REJECTED_BEFORE
+                rejected_before.append(r)
+                continue
             if reason == LICENSE and not licenses.is_paid(r.license.name if r.license else "") and on_topic:
                 r.match_hint, r.found_by = self._level_match[level], query.text
                 self.unlicensed[r.key] = r
@@ -288,6 +297,8 @@ class SearchWorker(QThread):
             fresh.append(r)
         if fresh:
             self.found.emit(fresh)
+        if rejected_before:
+            self.previously_rejected_found.emit(rejected_before)
 
     def matched_level(self, r: VideoResult, upto: int, use_description: bool = True) -> int | None:
         """Самый ранний уровень (не дальше запущенного), фраза которого есть у ролика; None — не по теме."""
