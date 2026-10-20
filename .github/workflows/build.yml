@@ -1,8 +1,19 @@
 name: Сборка для Windows
 
+# После успешной проверки main новая версия выпускается автоматически.
 # Ручной запуск без версии собирает ZIP как артефакт.
 # Ручной запуск с версией (например, 0.4.0) или тег v* — ещё и публикует ZIP в Releases.
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Новая версия после успешного CI"
+        required: true
+        type: string
+      ref:
+        description: "Точный SHA проверенного коммита"
+        required: true
+        type: string
   push:
     tags: ["v*"]
   workflow_dispatch:
@@ -15,14 +26,22 @@ on:
 permissions:
   contents: write
 
+# Ручной и автоматический запуск одной версии выполняются последовательно.
+concurrency:
+  group: windows-${{ inputs.version != '' && format('v{0}', inputs.version) || (startsWith(github.ref, 'refs/tags/') && github.ref_name || github.ref) }}
+  cancel-in-progress: false
+
 env:
-  RELEASE_TAG: ${{ github.event.inputs.version != '' && format('v{0}', github.event.inputs.version) || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}
+  RELEASE_TAG: ${{ inputs.version != '' && format('v{0}', inputs.version) || (startsWith(github.ref, 'refs/tags/') && github.ref_name || '') }}
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -36,6 +55,30 @@ jobs:
           $m = Select-String -Path app/__init__.py -Pattern '__version__\s*=\s*"([^"]+)"'
           $code = $m.Matches[0].Groups[1].Value
           if ("v$code" -ne $env:RELEASE_TAG) { throw "Тег $env:RELEASE_TAG не совпадает с __version__ = $code в app/__init__.py" }
+          git show-ref --verify --quiet "refs/tags/$env:RELEASE_TAG"
+          if ($LASTEXITCODE -eq 0) {
+            $tag = git rev-list -n 1 $env:RELEASE_TAG
+            if ($tag -ne (git rev-parse HEAD)) {
+              throw "Тег $env:RELEASE_TAG уже указывает на другой коммит"
+            }
+          }
+          # Отсутствующий тег — нормальный случай перед первым выпуском.
+          $global:LASTEXITCODE = 0
+
+      - name: Защита опубликованного выпуска
+        if: env.RELEASE_TAG != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.repos.getReleaseByTag({
+                ...context.repo, tag: process.env.RELEASE_TAG,
+              });
+            } catch (error) {
+              if (error.status === 404) return;
+              throw error;
+            }
+            core.setFailed(`Выпуск ${process.env.RELEASE_TAG} уже существует. Для изменений повысьте версию.`);
 
       - name: Зависимости
         run: pip install -r requirements-dev.txt
@@ -122,9 +165,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ inputs.ref || github.sha }}
           name: Поиск видео Copy.ru ${{ env.RELEASE_TAG }}
           generate_release_notes: true
+          make_latest: legacy
+          fail_on_unmatched_files: true
           files: |
             CopyVideoFinder-*.zip
             CopyVideoFinder-*.zip.sha256

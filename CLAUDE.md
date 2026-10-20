@@ -210,11 +210,13 @@ python -m venv .venv
 pip install -r requirements-dev.txt   # requirements.txt — только то, что нужно программе
 python -m app.main
 pytest
-ruff check app tests              # стиль: правила в ruff.toml
+ruff check app tests scripts      # стиль: правила в ruff.toml
 pyinstaller build.spec --noconfirm
 ```
 
-Выпуск версии: обновить `__version__` в `app/__init__.py`, затем запустить workflow «Сборка для Windows» с полем «version» (Actions → Run workflow, или `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f inputs[version]=X.Y.Z`). Workflow сам создаст тег vX.Y.Z и выпуск в Releases. Тег `v*`, отправленный вручную, работает так же; из облачного сеанса Claude отправка тегов запрещена. Старые выпуски удаляет workflow «Удаление старых выпусков» (`cleanup-releases.yml`, только вручную): оставляет `keep` последних, по умолчанию `dry_run=true` — только список; удаляет с `dry_run=false` (из облачного сеанса выпуски напрямую удалять нельзя).
+Решение пользователя 20.10.2026: последующие выпуски автоматизировать. Обновить `__version__` в `app/__init__.py`, коммит, пуш в `main`: после успешных Ruff и тестов `check.yml` сравнит версии до и после пуша и вызовет Windows-сборку точного проверенного коммита. Публикация выполняется внутри GitHub Actions через `GITHUB_TOKEN`, поэтому ограничение GitHub API в облачном сеансе ей не мешает. Обычные правки, PR, ручная проверка, понижение версии, перезапись истории и существующий или более новый тег выпуск не запускают. Уже опубликованный выпуск не перезаписывается, сборки одной версии выполняются последовательно.
+
+Ручной запуск оставлен для сборки артефакта (без «version») или повторной попытки после сбоя: workflow «Сборка для Windows» с полем «version» (Actions → Run workflow, или `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f inputs[version]=X.Y.Z`). Для сборки исходного проверенного коммита после сбоя перезапустить неуспешные задания исходного CI: ручной запуск с `ref=main` собирает текущий `main`. Workflow сам создаст тег vX.Y.Z и выпуск в Releases после успешной сборки. Тег `v*`, отправленный вручную, работает так же; из облачного сеанса Claude отправка тегов запрещена. Старые выпуски удаляет workflow «Удаление старых выпусков» (`cleanup-releases.yml`, только вручную): оставляет `keep` последних, по умолчанию `dry_run=true` — только список; удаляет с `dry_run=false` (из облачного сеанса выпуски напрямую удалять нельзя).
 
 ## Git и GitHub
 

@@ -19,19 +19,19 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 458 passed, 1 skipped
-ruff check app tests
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 478 passed, 1 skipped
+ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
 
-Перед каждым коммитом — `ruff check app tests` и `pytest`. Workflow «Проверка кода» (`check.yml`) гоняет их на каждый пуш; сборка — на windows-latest, поэтому пути в тестах и коде должны работать и с `\`.
+Перед каждым коммитом — `ruff check app tests scripts` и `pytest`. Workflow «Проверка кода» (`check.yml`) гоняет их на каждый пуш; сборка — на windows-latest, поэтому пути в тестах и коде должны работать и с `\`.
 
 ## Выпуск версии
 
 1. Поднять `__version__` в `app/__init__.py`, коммит, пуш в `main`.
-2. Дождаться зелёного `check.yml`.
-3. `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f "inputs[version]=X.Y.Z"` (или Actions → «Сборка для Windows» → Run workflow).
-4. Workflow сам создаст тег `vX.Y.Z` и выпуск с `CopyVideoFinder-vX.Y.Z-windows.zip` и `.sha256` — имена не менять (на них завязано автообновление). Неудачная сборка тег не создаёт — ту же версию можно запустить снова.
+2. После успешного задания `check` workflow `check.yml` сравнит версии до и после всего пуша (`scripts/release_version.py`). Только повышение версии на `main` вызывает `build.yml` с точным SHA проверенного коммита. PR, ручная проверка, обычные правки, понижение версии, перезапись истории и уже существующий или более новый тег выпуск не запускают.
+3. Дождаться зелёной цепочки в «Проверка кода»: Windows-тесты, сборка, проверка запуска и публикация выполняются автоматически. Дополнительный токен и доступ облачной среды к GitHub API не нужны: используются `GITHUB_TOKEN` и прежние секреты сборки внутри Actions.
+4. Workflow сам создаст тег `vX.Y.Z` и выпуск с `CopyVideoFinder-vX.Y.Z-windows.zip` и `.sha256` — имена не менять (на них завязано автообновление). Выпуски одной версии выполняются последовательно; существующий выпуск не перезаписывается. Неудачная сборка тег не создаёт: повторить неуспешные задания CI либо вручную запустить `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f "inputs[version]=X.Y.Z"` (или Actions → «Сборка для Windows» → Run workflow). Для повторения старого коммита использовать перезапуск исходного CI; ручной запуск с `ref=main` собирает текущий `main`.
 5. Старые выпуски — workflow `cleanup-releases.yml` вручную (`keep`, `dry_run=false`).
 
 ## Секреты — строго
@@ -49,7 +49,7 @@ python -m app.main                                   # запуск
 - Цвета/размеры — только `app/design.py` (тест `test_no_colors_outside_tokens`).
 - Добавление по ссылке — `app/manual.py`, `ui/add_link_dialog.py`, кнопка в каталоге. Повторная ссылка открывает прежнюю запись без изменения пользовательских отметок; без ключа известной площадки сохраняется только ссылка, без утверждения о свободной лицензии.
 - Ревью 0.24.0 и внешние ограничения — `docs/CODE_REVIEW.md`; подготовленные примечания выпуска — `docs/RELEASE_NOTES_0.24.0.md`. Не путать подготовленную версию с опубликованным выпуском.
-- В текущем облачном сеансе `api.github.com` блокируется прокси даже после публикации разрешения домена. Не просить повторно добавлять тот же домен. Git и страницы github.com доступны; 0.24.0 выпущена ручным запуском workflow пользователем, результат и архив проверены.
+- В текущем облачном сеансе `api.github.com` блокируется прокси даже после публикации разрешения домена. Не просить повторно добавлять тот же домен. Git и страницы github.com доступны; 0.24.0 выпущена ручным запуском workflow пользователем, результат и архив проверены. Последующие повышения версии выпускаются внутри Actions автоматически.
 - Тесты окон: одно `QApplication` из `tests/conftest.py`; не вызывать `processEvents`/`show` без нужды — роняло полный прогон.
 
 ## Работа

@@ -34,7 +34,43 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Ruff
-        run: ruff check app tests
+        run: ruff check app tests scripts
 
       - name: Тесты
         run: pytest -q
+
+  release-version:
+    name: Проверка новой версии
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.deleted
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Сравнение версий до и после пуша
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          BUILD_SHA: ${{ github.sha }}
+        run: python scripts/release_version.py
+
+  release:
+    name: Выпуск новой версии
+    needs: release-version
+    if: needs.release-version.outputs.version != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ needs.release-version.outputs.version }}
+      ref: ${{ github.sha }}
+    secrets: inherit
