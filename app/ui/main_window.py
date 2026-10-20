@@ -44,6 +44,7 @@ from app.sources.pexels import PexelsSource
 from app.sources.pixabay import PixabaySource
 from app.sources.videezy import VideezySource
 from app.sources.vimeo import VimeoSource
+from app.sources.vk import VkSource
 from app.sources.web import WebSource
 from app.sources.wikimedia import WikimediaSource
 from app.sources.yandex_video import YandexVideoSource
@@ -88,6 +89,7 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         VideezySource(cache),
         PexelsSource(settings.key("pexels_api_key"), cache),
         YandexVideoSource(cache),  # Rutube, VK Видео, Дзен, Одноклассники, YouTube — одной выдачей
+        VkSource(settings.vk_token, cache),  # после входа в VK в настройках
     ]
     # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
     return sources + [WebSource(cache, delegates=sources, tavily_key=settings.key("tavily_api_key"),

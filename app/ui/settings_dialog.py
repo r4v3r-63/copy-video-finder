@@ -1,6 +1,7 @@
 """Окно настроек: ключи API и параметры поиска."""
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,6 +22,7 @@ from PyQt6.QtWidgets import (
 
 from app import paths
 from app.settings import Settings, built_in_keys
+from app.sources import vk
 from app.ui import theme
 
 
@@ -45,6 +47,9 @@ def _key_field(value: str, built_in: bool = False) -> tuple[QWidget, QLineEdit]:
     return row, edit
 
 
+
+
+VK_HELP = "https://github.com/r4v3r-63/copy-video-finder/blob/main/docs/vk.md"
 
 
 def _link(text: str, url: str) -> QLabel:
@@ -95,6 +100,33 @@ class SettingsDialog(QDialog):
         form.addRow("Ключ Brave Search:", brave_row)
         form.addRow("", _note("Brave — платный, необязательно (программа не выходит за бесплатные $5 в месяц)."))
         form.addRow("", _note("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
+
+        # VK Видео: вход в браузере, пароль программа не видит; в программу — только токен из адреса.
+        self.vk_app_id = QLineEdit(settings.vk_app_id)
+        self.vk_app_id.setPlaceholderText("ID приложения с dev.vk.com")
+        self.vk_login = QPushButton("Войти в VK")
+        self.vk_login.clicked.connect(self._vk_open_login)
+        vk_row = QHBoxLayout()
+        vk_row.addWidget(self.vk_app_id, 1)
+        vk_row.addWidget(self.vk_login)
+        form.addRow("VK Видео:", vk_row)
+        self.vk_answer = QLineEdit()
+        self.vk_answer.setEchoMode(QLineEdit.EchoMode.Password)
+        self.vk_answer.setPlaceholderText("после входа вставьте сюда адрес страницы из браузера")
+        self.vk_answer.textChanged.connect(lambda text: self.vk_status.setText(
+            "Вход получен — нажмите «Сохранить»." if vk.token_from_text(text)
+            else "В адресе нет access_token — скопируйте адрес страницы целиком."))
+        self.vk_logout = QPushButton("Выйти")
+        self.vk_logout.clicked.connect(self._vk_forget)
+        answer_row = QHBoxLayout()
+        answer_row.addWidget(self.vk_answer, 1)
+        answer_row.addWidget(self.vk_logout)
+        form.addRow("", answer_row)
+        self.vk_token = settings.vk_token
+        self.vk_status = _note("")
+        form.addRow("", self.vk_status)
+        form.addRow("", _link("Как создать приложение VK и войти (инструкция)", VK_HELP))
+        self._vk_update()
 
         self.min_duration = QSpinBox()
         self.min_duration.setRange(1, 600)
@@ -195,6 +227,24 @@ class SettingsDialog(QDialog):
             width, height = min(width, screen.width() - 40), min(height, screen.height() - 80)
         self.resize(width, height)
 
+    def _vk_open_login(self):
+        if not self.vk_app_id.text().strip():
+            self.vk_status.setText("Сначала впишите ID приложения VK.")
+            return
+        QDesktopServices.openUrl(QUrl(vk.auth_url(self.vk_app_id.text())))
+        self.vk_status.setText("Войдите в VK в открывшемся браузере, затем скопируйте адрес страницы "
+                               "(начинается с https://oauth.vk.com/blank.html#access_token=…) и вставьте его выше.")
+
+    def _vk_forget(self):
+        self.vk_token = ""
+        self.vk_answer.clear()
+        self._vk_update()
+
+    def _vk_update(self):
+        self.vk_logout.setEnabled(bool(self.vk_token))
+        self.vk_status.setText("Вход в VK выполнен — VK Видео участвует в поиске." if self.vk_token
+                               else "Без входа ролики VK приходят только через Яндекс Видео.")
+
     def _browse(self):
         start = self.download_dir.text() or str(paths.default_download_dir())
         chosen = QFileDialog.getExistingDirectory(self, "Папка для роликов", start)
@@ -210,6 +260,11 @@ class SettingsDialog(QDialog):
         self._settings.europeana_api_key = self.europeana_key.text().strip()
         self._settings.brave_api_key = self.brave_key.text().strip()
         self._settings.tavily_api_key = self.tavily_key.text().strip()
+        self._settings.vk_app_id = self.vk_app_id.text().strip()
+        pasted = vk.token_from_text(self.vk_answer.text())
+        if pasted:
+            self.vk_token = pasted
+        self._settings.vk_token = self.vk_token
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

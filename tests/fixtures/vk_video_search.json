@@ -1,0 +1,10 @@
+{"response": {"count": 2, "items": [
+  {"id": 456239058, "owner_id": -222262532, "title": "Лазерная гравировка на металле — LaserPecker LP4",
+   "description": "гравировка, лазер, сувенир", "duration": 64, "width": 1920, "height": 1080,
+   "image": [{"url": "https://sun9-1.userapi.com/a_130.jpg", "width": 130, "height": 96},
+             {"url": "https://sun9-1.userapi.com/a_320.jpg", "width": 320, "height": 240},
+             {"url": "https://sun9-1.userapi.com/a_800.jpg", "width": 800, "height": 450}],
+   "player": "https://vk.com/video_ext.php?oid=-222262532&id=456239058", "views": 1200},
+  {"id": 77, "owner_id": 12345, "title": "Брошюровка на пружину", "duration": 120,
+   "image": [{"url": "https://sun9-2.userapi.com/b.jpg", "width": 160, "height": 120}]}
+]}}

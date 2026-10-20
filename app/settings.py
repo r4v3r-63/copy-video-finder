@@ -26,6 +26,8 @@ class Settings:
     europeana_api_key: str = ""
     tavily_api_key: str = ""  # Tavily — бесплатный поиск по интернету (1000 в месяц); без ключа — DuckDuckGo
     brave_api_key: str = ""  # Brave Search API — платный, необязательно
+    vk_app_id: str = ""  # ID своего приложения VK (dev.vk.com) — для входа
+    vk_token: str = ""  # токен VK после входа в браузере; только здесь, в «Данные/settings.json»
     min_duration: int = 5
     max_duration: int = 180  # с версии 0.7.0; раньше 45 — на стоках мало коротких роликов о полиграфии
     only_without_attribution: bool = False
