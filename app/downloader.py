@@ -121,6 +121,8 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
     ]
     if lic and lic.note:
         lines.append(f"Примечание: {lic.note}")
+    if not lic or lic.status not in licenses.SUITABLE:
+        lines.append("Свободной лицензии нет: использовать — только с разрешения автора.")
     if lic and lic.status == licenses.ATTRIBUTION:
         lines.append("Атрибуция (показывать в титре): "
                      + licenses.attribution_text(r.author, r.title, lic.name, r.page_url))

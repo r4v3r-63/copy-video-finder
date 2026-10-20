@@ -33,8 +33,8 @@ def test_cleared_fields_stay_cleared():
     ("https://x.com/user/status/1", True),
     ("https://www.dropbox.com/s/video.mp4", False),  # кончается на «x.com», но это не X
     ("https://www.netflix.com/title/1", False),
-    ("https://m.youtube.com/watch?v=1", True),
-    ("https://youtu.be/1", True),
+    ("https://m.youtube.com/watch?v=1", False),  # YouTube ищется (решение пользователя 20.10.2026)
+    ("https://youtu.be/1", False),
     ("https://www.amazon.co.uk/x", True),
     ("https://s3.amazonaws.com/bucket/clip.mp4", False),
     ("https://www.gettyimages.de/videos/x", True),

@@ -157,8 +157,9 @@ def lic_video(i, title, name, status):
     return r
 
 
-def test_unlicensed_shown_only_on_request():
-    """По теме, но без свободной лицензии — отдельно, «только посмотреть»; платные и не по теме — нет."""
+def test_all_licenses_shown_free_first_paid_never():
+    """Решение пользователя 20.10.2026: по теме — все, и без свободной лицензии (после свободных);
+    платные и не по теме — нет."""
     plan = SearchPlan(None, [SearchQuery("wire binding", EN)])
     answers = {"wire binding": [
         video(1, "wire binding office"),
@@ -168,10 +169,10 @@ def test_unlicensed_shown_only_on_request():
         lic_video(5, "cat on the sofa", "все права защищены", "Отклонено"),  # не по теме — никогда
     ]}
     worker, found = run(plan, [FakeSource(answers)])
-    assert [r.source_id for r in found] == ["1"]
-    extra = worker.unlicensed_results()
-    assert sorted(r.source_id for r in extra) == ["2", "3"]
-    assert all(r.view_only for r in extra) and not found[0].view_only
+    assert sorted(r.source_id for r in found) == ["1", "2", "3"]
+    assert not any(r.view_only for r in found) and worker.unlicensed_results() == []
+    by_id = {r.source_id: r.relevance for r in found}
+    assert by_id["1"] > by_id["2"] and by_id["1"] > by_id["3"]  # свободная — выше
 
 
 def test_is_paid():

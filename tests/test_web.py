@@ -95,7 +95,7 @@ def _get_with_kwargs(session):
 def test_ddg_results_and_block():
     links = parse_ddg(fixture_text("ddg_results.html"))
     assert links and all(u.startswith("http") for u, _ in links)
-    assert skipped(links[0][0])  # YouTube не подключается
+    assert not skipped(links[0][0])  # YouTube ищется (решение пользователя 20.10.2026)
     assert ddg_blocked(fixture_text("ddg_anomaly.html"), 202)
     assert not ddg_blocked(fixture_text("ddg_results.html"), 200)
 
@@ -113,10 +113,11 @@ def test_known_sites(url, expected):
     assert known_site(url) == expected
 
 
-@pytest.mark.parametrize("url", ["https://mixkit.co/free-stock-video/x/", "https://www.shutterstock.com/video/1",
-                                 "https://youtu.be/abc"])
-def test_skipped_sites(url):
-    assert skipped(url)
+@pytest.mark.parametrize("url, skip", [("https://www.shutterstock.com/video/1", True),
+                                       ("https://mixkit.co/free-stock-video/x/", False),
+                                       ("https://youtu.be/abc", False)])
+def test_skipped_sites(url, skip):
+    assert skipped(url) is skip
 
 
 PAGE = """<html><head><title>Bookbinding</title>
@@ -137,10 +138,14 @@ def test_generic_page_with_open_license():
     assert parse_page(PAGE.format(lic="by-nc"), "https://example.org/clips/7").license.status == licenses.REJECTED
 
 
-def test_generic_page_needs_file_and_license():
-    assert parse_page(PAGE.replace("creativecommons.org/licenses/{lic}/4.0/", "example.org/terms"),
-                      "https://example.org/clips/7") is None
-    assert parse_page(PAGE.format(lic="by").replace("wire-binding.mp4", "player"), "https://example.org/x") is None
+def test_generic_page_without_license_or_file():
+    """Любой ролик со страницы: без лицензии — «Требует проверки», без файла — смотреть на сайте."""
+    r = parse_page(PAGE.replace("creativecommons.org/licenses/{lic}/4.0/", "example.org/terms"),
+                   "https://example.org/clips/7")
+    assert r.license.status == licenses.REVIEW and r.license.name == "Не указана" and r.files
+    r = parse_page(PAGE.format(lic="by").replace("wire-binding.mp4", "player"), "https://example.org/x")
+    assert r is not None and r.files == []  # og:video есть, но не файл — страница с плеером
+    assert parse_page("<html><head><title>Статья про печать</title></head></html>", "https://example.org/a") is None
 
 
 def web(cache, clock, ddg=None, tavily_key="", tavily=None, page=None):
@@ -153,14 +158,14 @@ def web(cache, clock, ddg=None, tavily_key="", tavily=None, page=None):
 
 
 def test_web_search_opens_pages(cache, clock):
-    ddg = ('<a class="result__a" href="https://www.youtube.com/watch?v=1">YouTube</a>'
+    ddg = ('<a class="result__a" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">YouTube</a>'
            '<a class="result__a" href="https://example.org/clips/7">Wire binding</a>')
     src = web(cache, clock, ddg=PostSession(FakeResponse(text=ddg)))
     results = src.search("wire binding machine", SearchFilters())
-    assert [r.source_id for r in results] == ["https://example.org/clips/7"]
+    assert [r.source_id for r in results] == ["https://example.org/clips/7"]  # oEmbed YouTube не ответил
     call = src.engines[0].session.calls[0]
-    assert call["post"] and call["params"]["q"] == "wire binding machine free stock video"
-    assert len(src.pages.session.calls) == 1  # YouTube не открывался
+    assert call["post"] and call["params"]["q"] == "wire binding machine video"
+    assert src.pages.session.calls[0]["url"] == "https://www.youtube.com/oembed"
 
 
 def test_ddg_blocked_rests_ten_minutes(cache, clock):
@@ -192,8 +197,8 @@ def test_tavily_first_when_key_given(cache, clock):
     assert len(src.search("wire binding", SearchFilters(), lang="de")) == 1
     call = src.engines[0].session.calls[0]
     assert call["headers"]["Authorization"] == "Bearer tvly-key"
-    assert call["params"]["query"] == "wire binding"  # как есть: «free stock video» тянет страницы поиска стоков
-    assert "pixabay.com" in call["params"]["include_domains"]  # только бесплатные стоки
+    assert call["params"]["query"] == "wire binding Video"  # обычный поиск по всему интернету
+    assert "include_domains" not in call["params"]
 
 
 def test_free_limits_stay_free(cache, clock):
@@ -236,10 +241,10 @@ def test_video_own_terms_not_replaced_by_page_license():
     ld = ('<script type="application/ld+json">{"@type": "VideoObject", "name": "Wire binding", '
           '"contentUrl": "https://media.example.org/wire-binding.mp4", "license": "%s"}</script>')
     footer = '<footer>Text: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY</a></footer>'
-    page = f"<html><head>{ld % 'All rights reserved'}</head><body>{footer}</body></html>"
-    assert parse_page(page, "https://example.org/clips/8") is None
-    page = f"<html><head>{ld % 'https://example.org/terms'}</head><body>{footer}</body></html>"
-    assert parse_page(page, "https://example.org/clips/8") is None
+    for own in ("All rights reserved", "https://example.org/terms"):
+        page = f"<html><head>{ld % own}</head><body>{footer}</body></html>"
+        r = parse_page(page, "https://example.org/clips/8")
+        assert r.license.status == licenses.REVIEW and "CC" not in r.license.name
     # без лицензии у ролика ссылка из подвала — только «требует проверки»
     page = f"<html><head>{ld.replace(', \"license\": \"%s\"', '')}</head><body>{footer}</body></html>"
     r = parse_page(page, "https://example.org/clips/8")
@@ -247,3 +252,26 @@ def test_video_own_terms_not_replaced_by_page_license():
     # лицензия у самого ролика — принимается
     page = f"<html><head>{ld % 'https://creativecommons.org/publicdomain/zero/1.0/'}</head></html>"
     assert parse_page(page, "https://example.org/clips/8").license.status == licenses.ALLOWED
+
+
+def test_youtube_by_oembed(cache, clock):
+    """YouTube — по официальному oEmbed: название, автор, превью; файла нет, лицензия — на проверку."""
+    oembed = ('{"title": "Laser printer printing", "author_name": "Print Shop", '
+              '"author_url": "https://www.youtube.com/@shop", "thumbnail_url": "https://i.ytimg.com/vi/x/hq.jpg"}')
+    src = web(cache, clock, page=FakeSession(FakeResponse(text=oembed)))
+    r = src.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=5")
+    assert r.source == "YouTube" and r.source_id == "dQw4w9WgXcQ" and r.title == "Laser printer printing"
+    assert r.files == [] and r.license.status == licenses.REVIEW and r.author == "Print Shop"
+    assert r.page_url == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    assert src.open("https://www.youtube.com/shorts/dQw4w9WgXcQ") is None  # вертикальные — нет
+    assert src.open("https://www.youtube.com/@shop") is None
+
+
+def test_tavily_quota_message(cache, clock):
+    ddg = '<a class="result__a" href="https://example.org/clips/7">Wire binding</a>'
+    src = web(cache, clock, tavily_key="tvly-key", tavily=JsonSession(FakeResponse(432, "")),
+              ddg=PostSession(FakeResponse(text=ddg)))
+    with pytest.raises(RateLimitError, match="закончились бесплатные"):
+        src.engines[0].find("wire binding")
+    assert len(src.search("wire binding", SearchFilters())) == 1  # без Tavily — через DuckDuckGo
+    assert len(src.engines[0].session.calls) == 1  # сутки Tavily не спрашиваем

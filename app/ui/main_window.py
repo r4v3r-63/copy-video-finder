@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import __version__, maintenance, paths, processes, query, updater
+from app import __version__, licenses, maintenance, paths, processes, query, updater
 from app import catalog as cat
 from app.batch import BatchWorker
 from app.cache import Cache
@@ -558,7 +558,9 @@ class MainWindow(QMainWindow):
         for r in results:
             info = [format_duration(r.duration) if r.duration else "",
                     f"{r.width}×{r.height}" if r.width and r.height else ""]
-            text = " · ".join(i for i in info if i) + f"\n{r.source} · {r.license.status}"
+            free = r.license and r.license.status in licenses.SUITABLE
+            text = " · ".join(i for i in info if i) + \
+                f"\n{r.source} · {r.license.status if free else 'без свободной лицензии'}"
             if not r.files:
                 text += "\nскачать на сайте"
             if r.match_hint and r.match_hint != cat.EXACT:

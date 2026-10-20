@@ -6,7 +6,19 @@ from PyQt6.QtCore import Qt, QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QSlider, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSlider,
+    QStyle,
+    QStyleOptionSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
 from app import licenses
 from app.catalog import REJECTED, SELECTED
@@ -29,6 +41,27 @@ def format_duration(seconds: float | None) -> str:
     seconds = int(round(seconds))
     return f"{seconds // 60}:{seconds % 60:02d}"
 
+
+
+class SeekSlider(QSlider):
+    """Шкала времени: щелчок в любом месте сразу переводит ролик туда (не только перетаскивание ползунка)."""
+    clicked = pyqtSignal(int)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.maximum() > self.minimum():
+            option = QStyleOptionSlider()
+            self.initStyleOption(option)
+            handle = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, option,
+                                                 QStyle.SubControl.SC_SliderHandle, self)
+            if not handle.contains(event.position().toPoint()):
+                groove = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, option,
+                                                     QStyle.SubControl.SC_SliderGroove, self)
+                x = int(event.position().x()) - groove.x() - handle.width() // 2
+                span = max(groove.width() - handle.width(), 1)
+                value = QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), x, span)
+                self.setValue(value)
+                self.clicked.emit(value)
+        super().mousePressEvent(event)  # ползунок дальше можно тянуть, не отпуская кнопку
 
 class PlayerPanel(QWidget):
     download_requested = pyqtSignal(object, object)  # VideoResult, VideoFile
@@ -56,8 +89,9 @@ class PlayerPanel(QWidget):
 
         self.play_button = QPushButton("Пауза")
         self.play_button.clicked.connect(self.toggle)
-        self.position = QSlider(Qt.Orientation.Horizontal)
+        self.position = SeekSlider(Qt.Orientation.Horizontal)
         self.position.sliderMoved.connect(self.player.setPosition)
+        self.position.clicked.connect(self.player.setPosition)
         self.open_page = QPushButton("Открыть страницу ролика")
         self.open_page.clicked.connect(self._open_page)
         controls = QHBoxLayout()
@@ -103,16 +137,30 @@ class PlayerPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
         layout.setSpacing(theme.SPACE_S)
+        self.video.setMinimumHeight(160)
         layout.addWidget(self.video, 1)
         layout.addLayout(controls)
-        layout.addWidget(self.info)
+        # Сведения и кнопки — в прокрутке: на невысоком окне они не наезжают на видео и шкалу.
+        details = QWidget()
+        lower = QVBoxLayout(details)
+        lower.setContentsMargins(0, 0, 0, 0)
+        lower.setSpacing(theme.SPACE_S)
+        lower.addWidget(self.info)
         self.frames = FramesStrip()
-        layout.addWidget(self.frames)
-        layout.addLayout(catalog_row)
-        layout.addWidget(self.catalog_status)
-        layout.addLayout(download_row)
-        layout.addWidget(self.download_status)
-        layout.addWidget(self.open_page)
+        lower.addWidget(self.frames)
+        lower.addLayout(catalog_row)
+        lower.addWidget(self.catalog_status)
+        lower.addLayout(download_row)
+        lower.addWidget(self.download_status)
+        lower.addWidget(self.open_page)
+        lower.addStretch()
+        scroll = QScrollArea()
+        scroll.setWidget(details)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setMinimumHeight(120)
+        layout.addWidget(scroll, 1)
         self.show_result(None)
 
     def show_result(self, result: VideoResult | None):
@@ -163,6 +211,8 @@ class PlayerPanel(QWidget):
             if lic.url:
                 name = f'<a href="{escape(lic.url)}">{name}</a>'
             lines.append(f"Лицензия: {name} — {escape(lic.status)}")
+            if lic.status not in licenses.SUITABLE:
+                lines.append("<b>Свободной лицензии нет: использовать — только с разрешения автора.</b>")
             if lic.note:
                 lines.append(escape(lic.note))
             if lic.status == licenses.ATTRIBUTION:

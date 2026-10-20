@@ -36,6 +36,7 @@ LICENSE = "лицензия"
 OFF_TOPIC = "не по теме"
 REJECTED_BEFORE = "отклонён ранее"
 NO_FILES_PENALTY = 100  # ролики без ссылки на файл — после всех, которые можно скачать
+NOT_FREE_PENALTY = 50  # без свободной лицензии — после свободных
 
 
 
@@ -50,11 +51,19 @@ def rejection_reason(result: VideoResult, filters: SearchFilters, only_without_a
             return SIZE
         if min(result.width, result.height) < filters.min_height:
             return SIZE
+    # По решению пользователя (20.10.2026) показываются все ролики по теме, и без свободной лицензии
+    # тоже — с пометкой; не показываются только платные и редакционные (у них водяной знак и нет файла).
     status = result.license.status if result.license else licenses.REVIEW
-    allowed = {licenses.ALLOWED} if only_without_attribution else licenses.SUITABLE
-    if status not in allowed:
+    if licenses.is_paid(result.license.name if result.license else ""):
+        return LICENSE
+    if only_without_attribution and status != licenses.ALLOWED:
         return LICENSE
     return None
+
+
+def is_free(result: VideoResult) -> bool:
+    """Свободная лицензия: «Разрешено» или «Разрешено с атрибуцией» — такие можно использовать без спроса."""
+    return bool(result.license) and result.license.status in licenses.SUITABLE
 
 
 def is_suitable(result: VideoResult, filters: SearchFilters, only_without_attribution: bool = False) -> bool:
@@ -274,6 +283,8 @@ class SearchWorker(QThread):
             r.relevance = relevance(r, self.stems, self.printing)
             if not r.files:
                 r.relevance -= NO_FILES_PENALTY  # скачать можно только на сайте — ниже в выдаче
+            if not is_free(r):
+                r.relevance -= NOT_FREE_PENALTY
             fresh.append(r)
         if fresh:
             self.found.emit(fresh)

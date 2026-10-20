@@ -21,8 +21,9 @@ def video(sid="1", duration=15, w=1920, h=1080, status=licenses.ALLOWED, source=
     (video(w=1080, h=1080), False),
     (video(w=640, h=360), False),
     (video(status=licenses.ATTRIBUTION), True),
-    (video(status=licenses.REVIEW), False),
-    (video(status=licenses.REJECTED), False),
+    # Без свободной лицензии тоже показываются (решение пользователя 20.10.2026), платные — нет.
+    (video(status=licenses.REVIEW), True),
+    (video(status=licenses.REJECTED), True),
 ])
 def test_is_suitable(v, ok):
     assert is_suitable(v, SearchFilters()) is ok
@@ -89,8 +90,8 @@ def test_worker_merges_duplicates_across_languages_and_filters():
     })
     worker, found, problems = run_worker(plan, [src])
     assert sorted(src.calls) == [("laminator", EN), ("ламинатор", RU)]
-    assert sorted(r.source_id for r in found) == ["1", "4"]
-    assert worker.rejected == 2
+    assert sorted(r.source_id for r in found) == ["1", "3", "4"]  # без свободной лицензии — тоже
+    assert worker.rejected == 1
     assert problems == []
 
 
@@ -220,12 +221,12 @@ def test_short_mixed_words_are_significant():
     assert "dtf" in topic_stems(["dtf printing"])
 
 
-def test_off_topic_results_can_be_shown_but_never_bad_licenses():
+def test_off_topic_results_can_be_shown_but_never_paid():
     plan = SearchPlan(None, [SearchQuery("laminator", EN)])
     beach = tagged("1", "beach, sea, paper")
     city = tagged("2", "city, aerial")
     bad_license = tagged("3", "beach")
-    bad_license.license.status = licenses.REJECTED
+    bad_license.license.name, bad_license.license.status = "Coverr Premium", licenses.REJECTED
     src = FakeSource({"laminator": [city, beach, bad_license]})
     worker, found, _ = run_worker(plan, [src])
     assert found == []

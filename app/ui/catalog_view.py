@@ -350,7 +350,7 @@ class CatalogView(QWidget):
         splitter.setSizes([420, 520, 520])
         # Скрытая вкладка тоже задаёт минимальную ширину окна: панели не должны раздуваться
         # от длинных названий и подписей, иначе окно уезжает за экран.
-        for pane, width in ((self.tree, 220), (middle, 260), (self.card, 320)):
+        for pane, width in ((self.tree, 180), (middle, 220), (self.card, 300)):
             pane.setMinimumWidth(width)
         layout = QVBoxLayout(self)
         layout.addWidget(splitter)

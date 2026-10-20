@@ -48,12 +48,13 @@ STOCK_DOMAINS = FREE_STOCK_DOMAINS + ["pexels.com", "coverr.co"]  # их стр�
 _WIKI_VIDEO = (".webm", ".ogv", ".ogg", ".mp4", ".mpg", ".mpeg")
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
 BRAVE_MONTHLY = 900
-MAX_PAGES = 8  # страниц из выдачи поисковика на один запрос
+MAX_PAGES = 10  # страниц из выдачи поисковика на один запрос
 BLOCK_SECONDS = 600  # DuckDuckGo показал «anomaly» — 10 минут не беспокоим
 
-# Не подключаются (правило 5) и платные стоки, соцсети, магазины — там нет бесплатных роликов.
+# Платные стоки, соцсети, магазины — там нет роликов, которые можно взять. YouTube и Mixkit по решению
+# пользователя (20.10.2026) ищутся: YouTube — по oEmbed, только посмотреть на сайте.
 SKIP_DOMAINS = (
-    "youtube.com", "youtu.be", "mixkit.co", "shutterstock.com", "pond5.com", "stock.adobe.com", "istockphoto.com",
+    "shutterstock.com", "pond5.com", "stock.adobe.com", "istockphoto.com",
     "gettyimages", "storyblocks.com", "envato.com", "videohive.net", "artgrid.io", "motionarray.com",
     "dreamstime.com", "depositphotos.com", "123rf.com", "alamy.com", "canva.com", "amazon.", "facebook.com",
     "instagram.com", "tiktok.com", "pinterest.", "reddit.com", "twitter.com", "x.com", "linkedin.com",
@@ -80,6 +81,10 @@ _KNOWN = (
     ("Internet Archive", re.compile(r"archive\.org/details/([^/?#]+)")),
     ("Videezy", re.compile(r"videezy\.com/([a-z0-9-]+/\d+-[a-z0-9-]+)")),
 )
+# Ролики YouTube (не Shorts — они вертикальные): watch?v=…, youtu.be/…, /embed/…
+_YOUTUBE = re.compile(r"(?:youtube\.com/(?:watch\?(?:[^#]*&)?v=|embed/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})")
+YOUTUBE_OEMBED = "https://www.youtube.com/oembed"
+YOUTUBE_LICENSE = "Стандартная лицензия YouTube"
 
 
 def parse_ddg(page: str) -> list[tuple[str, str]]:
@@ -95,8 +100,8 @@ def parse_ddg(page: str) -> list[tuple[str, str]]:
 
 
 def _free_words(lang: str) -> str:
-    """Уточнение для поисковиков по всему интернету: ищем бесплатные ролики."""
-    return {"de": "kostenlos Video", "fr": "vidéo gratuite"}.get(lang, "free stock video")
+    """Уточнение для поисковиков: ищем ролики (любые, не только на бесплатных стоках)."""
+    return {"de": "Video", "fr": "vidéo", "ru": "видео"}.get(lang, "video")
 
 
 def ddg_blocked(page: str, status: int) -> bool:
@@ -178,13 +183,20 @@ def _object_license(obj: dict) -> str:
 
 
 def parse_page(page: str, url: str) -> VideoResult | None:
-    """Ролик с произвольной страницы: нужен файл ролика и открытая лицензия, иначе None."""
+    """Ролик с произвольной страницы; None — на странице нет видео.
+
+    Файл ролика (ссылка из разметки) — если есть, иначе ролик смотрят на сайте. Лицензия — из разметки;
+    не указана или не распознана — «Требует проверки» (решение пользователя 20.10.2026: искать любые
+    ролики по теме, а не только со свободной лицензией).
+    """
     meta, objects = _meta(page), _video_objects(page)
     obj = objects[0] if objects else {}
     video = next((v for v in (obj.get("contentUrl"), meta.get("og:video:secure_url"), meta.get("og:video:url"),
                               meta.get("og:video"), meta.get("contenturl"))
                   if isinstance(v, str) and urlparse(v).path.lower().endswith(_VIDEO_EXT)), None)
-    if not video:
+    is_video_page = bool(obj or meta.get("og:video") or meta.get("og:video:url") or meta.get("og:video:secure_url")
+                         or meta.get("og:type", "").startswith("video"))
+    if not video and not is_video_page:
         return None
     own = _object_license(obj)
     page_wide = False
@@ -202,9 +214,10 @@ def parse_page(page: str, url: str) -> VideoResult | None:
             license_url = m.group(0) if m else license_url
         page_wide = bool(license_url)
     name = licenses.name_from_url(license_url)
-    if not name:
-        return None  # лицензия не распознана — такой ролик всё равно не показывается
-    status, note = licenses.evaluate(name)
+    if name:
+        status, note = licenses.evaluate(name)
+    else:
+        name, status, note = "Не указана", licenses.REVIEW, "Лицензия на странице не указана или не распознана."
     if page_wide and status != licenses.REJECTED:
         status = licenses.REVIEW
         note = ("Лицензия указана для страницы, а не для ролика: она может относиться к тексту или фото. "
@@ -218,15 +231,15 @@ def parse_page(page: str, url: str) -> VideoResult | None:
         author = author.get("name", "")
     width, height = obj.get("width"), obj.get("height")
     host = urlparse(url).netloc.lower().removeprefix("www.")
-    video = urljoin(url, video)
+    video = urljoin(url, video) if video else None
     return VideoResult(
         source=host, source_id=url, title=str(title).strip()[:200],
         description=str(obj.get("description") or meta.get("og:description") or meta.get("description") or "")[:500],
         preview_url=urljoin(url, thumb) if isinstance(thumb, str) else None,
         duration=_duration(obj.get("duration", "")),
         width=int(width) if str(width).isdigit() else None, height=int(height) if str(height).isdigit() else None,
-        has_audio=None, page_url=url, files=[VideoFile("с сайта", video)], author=str(author),
-        license=LicenseInfo(name=name, url=license_url, status=status,
+        has_audio=None, page_url=url, files=[VideoFile("с сайта", video)] if video else [], author=str(author),
+        license=LicenseInfo(name=name, url=license_url or None, status=status,
                             note=(note + " Найдено в интернете — проверьте условия на странице.").strip()),
         preview_video=video,
     )
@@ -244,6 +257,9 @@ class PageReader(HttpSource):
 
     def read(self, url: str) -> str:
         return self._fetch_text(url)
+
+    def read_url(self, url: str, params: dict) -> str:
+        return self._fetch_text(url, params)
 
     def search(self, query, filters, page=1, lang="en"):
         return []
@@ -301,12 +317,21 @@ class TavilyEngine(Engine):
         return bool(self.key)
 
     def find(self, query: str, lang: str = "en") -> list[tuple[str, str]]:
-        # Только бесплатные стоки, как «site:»; запрос как есть: со словами «free stock video»
-        # в выдаче в основном страницы поиска стоков, а не ролики.
-        data = json.loads(self._fetch_text(TAVILY_URL, {"query": query, "max_results": 20, "search_depth": "basic",
-                                                        "include_domains": FREE_STOCK_DOMAINS},
-                                           headers={"Authorization": f"Bearer {self.key}"}, method="POST_JSON"))
+        # Обычный поиск по всему интернету (решение пользователя 20.10.2026), со словом «видео».
+        data = json.loads(self._fetch_text(TAVILY_URL, {"query": f"{query} {_free_words(lang)}", "max_results": 20,
+                                                        "search_depth": "basic"},
+                                           headers={"Authorization": f"Bearer {self.key}"}, method="POST_JSON",
+                                           check=self._quota))
         return [(r.get("url", ""), r.get("title", "")) for r in data.get("results", [])]
+
+
+    def _quota(self, resp) -> RateLimitError | None:
+        """432/433 — бесплатный объём Tavily на этот месяц закончился: сутки не спрашиваем, ищем дальше без него."""
+        if resp.status_code in (432, 433):
+            self.cache.block_until(self.name, self._now() + 86400)
+            return RateLimitError(self.name, "У ключа Tavily закончились бесплатные запросы этого месяца — "
+                                             "поиск по интернету идёт через DuckDuckGo.")
+        return None
 
 
 class BraveEngine(Engine):
@@ -344,7 +369,7 @@ class WebSource(HttpSource):
     """Поиск по интернету: поисковики по очереди (Tavily и Brave — если есть ключ, затем DuckDuckGo)."""
     name = "Интернет"
     homepage = "https://duckduckgo.com"
-    languages = frozenset({"en", "de", "fr"})
+    languages = frozenset({"ru", "en", "de", "fr"})
     max_level = 2  # название, оборудование, действие — дальше поисковик расходует лимиты впустую
     max_parallel = 1
 
@@ -391,7 +416,13 @@ class WebSource(HttpSource):
                              " Повторите позже.")
 
     def open(self, url: str) -> VideoResult | None:
-        """Ролик по ссылке со страницы: известная площадка — через её модуль, иначе разбор страницы."""
+        """Ролик по ссылке со страницы: известная площадка — через её модуль, YouTube — по oEmbed,
+        иначе разбор страницы."""
+        youtube = _YOUTUBE.search(url)
+        if youtube:
+            return self.youtube(youtube.group(1))
+        if "youtube.com" in url or "youtu.be" in url:
+            return None  # каналы, плейлисты, Shorts — не отдельный горизонтальный ролик
         known = known_site(url)
         if known:
             name, source_id = known
@@ -407,7 +438,31 @@ class WebSource(HttpSource):
             return None  # страница поиска или картинок стока, а не ролик — не открываем
         return parse_page(self.pages.read(url), url)
 
+    def youtube(self, video_id: str) -> VideoResult | None:
+        """Ролик YouTube по официальному oEmbed: название, автор, превью. Файла нет — смотреть на сайте."""
+        page_url = f"https://www.youtube.com/watch?v={video_id}"
+        try:
+            data = json.loads(self.pages.read_url(YOUTUBE_OEMBED, {"url": page_url, "format": "json"}))
+        except (SourceError, ValueError):
+            return None
+        if not isinstance(data, dict) or not data.get("title"):
+            return None
+        return VideoResult(
+            source="YouTube", source_id=video_id, title=str(data["title"])[:200], description="",
+            preview_url=data.get("thumbnail_url"), duration=None, width=None, height=None, has_audio=None,
+            page_url=page_url, files=[], author=str(data.get("author_name") or ""),
+            author_url=data.get("author_url"),
+            license=LicenseInfo(name=YOUTUBE_LICENSE, url="https://www.youtube.com/t/terms", status=licenses.REVIEW,
+                                note="Все права у автора, если в описании ролика не сказано иное. "
+                                     "Скачать нельзя — смотрите на YouTube."),
+        )
+
     def get_details(self, source_id: str) -> VideoResult:
+        if re.fullmatch(r"[A-Za-z0-9_-]{11}", source_id):
+            result = self.youtube(source_id)
+            if result is None:
+                raise NotFoundError(self.name, "Ролик YouTube не найден.")
+            return result
         result = self.open(source_id)
         if result is None:
             raise NotFoundError(self.name, "Ролик по ссылке не найден.")
