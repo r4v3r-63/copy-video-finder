@@ -64,7 +64,6 @@ class SettingsDialog(QDialog):
     def __init__(self, settings: Settings, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Настройки")
-        self.setMinimumWidth(480)
         self._settings = settings
 
         form = QFormLayout()
