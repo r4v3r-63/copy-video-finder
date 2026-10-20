@@ -281,7 +281,7 @@ def test_legacy_prepared_file_downloaded_again(tmp_path):
 def test_other_url_not_resumed_even_with_same_etag(tmp_path):
     """Отменили Full HD, выбрали 4K: тот же .part, другая ссылка, тот же ETag — скачивание с начала."""
     dest = tmp_path / "a.mp4"
-    with pytest.raises(Exception):
+    with pytest.raises(DownloadError):
         fetch("https://cdn/fhd.mp4", dest, StreamSession(StreamResponse(b"AAAABBBB", headers={"ETag": '"x"'},
                                                                           cut_after=4)), retries=1, pause=0)
     assert (tmp_path / "a.mp4.part").read_bytes() == b"AAAA"
