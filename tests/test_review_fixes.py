@@ -86,8 +86,8 @@ def test_rate_limit_shared_between_instances(tmp_path):
 
 def test_coverr_premium_license_kept():
     from app import licenses
-    from app.sources.coverr import CoverrSource
     from app.sources.base import LicenseInfo, VideoResult
+    from app.sources.coverr import CoverrSource
     r = VideoResult(source="Coverr", source_id="1", title="x", description="", preview_url=None, duration=10,
                     width=1920, height=1080, has_audio=None, page_url="",
                     license=LicenseInfo("Coverr Premium", status=licenses.REJECTED))

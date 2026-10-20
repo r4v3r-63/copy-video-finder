@@ -13,8 +13,19 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import licenses
 from app.query import SearchPlan
-from app.topic import AMBIGUOUS, NOT_PRINT, WORD as _WORD, domain_words, in_print_domain, phrase_stems, stem as _stem, topic_stems
-from app.sources.base import AuthError, NotFoundError, RateLimitError, SearchFilters, Source, SourceError, VideoFile, VideoResult
+from app.sources.base import (
+    AuthError,
+    NotFoundError,
+    RateLimitError,
+    SearchFilters,
+    Source,
+    SourceError,
+    VideoFile,
+    VideoResult,
+)
+from app.topic import AMBIGUOUS, NOT_PRINT, domain_words, in_print_domain, phrase_stems, topic_stems
+from app.topic import WORD as _WORD
+from app.topic import stem as _stem
 
 log = logging.getLogger(__name__)
 

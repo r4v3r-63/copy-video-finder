@@ -1,3 +1,5 @@
+from datetime import UTC
+
 import pytest
 from PyQt6.QtCore import QCoreApplication
 
@@ -130,8 +132,8 @@ def test_vimeo_request(cache, clock):
 
 
 def test_vimeo_rate_limit_headers(cache, clock):
-    from datetime import datetime, timezone
-    reset = datetime.fromtimestamp(clock.t + 120, timezone.utc).isoformat()
+    from datetime import datetime
+    reset = datetime.fromtimestamp(clock.t + 120, UTC).isoformat()
     headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
     src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers))
     src.search("a", SearchFilters())
@@ -161,8 +163,8 @@ def test_not_downloadable_results_go_last(cache, clock):
 
 def test_batch_waits_for_minute_limit(cache, clock):
     """Пакетный поиск пережидает поминутный лимит, а не пропускает площадку; лимит не обходится."""
-    from datetime import datetime, timezone
-    reset = datetime.fromtimestamp(clock.t + 40, timezone.utc).isoformat()
+    from datetime import datetime
+    reset = datetime.fromtimestamp(clock.t + 40, UTC).isoformat()
     headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
     src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers), FakeResponse(text='{"data": []}'))
     waited = []
@@ -182,8 +184,8 @@ def test_batch_waits_for_minute_limit(cache, clock):
 
 
 def test_long_limit_not_waited(cache, clock):
-    from datetime import datetime, timezone
-    reset = datetime.fromtimestamp(clock.t + 3600, timezone.utc).isoformat()
+    from datetime import datetime
+    reset = datetime.fromtimestamp(clock.t + 3600, UTC).isoformat()
     headers = {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": reset}
     src = vimeo(cache, clock, FakeResponse(text='{"data": []}', headers=headers))
     src.search("a", SearchFilters())

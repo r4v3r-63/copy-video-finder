@@ -4,8 +4,8 @@ import logging
 import sys
 
 from PyQt6.QtCore import QLibraryInfo, QLocale, QLockFile, QTranslator
-from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtGui import QIcon
+from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from app import paths, processes

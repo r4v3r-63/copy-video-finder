@@ -30,9 +30,9 @@ from PyQt6.QtWidgets import (
 from app import catalog as cat
 from app import licenses, similar
 from app.processes import Category, Process
+from app.search import preview_file
 from app.ui import theme
 from app.ui.coverage_view import level_brush
-from app.search import preview_file
 from app.ui.frames_view import FramesStrip
 from app.ui.player import format_duration, video_facts
 
@@ -107,7 +107,8 @@ class VideoCard(QWidget):
         add_row.addWidget(self.link_button)
 
         self.open_page = QPushButton("Открыть страницу ролика")
-        self.open_page.clicked.connect(lambda: self.entry and QDesktopServices.openUrl(QUrl(self.entry.result.page_url)))
+        self.open_page.clicked.connect(
+            lambda: self.entry and QDesktopServices.openUrl(QUrl(self.entry.result.page_url)))
         self.open_file = QPushButton("Показать файл")
         self.open_file.clicked.connect(self._show_file)
         self.delete = QPushButton("Удалить из каталога")

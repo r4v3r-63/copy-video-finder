@@ -95,7 +95,8 @@ class DictionaryDialog(QDialog):
         add.clicked.connect(lambda: (self._add_row("", ""), self.table.scrollToBottom(),
                                      self.table.editItem(self.table.item(self.table.rowCount() - 1, 0))))
         remove = QPushButton("Удалить строку")
-        remove.clicked.connect(lambda: self.table.removeRow(self.table.currentRow()) if self.table.currentRow() >= 0 else None)
+        remove.clicked.connect(
+            lambda: self.table.removeRow(self.table.currentRow()) if self.table.currentRow() >= 0 else None)
         reset = QPushButton("Вернуть встроенный словарь")
         reset.clicked.connect(self._reset)
         row = QHBoxLayout()
@@ -168,7 +169,8 @@ class DuplicatesDialog(QDialog):
         for a, b, d in pairs:
             row = self.table.rowCount()
             self.table.insertRow(row)
-            cells = [str(a.id), f"{a.result.source}: {a.result.title}", str(b.id), f"{b.result.source}: {b.result.title}",
+            cells = [str(a.id), f"{a.result.source}: {a.result.title}",
+                     str(b.id), f"{b.result.source}: {b.result.title}",
                      "почти одинаковые" if d <= 2 else "очень похожи"]
             for col, text in enumerate(cells):
                 item = QTableWidgetItem(text)

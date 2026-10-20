@@ -24,7 +24,7 @@
 - SQLite (каталог и кэш)
 - FFmpeg (конвертация WebM → MP4), кладётся в папку программы
 - openpyxl (экспорт Excel), Pillow (поиск похожих дублей: свой dHash в `similar.py` вместо imagehash, чтобы не тянуть numpy и scipy)
-- pytest (тесты)
+- pytest (тесты), ruff (стиль, `ruff.toml`; workflow «Проверка кода» — ruff и тесты на каждый пуш)
 - PyInstaller в режиме onedir
 
 ## Структура
@@ -48,7 +48,7 @@ app/
   licenses.py          # оценка лицензий
   catalog.py           # каталог в «Данные/catalog.sqlite»: ролики, привязки к услугам, отметки, покрытие
   downloader.py        # очередь скачивания, файл лицензии рядом с роликом
-  export/              # CSV, Excel, HTML-каталог, M3U, сводка покрытия, отчёт PDF
+  export/              # CSV, Excel, HTML-каталог, M3U, сводка покрытия, отчёт PDF, шоурил
   paths.py             # пути к папке «Данные» рядом с exe
   query.py             # запросы на русском и английском, перевод по словарю
   search.py            # фоновый поиск по всем фразам и площадкам, фильтр выдачи
@@ -102,6 +102,7 @@ tests/
 - Зацикливание: после скачивания FFmpeg сравнивает первый и последний кадр (`downloader.loop_hint` → `videos.loop_hint`); решение пользователя — `videos.loop` в карточке.
 - Кадры из ролика (`frames.py`, `ui/frames_view.FramesStrip`): кнопка в панели просмотра и в карточке каталога; FFmpeg берёт 3 кадра по ссылке просмотра (в карточке — из скачанного файла, если есть).
 - Отчёт для руководства (`export/report.py`, меню «Каталог»): HTML для QTextDocument → PDF через QPdfWriter (A4), превью скачиваются в фоне (`ReportWorker`); до 3 засчитанных роликов на услугу, точные первыми. Блок услуги не разрывается между страницами (`keep_blocks_together`: верхний отступ, не PageBreak — с ним Qt теряет конец документа; после правки — `_relayout`).
+- Шоурил (`export/showreel.py`, `ui/showreel_dialog.py`, меню «Каталог»): скачанные ролики услуг (не отклонённые, лицензия свободная и подтверждена — `showreel.suitable`) → один MP4 FFmpeg: по N секунд (короче `MIN_CLIP` — пропуск), 1920×1080 с полями, затемнение, без звука; рядом .txt с авторами и лицензиями (`credits_text`). Превью отчёта — JPEG 16:9 через Pillow (`report.thumb_jpeg`: Qt не читает AVIF Coverr).
 - Подготовка к показу: `Settings.trim_seconds` (0 — не обрезать) и `Settings.mute_audio`; при скачивании FFmpeg перекодирует в MP4 с `-t`/`-an` (`DownloadJob.trim/mute`), в файле лицензии — пометка, что ролик изменён.
 - Новые столбцы `videos` добавляются в старую базу через `ALTER TABLE` (`catalog._ADDED_COLUMNS`).
 
@@ -172,6 +173,7 @@ python -m venv .venv
 pip install -r requirements-dev.txt   # requirements.txt — только то, что нужно программе
 python -m app.main
 pytest
+ruff check app tests              # стиль: правила в ruff.toml
 pyinstaller build.spec --noconfirm
 ```
 

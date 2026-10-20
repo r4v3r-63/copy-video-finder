@@ -28,6 +28,7 @@ def test_unknown_keys_ignored(data_dir):
 
 def test_built_in_keys_used_when_user_key_empty(data_dir, tmp_path, monkeypatch):
     import json
+
     from app import settings as settings_mod
     defaults = tmp_path / "defaults.json"
     defaults.write_text(json.dumps({"pixabay_api_key": "built-px", "vimeo_token": " built-vm ", "other": "x"}))
@@ -53,7 +54,8 @@ def test_no_api_keys_in_repository():
     import re
     root = pathlib.Path(__file__).resolve().parent.parent
     pattern = re.compile(r"\b\d{6,}-[0-9a-f]{20,}\b|\b[0-9a-f]{32}\b")  # вид ключей Pixabay и токенов Vimeo
-    for path in list(root.glob("app/**/*.py")) + list(root.glob("resources/*.json")) + [root / ".github/workflows/build.yml"]:
+    files = list(root.glob("app/**/*.py")) + list(root.glob("resources/*.json"))
+    for path in files + [root / ".github/workflows/build.yml"]:
         assert not pattern.search(path.read_text(encoding="utf-8")), path
 
 

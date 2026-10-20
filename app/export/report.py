@@ -4,6 +4,7 @@
 скачиваются заранее (`fetch_thumbs`, в фоне) и встраиваются в документ картинками.
 """
 
+import io
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -11,6 +12,7 @@ from html import escape
 from pathlib import Path
 
 import requests
+from PIL import Image, ImageOps
 from PyQt6.QtCore import QMarginsF, QSizeF, QThread, QUrl, pyqtSignal
 from PyQt6.QtGui import QImage, QPageLayout, QPageSize, QPdfWriter, QTextCursor, QTextDocument
 
@@ -19,6 +21,7 @@ from app import catalog as cat
 from app.sources.http import USER_AGENT
 
 VIDEOS_PER_SERVICE = 3
+THUMB_SIZE = (340, 192)  # 16:9, в отчёте — 170 точек шириной
 _MATCH_ORDER = {cat.EXACT: 0, cat.PARTIAL: 1, cat.RELATED: 2}
 
 
@@ -35,6 +38,21 @@ def service_videos(store: cat.Catalog, categories) -> dict[str, list[cat.Entry]]
             for pid, items in found.items()}
 
 
+def thumb_jpeg(data: bytes) -> bytes | None:
+    """Превью для отчёта: JPEG 16:9 шириной THUMB_SIZE[0] (обрезка по центру).
+
+    Через Pillow — Qt не читает AVIF (Coverr), а вертикальные превью растянули бы блок услуги.
+    """
+    try:
+        with Image.open(io.BytesIO(data)) as image:
+            fitted = ImageOps.fit(image.convert("RGB"), THUMB_SIZE, Image.Resampling.LANCZOS)
+    except (OSError, ValueError, Image.DecompressionBombError):
+        return None
+    out = io.BytesIO()
+    fitted.save(out, "JPEG", quality=85)
+    return out.getvalue()
+
+
 def fetch_thumbs(entries: list[cat.Entry], session=None, cancel: threading.Event | None = None) -> dict[int, bytes]:
     """Превью роликов для отчёта: номер в каталоге → картинка. Не скачалось — без превью."""
     session = session or requests.Session()
@@ -44,7 +62,7 @@ def fetch_thumbs(entries: list[cat.Entry], session=None, cancel: threading.Event
             return e.id, None
         try:
             resp = session.get(e.result.preview_url, headers={"User-Agent": USER_AGENT}, timeout=15)
-            return e.id, resp.content if resp.status_code == 200 else None
+            return e.id, thumb_jpeg(resp.content) if resp.status_code == 200 else None
         except requests.RequestException:
             return e.id, None
 

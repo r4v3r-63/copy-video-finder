@@ -163,8 +163,9 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
         queries = [SearchQuery(p.phrases_ru[0], RU) for p in group if p.phrases_ru]
         queries += [SearchQuery(phrase, EN) for p in group for phrase in p.phrases_en[:2]]
         names = ", ".join(p.name for p in group)
-        return SearchPlan(None, _unique(with_key_words(queries, group)), f"Запрос подходит к услугам: {names}. "
-                                                  "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.",
+        note = (f"Запрос подходит к услугам: {names}. "
+                "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.")
+        return SearchPlan(None, _unique(with_key_words(queries, group)), note,
                           exclude=frozenset(w for p in group for w in p.exclude))
 
     if is_russian(text):

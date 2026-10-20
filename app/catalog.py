@@ -247,7 +247,8 @@ class Catalog:
         links = {r["process_id"]: r["match"] for r in
                  self._db.execute("SELECT process_id, match FROM links WHERE video_id = ?", (row["id"],))}
         optional = lambda v: None if v is None else bool(v)  # noqa: E731
-        return Entry(id=row["id"], result=result, status=row["status"], license_confirmed=bool(row["license_confirmed"]),
+        return Entry(id=row["id"], result=result, status=row["status"],
+                     license_confirmed=bool(row["license_confirmed"]),
                      comment=row["comment"], downloaded_path=row["downloaded_path"], added_at=row["added_at"],
                      checked_at=row["checked_at"], links=links, available=bool(row["available"]),
                      link_checked_at=row["link_checked_at"], phash=row["phash"] or "", loop=optional(row["loop"]),

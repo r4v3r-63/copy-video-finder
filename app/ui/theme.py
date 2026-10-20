@@ -10,11 +10,34 @@ from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPalette
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from app import paths
+
 # Токены, которые виджеты берут как theme.PRIMARY, theme.SPACE_L и т. п., — тоже отсюда.
 from app.design import (  # noqa: F401 — часть импортов только для виджетов
-    CONTROL_HEIGHT, CONTROL_HEIGHT_LARGE, DARK, FONT_BODY, FONT_CAPTION, FONT_FALLBACK, FONT_FAMILY, FONT_FILES,
-    FONT_SUBTITLE, FONT_TITLE, LIGHT, PALETTES, PRIMARY, RADIUS_BUTTON, RADIUS_CARD, RADIUS_INPUT, SECONDARY, SPACE_L,
-    SPACE_M, SPACE_S, SPACE_XS, SYSTEM, TERTIARY, THEME_NAMES, Palette,
+    CONTROL_HEIGHT,
+    CONTROL_HEIGHT_LARGE,
+    DARK,
+    FONT_BODY,
+    FONT_CAPTION,
+    FONT_FALLBACK,
+    FONT_FAMILY,
+    FONT_FILES,
+    FONT_SUBTITLE,
+    FONT_TITLE,
+    LIGHT,
+    PALETTES,
+    PRIMARY,
+    RADIUS_BUTTON,
+    RADIUS_CARD,
+    RADIUS_INPUT,
+    SECONDARY,
+    SPACE_L,
+    SPACE_M,
+    SPACE_S,
+    SPACE_XS,
+    SYSTEM,
+    TERTIARY,
+    THEME_NAMES,
+    Palette,
 )
 
 _current = LIGHT
@@ -231,7 +254,8 @@ def qt_palette(p: Palette) -> QPalette:
         (roles.AlternateBase, p.bg_secondary), (roles.Text, p.text_primary), (roles.Button, p.bg_surface),
         (roles.ButtonText, p.text_primary), (roles.Highlight, p.accent_primary),
         (roles.HighlightedText, p.selection_text), (roles.Link, p.accent_text), (roles.LinkVisited, p.accent_secondary),
-        (roles.ToolTipBase, p.bg_surface), (roles.ToolTipText, p.text_primary), (roles.PlaceholderText, p.text_secondary),
+        (roles.ToolTipBase, p.bg_surface), (roles.ToolTipText, p.text_primary),
+        (roles.PlaceholderText, p.text_secondary),
         (roles.BrightText, p.text_inverse),
     ):
         pal.setColor(role, QColor(color))

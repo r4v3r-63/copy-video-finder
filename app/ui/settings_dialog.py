@@ -76,7 +76,8 @@ class SettingsDialog(QDialog):
         tavily_row, self.tavily_key = _key_field(settings.tavily_api_key, "tavily_api_key" in built)
         form.addRow("Ключ Tavily:", tavily_row)
         form.addRow("", _link("Поиск по интернету надёжнее с ключом Tavily: бесплатно, без карты, 1000 запросов "
-                              "в месяц (программа тратит не больше 900). Без ключа — DuckDuckGo, он иногда ограничивает частые запросы",
+                              "в месяц (программа тратит не больше 900). Без ключа — DuckDuckGo, "
+                              "он иногда ограничивает частые запросы",
                               "https://app.tavily.com"))
         brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
         form.addRow("Ключ Brave Search:", brave_row)

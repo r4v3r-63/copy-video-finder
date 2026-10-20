@@ -103,13 +103,16 @@ def test_text_without_service_is_translated():
     assert plan.texts(EN) == ["machine"]
 
 
+def _lower(texts):
+    return {t.lower() for t in texts}
+
+
 def test_every_service_has_key_words_and_they_are_searched():
     for proc in PROCS:
         assert proc.key_ru and proc.key_en, proc.id
         plan = build_plan(proc.display, PROCS, DICT)
-        lower = lambda texts: {t.lower() for t in texts}
-        assert lower(proc.key_en) <= lower(plan.texts(EN)), proc.id
-        assert lower(proc.key_ru) <= lower(plan.texts(RU)), proc.id
+        assert _lower(proc.key_en) <= _lower(plan.texts(EN)), proc.id
+        assert _lower(proc.key_ru) <= _lower(plan.texts(RU)), proc.id
 
 
 def test_lamination_searched_by_short_key_word():

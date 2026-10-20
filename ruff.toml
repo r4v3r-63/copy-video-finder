@@ -1,0 +1,14 @@
+# Проверка стиля: ruff check app tests
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[lint.isort]
+known-first-party = ["app"]
+
+[lint.per-file-ignores]
+# Встроенные в HTML стили и скрипт — длинные строки шаблона.
+"app/export/html_catalog.py" = ["E501"]
+"app/export/summary.py" = ["E501"]

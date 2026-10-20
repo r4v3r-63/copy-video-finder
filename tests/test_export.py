@@ -14,7 +14,8 @@ def video(sid, title="Ламинатор в офисе", source="Pixabay", lic="
     return VideoResult(source=source, source_id=sid, title=title, description="desc; с точкой с запятой", preview_url="https://p/1.jpg",
                        duration=12.4, width=1920, height=1080, has_audio=True, page_url=f"https://page/{sid}",
                        files=[VideoFile("Full HD", f"https://cdn/{sid}.mp4", 1920, 1080, "video/mp4")],
-                       author="Анна", author_url="https://a", license=LicenseInfo(lic, "https://lic", status=status, note=""))
+                       author="Анна", author_url="https://a",
+                       license=LicenseInfo(lic, "https://lic", status=status, note=""))
 
 
 @pytest.fixture

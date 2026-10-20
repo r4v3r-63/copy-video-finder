@@ -90,7 +90,8 @@ def css_variables() -> str:
     def block(p: Palette) -> str:
         return "; ".join(f"{name}: {value}" for name, value in (
             ("--color-white", WHITE), ("--color-black", BLACK), ("--color-blue", BLUE), ("--color-purple", PURPLE),
-            ("--bg-primary", p.bg_primary), ("--bg-dark", BLACK), ("--bg-secondary", p.bg_secondary), ("--bg-surface", p.bg_surface),
+            ("--bg-primary", p.bg_primary), ("--bg-dark", BLACK), ("--bg-secondary", p.bg_secondary),
+            ("--bg-surface", p.bg_surface),
             ("--text-primary", p.text_primary), ("--text-secondary", p.text_secondary),
             ("--text-inverse", p.text_inverse), ("--accent-primary", p.accent_primary),
             ("--accent-hover", p.accent_hover), ("--accent-text", p.accent_text),

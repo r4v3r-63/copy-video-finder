@@ -165,8 +165,8 @@ def test_specific_single_words_still_confirm_topic():
 def test_wikimedia_checked_by_title_only(tmp_path):
     from app.cache import Cache
     from app.search import is_relevant
-    from app.topic import phrase_stems
     from app.sources.wikimedia import WikimediaSource
+    from app.topic import phrase_stems
     from tests.fakes import FakeResponse, FakeSession, fixture_text
     session = FakeSession(FakeResponse(text=fixture_text("wikimedia_search.json")))
     session.headers = {}
@@ -290,7 +290,8 @@ def test_service_exclude_words():
     # Настоящий промах Pixabay по «лазерной гравировке»: плазменная резка металла с искрами.
     ("лазер, вырезать, элемент дизайна, точность, гравировка, пламя, горящий, искры, самодельный, кузнец, "
      "стали, ремесло, металлический, металлоконструкции, ручной работы", False),
-    ("laser, cut out, design element, accuracy, engraving, flame, burning, sparks, blacksmith, steel, metalwork", False),
+    ("laser, cut out, design element, accuracy, engraving, flame, burning, sparks, blacksmith, steel, "
+     "metalwork", False),
     ("машина лазера, лазерная резка, технология, лазер, плазмы, промышленный, фабрика, стали, металл", False),
     ("laser engraving, acrylic, souvenir, gift, keychain", True),
     ("лазерная гравировка, металлическая ручка, сувенир, подарок", True),

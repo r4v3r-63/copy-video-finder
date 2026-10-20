@@ -10,7 +10,8 @@ from app.sources.base import LicenseInfo, SearchFilters, Source, VideoResult
 
 def video(sid, tags):
     return VideoResult(source="Fake", source_id=sid, title=tags, description=tags, preview_url=None, duration=10,
-                       width=1920, height=1080, has_audio=None, page_url="", license=LicenseInfo("x", status=licenses.ALLOWED))
+                       width=1920, height=1080, has_audio=None, page_url="",
+                       license=LicenseInfo("x", status=licenses.ALLOWED))
 
 
 class Fake(Source):

@@ -123,7 +123,8 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
     builtin = {p["id"]: p for c in builtin_raw["categories"] for p in c["processes"]}
     lines = ["{", f'  "version": {version},', '  "categories": [']
     for ci, c in enumerate(categories):
-        lines += ["    {", f'      "id": {json.dumps(c.id)},', f'      "name": {json.dumps(c.name, ensure_ascii=False)},',
+        lines += ["    {", f'      "id": {json.dumps(c.id)},',
+                  f'      "name": {json.dumps(c.name, ensure_ascii=False)},',
                   '      "processes": [']
         for pi, p in enumerate(c.processes):
             d = process_dict(p)
@@ -152,7 +153,7 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
 
 _TRANSLIT = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
                      ["a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s",
-                      "t", "u", "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya"]))
+                      "t", "u", "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya"], strict=True))
 
 
 def new_id(name: str, existing: set[str]) -> str:

@@ -36,7 +36,8 @@ def other_scene(d, sx, sy):
 def video(sid, source="Pixabay", preview=None):
     return VideoResult(source=source, source_id=sid, title=f"Ролик {sid}", description="", preview_url=preview,
                        duration=12.6, width=1920, height=1080, has_audio=None, page_url="",
-                       files=[VideoFile("HD", "u")], license=LicenseInfo("Pixabay Content License", status=licenses.ALLOWED))
+                       files=[VideoFile("HD", "u")],
+                       license=LicenseInfo("Pixabay Content License", status=licenses.ALLOWED))
 
 
 @pytest.fixture
@@ -215,6 +216,7 @@ def test_search_history(store, clock):
 
 def test_user_dictionary_overrides_builtin(data_dir):
     import json
+
     from app import paths
     from app.query import Dictionary
     assert Dictionary.load().translate("пенокартон") == "foam board"
@@ -226,6 +228,7 @@ def test_user_dictionary_overrides_builtin(data_dir):
 def test_avif_thumbnail_loads():
     """Coverr отдаёт превью в AVIF, который Qt не читает: плитка должна получить картинку через Pillow."""
     import io
+
     from PIL import Image, features
     if not features.check("avif"):
         pytest.skip("Pillow без AVIF")
@@ -247,7 +250,9 @@ def test_frame_times():
 def test_frames_from_video(tmp_path):
     """Три кадра из ролика (начало, середина, конец) в PNG; ролик короче — лишний кадр пропускается."""
     from pathlib import Path
+
     from PIL import Image
+
     from app.frames import extract_frames
     src = tmp_path / "v.mp4"
     subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=640x360:rate=10", "-t", "4",

@@ -123,7 +123,8 @@ def test_attribution_in_license_file(tmp_path):
     job = DownloadJob(result=v, file=FILES[2], process=None, query_text="ламинатор", base_dir=tmp_path)
     path, _ = run_job(job, StreamSession(StreamResponse(b"x")))
     text = path.with_suffix(".txt").read_text(encoding="utf-8")
-    assert "Атрибуция (показывать в титре): Anna — laminator, office — CC BY-SA 4.0 — https://pixabay.com/videos/id-125/" in text
+    assert ("Атрибуция (показывать в титре): Anna — laminator, office — CC BY-SA 4.0 — "
+            "https://pixabay.com/videos/id-125/") in text
     assert licenses.SHARE_ALIKE_NOTE in text
 
 

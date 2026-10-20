@@ -55,12 +55,14 @@ def test_fetch_thumbs_skips_failures(tmp_path):
     class Session:
         def get(self, url, headers=None, timeout=None):
             class R:
-                status_code = 200 if url.endswith("0.jpg") else 404
-                content = b"img"
+                status_code = 200 if url.endswith(("0.jpg", "1.jpg")) else 404
+                content = png() if url.endswith("0.jpg") else b"not an image"
             return R()
 
     thumbs = report.fetch_thumbs(store.entries(), session=Session())
-    assert list(thumbs) == [ids[0]]
+    assert list(thumbs) == [ids[0]]  # 404 и не картинка — без превью
+    with Image.open(io.BytesIO(thumbs[ids[0]])) as image:
+        assert image.format == "JPEG" and image.size == report.THUMB_SIZE
     store.close()
 
 

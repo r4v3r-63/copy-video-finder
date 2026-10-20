@@ -9,7 +9,8 @@ from app.processes import Level, Process
 def test_save_roundtrip_matches_builtin(tmp_path):
     categories = processes.load_catalog(processes.builtin_file())
     out = processes.save_catalog(categories, tmp_path / "p.json")
-    assert json.loads(out.read_text(encoding="utf-8")) == json.loads(processes.builtin_file().read_text(encoding="utf-8"))
+    builtin = processes.builtin_file().read_text(encoding="utf-8")
+    assert json.loads(out.read_text(encoding="utf-8")) == json.loads(builtin)
 
 
 def test_user_copy_is_used_and_keeps_ids(data_dir):

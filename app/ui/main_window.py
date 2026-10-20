@@ -1,9 +1,8 @@
 """Главное окно: одно поле ввода услуги, сетка результатов и панель просмотра."""
 
 import io
-from html import escape
-
 from datetime import datetime
+from html import escape
 from pathlib import Path
 
 from PyQt6.QtCore import QSize, QStringListModel, Qt, QTimer, QUrl
@@ -12,6 +11,7 @@ from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkReques
 from PyQt6.QtWidgets import (
     QApplication,
     QCompleter,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -19,8 +19,8 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMainWindow,
-    QFileDialog,
     QMessageBox,
+    QProgressDialog,
     QPushButton,
     QSplitter,
     QTabWidget,
@@ -30,28 +30,29 @@ from PyQt6.QtWidgets import (
 
 from app import __version__, maintenance, paths, processes, query, updater
 from app import catalog as cat
+from app.batch import BatchWorker
 from app.cache import Cache
-from app.downloader import DownloadJob, DownloadQueue
+from app.downloader import DownloadJob, DownloadQueue, safe_name
+from app.export import html_catalog, playlist, registry, report, showreel, summary
 from app.search import SearchWorker, print_stems
 from app.settings import Settings
-from app.sources.base import SearchFilters, Source, VideoResult
-from app.sources.pexels import PexelsSource
 from app.sources.archive import ArchiveSource
+from app.sources.base import SearchFilters, Source, VideoResult
 from app.sources.coverr import CoverrSource
 from app.sources.europeana import EuropeanaSource
+from app.sources.pexels import PexelsSource
 from app.sources.pixabay import PixabaySource
-from app.sources.vimeo import VimeoSource
 from app.sources.videezy import VideezySource
+from app.sources.vimeo import VimeoSource
 from app.sources.web import WebSource
 from app.sources.wikimedia import WikimediaSource
-from app.batch import BatchWorker
-from app.export import html_catalog, playlist, registry, report, summary
+from app.ui import theme
 from app.ui.catalog_view import CatalogView
 from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
-from app.ui.settings_dialog import SettingsDialog
-from app.ui import theme
 from app.ui.services_dialog import ServicesDialog
+from app.ui.settings_dialog import SettingsDialog
+from app.ui.showreel_dialog import ShowreelDialog
 from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
@@ -202,6 +203,7 @@ class MainWindow(QMainWindow):
         self.link_check: maintenance.LinkCheckWorker | None = None
         self.duplicates: maintenance.DuplicateWorker | None = None
         self.report_worker: report.ReportWorker | None = None
+        self.showreel_worker: showreel.ShowreelWorker | None = None
         self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
@@ -262,6 +264,9 @@ class MainWindow(QMainWindow):
         playlist_action = QAction("Плейлист M3U из скачанных…", self)
         playlist_action.triggered.connect(self.export_playlist)
         catalog_menu.addAction(playlist_action)
+        showreel_action = QAction("Шоурил для экрана…", self)
+        showreel_action.triggered.connect(self.export_showreel)
+        catalog_menu.addAction(showreel_action)
         catalog_menu.addSeparator()
         import_action = QAction("Импорт реестра CSV…", self)
         import_action.triggered.connect(self.import_csv)
@@ -394,6 +399,44 @@ class MainWindow(QMainWindow):
             return
         self._exported(path, f"Плейлист из {count} роликов сохранён")
 
+    def export_showreel(self):
+        """Склеить скачанные ролики услуги или категории в один MP4 для экрана (в фоне, с отменой)."""
+        if self.showreel_worker and self.showreel_worker.isRunning():
+            return
+        ffmpeg = paths.ffmpeg_tool("ffmpeg")
+        if not ffmpeg:
+            QMessageBox.warning(self, "Шоурил", "Для шоурила нужен FFmpeg в папке программы.")
+            return
+        dialog = ShowreelDialog(self.catalog, self.categories, self)
+        if not dialog.exec():
+            return
+        title, entries = dialog.title(), dialog.entries()
+        folder = self.download_dir() / "Шоурил"
+        folder.mkdir(parents=True, exist_ok=True)
+        chosen, _ = QFileDialog.getSaveFileName(self, "Шоурил для экрана", str(folder / f"{safe_name(title)}.mp4"),
+                                                "Видео MP4 (*.mp4)")
+        if not chosen:
+            return
+        path = Path(chosen).with_suffix(".mp4")
+        progress = QProgressDialog(f"Собирается шоурил «{title}» из {len(entries)} роликов…", "Отмена", 0, 100, self)
+        progress.setWindowTitle("Шоурил")
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        worker = showreel.ShowreelWorker(title, entries, path, ffmpeg, paths.ffmpeg_tool("ffprobe"),
+                                         dialog.clip_seconds(), dialog.fade_seconds(), self)
+        worker.progress.connect(progress.setValue)
+        progress.canceled.connect(worker.cancel.set)
+        worker.done.connect(lambda error, used: self._showreel_done(progress, path, error, used))
+        self.showreel_worker = worker
+        worker.start()
+
+    def _showreel_done(self, progress: QProgressDialog, path: Path, error: str, used: list):
+        progress.close()
+        if error:
+            QMessageBox.warning(self, "Шоурил", error)
+            return
+        self._exported(path, f"Шоурил из {len(used)} роликов сохранён, список авторов — рядом в .txt")
+
     def _about(self):
         box = QMessageBox(self)
         box.setWindowTitle("О программе")
@@ -508,7 +551,8 @@ class MainWindow(QMainWindow):
         self._remove_placeholder()
         statuses = self.catalog.statuses()
         for r in results:
-            info = [format_duration(r.duration) if r.duration else "", f"{r.width}×{r.height}" if r.width and r.height else ""]
+            info = [format_duration(r.duration) if r.duration else "",
+                    f"{r.width}×{r.height}" if r.width and r.height else ""]
             text = " · ".join(i for i in info if i) + f"\n{r.source} · {r.license.status}"
             if not r.files:
                 text += "\nскачать на сайте"
@@ -899,7 +943,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.stop_search()
         self.stop_batch()
-        for worker in (self.link_check, self.duplicates, self.report_worker):
+        for worker in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker):
             if worker and worker.isRunning():
                 worker.cancel.set()
                 worker.wait(3000)

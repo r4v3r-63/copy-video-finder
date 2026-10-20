@@ -22,8 +22,16 @@ from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
 from app import licenses
 from app.cache import Cache
-from app.sources.base import (LicenseInfo, NotFoundError, RateLimitError, SearchFilters, Source, SourceError,
-                              VideoFile, VideoResult)
+from app.sources.base import (
+    LicenseInfo,
+    NotFoundError,
+    RateLimitError,
+    SearchFilters,
+    Source,
+    SourceError,
+    VideoFile,
+    VideoResult,
+)
 from app.sources.http import HttpSource
 from app.sources.videezy import BROWSER_UA
 
