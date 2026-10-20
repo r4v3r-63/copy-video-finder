@@ -1,6 +1,9 @@
 import json
 
+import pytest
+
 from app import paths, processes
+from tests.fakes import fixture_text
 
 
 def catalog():
@@ -8,14 +11,18 @@ def catalog():
 
 
 def test_catalog_groups_cover_all_site_services():
-    """Справочник v5: услуги сайта Copy.ru (tests/fixtures/site_services.txt) — каждая ровно в одной группе."""
+    """Услуги сайта, кроме исключённых пользователем, — каждая ровно в одной группе."""
     from pathlib import Path
     cats = catalog()
     groups = processes.all_processes(cats)
     site = [s for s in (Path(__file__).parent / "fixtures" / "site_services.txt").read_text(
-        encoding="utf-8").splitlines() if s]
+        encoding="utf-8").splitlines() if s and s != "Перевод документов"]
     variants = [v for g in groups for v in g.variants]
     assert sorted(variants) == sorted(site)
+    assert len(variants) == 375 and len(groups) == 87
+    assert processes.find_by_display(groups, "Перевод документов") is None
+    assert processes.find_variant(groups, "Перевод документов") is None
+    assert processes.suggestion_texts(groups, "перевод документ") == []
     assert len(cats) >= 15 and len(groups) >= 60
     for g in groups:
         assert g.variants and g.phrases_ru and g.phrases_en and g.levels, g.id
@@ -95,3 +102,21 @@ def test_old_user_copy_retired(data_dir):
     cats = processes.load_catalog()
     assert len(processes.all_processes(cats)) > 60
     assert not paths.processes_file().exists() and (paths.data_dir() / "processes.v4.json").exists()
+
+
+@pytest.mark.parametrize("explicit_path", [False, True])
+def test_translation_removed_from_old_user_copy_without_losing_edits(data_dir, explicit_path):
+    source = fixture_text("services_with_translation.json")
+    path = paths.processes_file()
+    path.write_text(source, encoding="utf-8")
+    categories = processes.load_catalog(path if explicit_path else None)
+    loaded = {p.id: p for p in processes.all_processes(categories)}
+    assert set(loaded) == {"scanning", "my_service"}
+    assert loaded["scanning"].name == "Моё сканирование"
+    assert loaded["scanning"].phrases_ru == ["мой сканер документов"]
+    assert loaded["my_service"].phrases_en == ["custom printing"]
+    assert path.read_text(encoding="utf-8") == source
+    processes.save_catalog(categories)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved["removed"] == ["translation"]
+    assert all(p["id"] != "translation" for c in saved["categories"] for p in c["processes"])

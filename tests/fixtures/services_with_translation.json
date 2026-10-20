@@ -1,0 +1,15 @@
+{
+  "version": 5,
+  "categories": [{
+    "id": "documents",
+    "name": "Документы",
+    "processes": [
+      {"id": "scanning", "name": "Моё сканирование", "phrases_ru": ["мой сканер документов"],
+       "phrases_en": ["my document scanner"]},
+      {"id": "translation", "name": "Перевод документов", "variants": ["Перевод документов"],
+       "phrases_ru": ["перевод документов"], "phrases_en": ["document translation"]},
+      {"id": "my_service", "name": "Моя услуга", "phrases_ru": ["моя печать"],
+       "phrases_en": ["custom printing"]}
+    ]
+  }]
+}

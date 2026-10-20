@@ -5,7 +5,8 @@ import pytest
 from app import licenses
 from app.catalog import EXACT, PARTIAL, PRODUCT, REJECTED, RELATED, SELECTED, Catalog
 from app.sources.base import LicenseInfo, VideoFile, VideoResult
-from tests.fakes import Clock
+from app.sources.web import parse_page
+from tests.fakes import Clock, fixture_text
 
 
 def video(sid="1", source="Pixabay", status=licenses.ALLOWED, title="laminator, office"):
@@ -34,6 +35,29 @@ def test_add_is_idempotent_by_source_and_id(cat):
     c = cat.add(video("1", source="Coverr"))
     assert a == b != c
     assert len(cat.entries()) == 2
+
+
+def test_removed_translation_links_are_dropped_but_videos_and_other_links_survive(tmp_path):
+    path = tmp_path / "catalog.sqlite"
+    store = Catalog(path)
+    result = parse_page(fixture_text("manual_video.html"), "https://example.org/video/1")
+    vid = store.select(result, "translation")
+    store.set_comment(vid, "Сохранить ролик")
+    shared = store.select(video("shared"), "translation")
+    store.link(shared, "scanning", PARTIAL)
+    before = store.get(vid)
+    store.close()
+
+    for _ in range(2):
+        store = Catalog(path)
+        entry = store.get(vid)
+        assert entry.links == {}
+        assert entry.result == before.result
+        assert (entry.status, entry.license_confirmed, entry.comment) == (SELECTED, True, "Сохранить ролик")
+        assert store.get(shared).links == {"scanning": PARTIAL}
+        assert len(store.entries()) == 2
+        assert store.entries(process_id="translation") == []
+        store.close()
 
 
 def test_round_trip_keeps_all_fields(cat):

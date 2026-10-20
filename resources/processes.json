@@ -70,18 +70,6 @@
            {"name": "Оборудование", "match": "точное", "en": ["wide format scanner", "large format document scanner", "map scanner"], "ru": ["широкоформатный сканер"], "de": ["Großformatscanner"], "fr": ["scanner grand format"]},
            {"name": "Действие", "match": "точное", "en": ["scanning blueprints", "scanning large drawings", "document digitization"], "ru": ["сканирование документов"], "de": ["Dokumente scannen"], "fr": ["numérisation documents"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["document scanner office", "scanning paper documents"], "ru": ["сканер документов"], "de": ["Dokumentenscanner"], "fr": ["scanner documents"]}
-         ]},
-        {"id": "translation",
-         "name": "Перевод документов",
-         "variants": ["Перевод документов"],
-         "aliases": ["перевод", "нотариальный перевод"],
-         "phrases_ru": ["перевод документов", "переводчик документов"],
-         "phrases_en": ["document translation", "translator documents", "certified translation"],
-         "key_ru": ["перевод документов"],
-         "key_en": ["document translation"],
-         "levels": [
-           {"name": "Действие", "match": "точное", "en": ["translating documents", "translator office documents"], "ru": ["письменный перевод"], "de": ["Übersetzung Dokumente"], "fr": ["traduction documents"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["office documents paperwork", "printing documents"], "ru": ["печать документов"]}
          ]}
       ]
     },
@@ -1278,5 +1266,6 @@
       ]
     }
   ],
-  "migrated": {"wf_latex": "wf_aqueous", "banner_finishing": "wf_ecosolvent", "eyelets": "wf_ecosolvent", "badge_punch": "badges", "button_badges": "badges", "thermal_binding": "perfect_binding"}
+  "migrated": {"wf_latex": "wf_aqueous", "banner_finishing": "wf_ecosolvent", "eyelets": "wf_ecosolvent", "badge_punch": "badges", "button_badges": "badges", "thermal_binding": "perfect_binding"},
+  "removed": ["translation"]
 }

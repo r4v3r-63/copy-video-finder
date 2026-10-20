@@ -137,6 +137,9 @@ class Catalog:
                 if column not in have:
                     self._db.execute(f"ALTER TABLE videos ADD COLUMN {column} {decl}")
             self._migrate_links()
+            # Исключённые услуги исчезают и из уже обновлённого каталога; сами ролики остаются.
+            self._db.executemany("DELETE FROM links WHERE process_id = ?",
+                                 ((process_id,) for process_id in processes.removed_ids()))
             # Старые записи с абсолютным путём внутри папки программы — в переносимый вид.
             rows = self._db.execute("SELECT id, downloaded_path FROM videos WHERE downloaded_path != ''").fetchall()
             for row in rows:

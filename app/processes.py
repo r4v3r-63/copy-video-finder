@@ -71,6 +71,11 @@ def migrated_ids() -> dict[str, str]:
     return dict(json.loads(builtin_file().read_text(encoding="utf-8")).get("migrated", {}))
 
 
+def removed_ids() -> set[str]:
+    """Исключённые пользователем услуги: не возвращать их из старой копии справочника."""
+    return set(json.loads(builtin_file().read_text(encoding="utf-8")).get("removed", []))
+
+
 def _retire_old_copy(path: Path) -> bool:
     """Пользовательская копия справочника старше версии 5 — по 43 техпроцессам: откладывается."""
     try:
@@ -110,6 +115,7 @@ def load_catalog(path: Path | None = None) -> list[Category]:
             for p in cat["processes"]:
                 for key, value in builtin.get(p["id"], {}).items():
                     p.setdefault(key, value)
+    removed = removed_ids()
     categories = []
     for cat in raw["categories"]:
         processes = [
@@ -130,7 +136,7 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                               phrases={lang: list(lv[lang]) for lang in LANGS if lv.get(lang)})
                         for lv in p.get("levels", [])],
             )
-            for p in cat["processes"]
+            for p in cat["processes"] if p["id"] not in removed
         ]
         categories.append(Category(id=cat["id"], name=cat["name"], processes=processes))
     return categories
@@ -182,9 +188,12 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
                 lines.append("         ]}" + ("," if pi < len(c.processes) - 1 else ""))
         lines += ["      ]", "    }" + ("," if ci < len(categories) - 1 else "")]
     migrated = builtin_raw.get("migrated")
-    lines += ["  ]" + ("," if migrated else "")]
+    removed = builtin_raw.get("removed")
+    lines += ["  ]" + ("," if migrated or removed else "")]
     if migrated:
-        lines.append(f'  "migrated": {json.dumps(migrated, ensure_ascii=False)}')
+        lines.append(f'  "migrated": {json.dumps(migrated, ensure_ascii=False)}' + ("," if removed else ""))
+    if removed:
+        lines.append(f'  "removed": {json.dumps(removed, ensure_ascii=False)}')
     lines += ["}"]
     text = "\n".join(lines) + "\n"
     json.loads(text)  # проверка: файл должен читаться
