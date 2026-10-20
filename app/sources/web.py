@@ -193,18 +193,21 @@ def parse_page(page: str, url: str) -> VideoResult | None:
         # нельзя подменять ссылкой на Creative Commons из другого блока страницы.
         license_url = own
     else:
+        # Лицензия страницы (rel="license" или просто ссылка) с роликом не связана: она может
+        # относиться к тексту или фото. Такие ролики — только на ручную проверку.
         m = _LICENSE_LINK.search(page)
         license_url = (m.group(1) or m.group(2)) if m else ""
         if not licenses.name_from_url(license_url):
-            m = _CC_ANY.search(page)  # ссылка где-то на странице — может относиться к тексту или фото
-            license_url, page_wide = (m.group(0), True) if m else (license_url, False)
+            m = _CC_ANY.search(page)
+            license_url = m.group(0) if m else license_url
+        page_wide = bool(license_url)
     name = licenses.name_from_url(license_url)
     if not name:
         return None  # лицензия не распознана — такой ролик всё равно не показывается
     status, note = licenses.evaluate(name)
     if page_wide and status != licenses.REJECTED:
         status = licenses.REVIEW
-        note = ("Ссылка на лицензию есть на странице, но не у ролика: она может относиться к тексту или фото. "
+        note = ("Лицензия указана для страницы, а не для ролика: она может относиться к тексту или фото. "
                 + note).strip()
     title = obj.get("name") or meta.get("og:title") or html.unescape(_TAGS.sub("", (_TITLE.search(page) or [0, ""])[1]))
     thumb = obj.get("thumbnailUrl") or meta.get("og:image")

@@ -184,3 +184,15 @@ def test_import_applies_no_and_empty_values(tmp_path, cats, clock):
     assert not e.license_confirmed and e.comment == "" and e.downloaded_path == ""
     s.close()
     target.close()
+
+
+@pytest.mark.skipif(not __import__("shutil").which("node"), reason="нет node")
+def test_html_catalog_csv_guards_formulas(store, cats, tmp_path):
+    """«Скачать выбранное в CSV» в HTML-каталоге: перед «=1+1» — апостроф, как в реестре."""
+    import subprocess
+    html_catalog.write(tmp_path / "k.html", store, cats)
+    line = next(s for s in (tmp_path / "k.html").read_text(encoding="utf-8").splitlines()
+                if "const cell" in s)
+    script = line.strip() + '\nconsole.log([cell("=1+1"), cell("-5"), cell("ok \\"x\\"")].join("|"));'
+    out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout.strip()
+    assert out == '"\'=1+1"|"\'-5"|"ok ""x"""'

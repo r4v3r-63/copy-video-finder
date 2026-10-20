@@ -155,14 +155,17 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
         have = part.stat().st_size if part.exists() else 0
         headers = {"User-Agent": USER_AGENT}
         validator = validator_file.read_text(encoding="utf-8").strip() if have and validator_file.exists() else ""
+        if have and not validator:
+            # Без ETag/даты изменения не проверить, тот ли это файл: докачка могла бы склеить две версии.
+            part.unlink()
+            have = 0
         if have:
             headers["Range"] = f"bytes={have}-"
-            if validator:
-                headers["If-Range"] = validator
+            headers["If-Range"] = validator
         try:
             with session.get(url, headers=headers, stream=True, timeout=30) as resp:
                 if resp.status_code == 416 and have:
-                    # «Диапазон за концом файла»: готово, только если размер на сервере совпадает с нашим.
+                    # «Диапазон за концом файла» при If-Range (файл тот же): готово, если совпал и размер.
                     if _range_total(resp.headers) == have:
                         break
                     part.unlink(missing_ok=True)
@@ -362,13 +365,15 @@ def variant(file: VideoFile, trim: int, mute: bool) -> str:
 
 
 def _legacy_same(license_file: Path, file: VideoFile, wanted: str) -> bool:
-    """Файл версий до 0.18 (без строки варианта): то же качество и без подготовки к показу."""
+    """Файл версий до 0.18 (без строки варианта) — тот же, только если оба без подготовки к показу
+    и качество совпало. Параметры старой подготовки надёжно не восстановить — тогда скачиваем заново."""
+    if not wanted.endswith("обрезка 0 с, без звука: нет"):
+        return False
     try:
         text = license_file.read_text(encoding="utf-8")
     except OSError:
-        return not license_file.exists()  # файла лицензии нет вовсе — сравнить не с чем, считаем тем же
-    unprepared = wanted.endswith("обрезка 0 с, без звука: нет")
-    return f"Качество: {file.quality}" in text and ("Подготовлен к показу" not in text) == unprepared
+        return False
+    return f"Качество: {file.quality}" in text and "Подготовлен к показу" not in text
 
 
 def saved_variant(license_file: Path) -> str | None:

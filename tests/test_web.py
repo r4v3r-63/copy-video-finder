@@ -132,7 +132,8 @@ def test_generic_page_with_open_license():
     assert r.title == "Wire binding machine at work"
     assert r.files[0].url == "https://media.example.org/wire-binding.mp4"  # ссылка со страницы, не придумана
     assert r.preview_url == "https://example.org/thumb.jpg"
-    assert r.license.name == "CC BY 4.0" and r.license.status == licenses.ATTRIBUTION
+    # rel="license" — лицензия страницы, а не ролика: только ручная проверка
+    assert r.license.name == "CC BY 4.0" and r.license.status == licenses.REVIEW
     assert parse_page(PAGE.format(lic="by-nc"), "https://example.org/clips/7").license.status == licenses.REJECTED
 
 
@@ -242,7 +243,7 @@ def test_video_own_terms_not_replaced_by_page_license():
     # без лицензии у ролика ссылка из подвала — только «требует проверки»
     page = f"<html><head>{ld.replace(', \"license\": \"%s\"', '')}</head><body>{footer}</body></html>"
     r = parse_page(page, "https://example.org/clips/8")
-    assert r.license.status == licenses.REVIEW and "не у ролика" in r.license.note
+    assert r.license.status == licenses.REVIEW and "не для ролика" in r.license.note
     # лицензия у самого ролика — принимается
     page = f"<html><head>{ld % 'https://creativecommons.org/publicdomain/zero/1.0/'}</head></html>"
     assert parse_page(page, "https://example.org/clips/8").license.status == licenses.ALLOWED

@@ -192,7 +192,8 @@ $("export").addEventListener("click", () => {
     ["Лицензия", i => i.license], ["Статус лицензии", i => i.licenseStatus], ["Автор", i => i.author],
     ["Атрибуция", i => i.attribution], ["Страница ролика", i => i.page], ["Файл (лучшее качество)", i => i.files[0]?.url ?? ""],
     ["Скачан в", i => i.local], ["Комментарий", i => i.comment]];
-  const cell = v => `"${String(v).replace(/"/g, '""')}"`;
+  // Как в реестре: строка с «= + - @» в Excel — формула, поэтому перед ней апостроф.
+  const cell = v => { const s = String(v); return `"${(/^[=+\\-@\\t\\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`; };
   const rows = DATA.items.filter(i => picked.has(i.id)).map(i => cols.map(([, f]) => cell(f(i))).join(";"));
   const csv = "\\ufeff" + [cols.map(([h]) => cell(h)).join(";"), ...rows].join("\\r\\n");
   const a = document.createElement("a");

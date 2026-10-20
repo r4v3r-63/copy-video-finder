@@ -297,3 +297,16 @@ def test_settings_dialog_fits_small_screen(tmp_path, monkeypatch):
     dialog = SettingsDialog(Settings(), None)
     assert dialog.findChild(QScrollArea) is not None
     assert dialog.minimumSizeHint().height() < 700
+
+
+def test_settings_dialog_width_fits_screen():
+    """Вся форма видна по ширине: окно не шире экрана, и форма не шире видимой области."""
+    from PyQt6.QtWidgets import QScrollArea
+
+    from app.settings import Settings
+    from app.ui.settings_dialog import SettingsDialog
+    dialog = SettingsDialog(Settings(), None)
+    scroll = dialog.findChild(QScrollArea)
+    room = dialog.width() - scroll.verticalScrollBar().sizeHint().width() - 24
+    assert dialog.width() <= dialog.screen().availableGeometry().width()
+    assert scroll.widget().minimumSizeHint().width() <= room

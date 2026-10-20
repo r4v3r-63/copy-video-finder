@@ -45,9 +45,18 @@ def _key_field(value: str, built_in: bool = False) -> tuple[QWidget, QLineEdit]:
     return row, edit
 
 
+
+
 def _link(text: str, url: str) -> QLabel:
     label = QLabel(f'<a href="{url}">{text}</a>')
     label.setOpenExternalLinks(True)
+    label.setWordWrap(True)
+    return label
+
+
+def _note(text: str) -> QLabel:
+    label = QLabel(text)
+    label.setWordWrap(True)
     return label
 
 
@@ -59,6 +68,7 @@ class SettingsDialog(QDialog):
         self._settings = settings
 
         form = QFormLayout()
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)  # узко — подпись над полем
         built = built_in_keys()
         pexels_row, self.pexels_key = _key_field(settings.pexels_api_key, "pexels_api_key" in built)
         form.addRow("Ключ API Pexels:", pexels_row)
@@ -84,8 +94,8 @@ class SettingsDialog(QDialog):
                               "https://app.tavily.com"))
         brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
         form.addRow("Ключ Brave Search:", brave_row)
-        form.addRow("", QLabel("Brave — платный, необязательно (программа не выходит за бесплатные $5 в месяц)."))
-        form.addRow("", QLabel("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
+        form.addRow("", _note("Brave — платный, необязательно (программа не выходит за бесплатные $5 в месяц)."))
+        form.addRow("", _note("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
 
         self.min_duration = QSpinBox()
         self.min_duration.setRange(1, 600)
@@ -169,15 +179,19 @@ class SettingsDialog(QDialog):
         scroll.setWidget(body)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         layout = QVBoxLayout(self)
         layout.addWidget(scroll, 1)
         layout.addWidget(buttons)
+        # Длинные подписи переносятся; ширина и высота — не больше экрана (на узком — прокрутка).
         screen = self.screen().availableGeometry() if self.screen() else None
-        height = body.sizeHint().height() + buttons.sizeHint().height() + 48
+        scrollbar = scroll.verticalScrollBar().sizeHint().width()
+        width = max(body.sizeHint().width() + scrollbar + 24, 640)
+        height = body.heightForWidth(width - 40) if body.hasHeightForWidth() else body.sizeHint().height()
+        height += buttons.sizeHint().height() + 48
         if screen:
-            height = min(height, screen.height() - 80)
-        self.resize(max(body.sizeHint().width() + 40, 640), height)
+            width, height = min(width, screen.width() - 40), min(height, screen.height() - 80)
+        self.resize(width, height)
 
     def _browse(self):
         start = self.download_dir.text() or str(paths.default_download_dir())

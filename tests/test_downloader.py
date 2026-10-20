@@ -71,7 +71,7 @@ def test_extension():
 
 def test_fetch_resumes_after_break(tmp_path):
     data = b"0123456789abcdef"
-    session = StreamSession(StreamResponse(data, cut_after=8), StreamResponse(data[8:], 206))
+    session = StreamSession(StreamResponse(data, cut_after=8, headers={"ETag": '"v1"'}), StreamResponse(data[8:], 206))
     dest = tmp_path / "v.mp4"
     fetch("https://cdn/v.mp4", dest, session, pause=0)
     assert dest.read_bytes() == data
@@ -232,11 +232,13 @@ def test_416_with_other_size_restarts(tmp_path):
     """416, но на сервере 3 байта, а у нас 17: частичный файл не принимается за готовый."""
     dest = tmp_path / "a.mp4"
     (tmp_path / "a.mp4.part").write_bytes(b"x" * 17)
+    (tmp_path / "a.mp4.part.etag").write_text('"v1"', encoding="utf-8")
     session = StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"}),
                             StreamResponse(b"abc"))
     fetch("u", dest, session, pause=0)
     assert dest.read_bytes() == b"abc" and "Range" not in session.calls[1]["headers"]
     (tmp_path / "b.mp4.part").write_bytes(b"abc")
+    (tmp_path / "b.mp4.part.etag").write_text('"v1"', encoding="utf-8")
     fetch("u", tmp_path / "b.mp4", StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"})))
     assert (tmp_path / "b.mp4").read_bytes() == b"abc"  # размер совпал — готово
 
@@ -249,3 +251,28 @@ def test_resume_only_same_file(tmp_path):
     fetch("u", dest, session, pause=0)
     assert session.calls[1]["headers"]["If-Range"] == '"v1"' and session.calls[1]["headers"]["Range"] == "bytes=4-"
     assert dest.read_bytes() == b"NEWFILE!" and not (tmp_path / "a.mp4.part.etag").exists()
+
+
+def test_part_without_validator_not_resumed(tmp_path):
+    """Старый .part без ETag: неизвестно, тот ли это файл, — скачиваем заново, без Range."""
+    dest = tmp_path / "a.mp4"
+    (tmp_path / "a.mp4.part").write_bytes(b"OLD!")
+    session = StreamSession(StreamResponse(b"BBBBBBBB"))
+    fetch("u", dest, session)
+    assert dest.read_bytes() == b"BBBBBBBB" and "Range" not in session.calls[0]["headers"]
+
+
+def test_legacy_prepared_file_downloaded_again(tmp_path):
+    """Файл до 0.18 обрезан до 2 с, теперь нужно 5 с: параметры старой подготовки не известны — заново."""
+    job = DownloadJob(result=video(FILES), file=FILES[1], process=PROC, query_text="", base_dir=tmp_path)
+    path, _ = run_job(job, StreamSession(StreamResponse(b"old")))
+    txt = path.with_suffix(".txt")
+    lines = [line for line in txt.read_text(encoding="utf-8").splitlines() if not line.startswith("Вариант файла")]
+    txt.write_text("\n".join(lines + ["Подготовлен к показу: обрезан до 2 с."]) + "\n", encoding="utf-8")
+    from app import downloader
+    file = FILES[1]
+    assert not downloader._legacy_same(txt, file, downloader.variant(file, 5, False))
+    assert not downloader._legacy_same(txt, file, downloader.variant(file, 0, False))  # был подготовлен
+    txt.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    assert downloader._legacy_same(txt, file, downloader.variant(file, 0, False))
+    assert run_job(job, StreamSession()) == (path, "уже был скачан")
