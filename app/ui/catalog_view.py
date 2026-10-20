@@ -66,13 +66,13 @@ class VideoCard(QWidget):
 
         self.title = QLineEdit()
         self.title.editingFinished.connect(self._save_title)
-        self.status = QComboBox()
+        self.status = theme.compact_combo(QComboBox())
         for value, name in STATUS_NAMES.items():
             self.status.addItem(name, value)
         self.status.activated.connect(self._save_status)
         self.confirmed = QCheckBox("Лицензию проверил(а)")
         self.confirmed.toggled.connect(self._save_confirmed)
-        self.loop = QComboBox()
+        self.loop = theme.compact_combo(QComboBox())
         for name, value in LOOP_CHOICES:
             self.loop.addItem(name, value)
         self.loop.setToolTip("Можно ли крутить ролик по кругу без заметного скачка на стыке.")
@@ -93,10 +93,10 @@ class VideoCard(QWidget):
         self.links.verticalHeader().hide()
         self.links.verticalHeader().setDefaultSectionSize(theme.CONTROL_HEIGHT + theme.SPACE_S)
         self.links.setMaximumHeight(150)
-        self.add_process = QComboBox()
+        self.add_process = theme.compact_combo(QComboBox())
         for p in processes:
             self.add_process.addItem(p.display, p.id)
-        self.add_match = QComboBox()
+        self.add_match = theme.compact_combo(QComboBox())
         self.add_match.addItems(cat.MATCHES)
         self.link_button = QPushButton("Привязать")
         theme.set_role(self.link_button, theme.SECONDARY)
@@ -206,7 +206,7 @@ class VideoCard(QWidget):
             self.links.insertRow(row)
             proc = self.processes.get(process_id)
             self.links.setItem(row, 0, QTableWidgetItem(proc.display if proc else process_id))
-            combo = QComboBox()
+            combo = theme.compact_combo(QComboBox(), 12)
             combo.addItems(cat.MATCHES)
             combo.setCurrentText(match)
             combo.activated.connect(lambda _i, pid=process_id, c=combo: self._relink(pid, c.currentText()))
@@ -309,7 +309,7 @@ class CatalogView(QWidget):
         self.search.setPlaceholderText("Поиск по названию, описанию, площадке, комментарию")
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(lambda _t: self.refresh_list())
-        self.status_filter = QComboBox()
+        self.status_filter = theme.compact_combo(QComboBox())
         for name, value in STATUS_FILTERS:
             self.status_filter.addItem(name, value)
         self.status_filter.activated.connect(lambda _i: self.refresh_list())
@@ -348,6 +348,10 @@ class CatalogView(QWidget):
         splitter.setStretchFactor(1, 4)
         splitter.setStretchFactor(2, 3)
         splitter.setSizes([420, 520, 520])
+        # Скрытая вкладка тоже задаёт минимальную ширину окна: панели не должны раздуваться
+        # от длинных названий и подписей, иначе окно уезжает за экран.
+        for pane, width in ((self.tree, 220), (middle, 260), (self.card, 320)):
+            pane.setMinimumWidth(width)
         layout = QVBoxLayout(self)
         layout.addWidget(splitter)
         self.refresh()

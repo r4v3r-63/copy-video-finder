@@ -315,3 +315,25 @@ def test_settings_dialog_width_fits_screen():
     assert scroll.horizontalScrollBarPolicy() != Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     if screen >= 1000:
         assert scroll.widget().minimumSizeHint().width() <= room
+
+
+def test_catalog_tab_does_not_widen_window(store):
+    """Скрытая вкладка «Каталог» задаёт минимальную ширину окна: длинные названия услуг и ролика
+    не должны её раздувать — иначе на экране 1600 px содержимое окна уезжает вправо."""
+    from app import processes
+    from app.ui.catalog_view import CatalogView
+    from app.ui.player import PlayerPanel
+    cats = processes.load_catalog()
+    title = ", ".join(["печать устройство", "printer", "printing", "типографии", "машина", "чернила", "cmyk"] * 3)
+    vid = store.select(video("long"), "lam_roll")
+    store.set_title(vid, title)
+    for p in processes.all_processes(cats)[:6]:
+        store.link(vid, p.id)
+    view = CatalogView(store, cats)
+    view.select_entry(vid)
+    assert view.minimumSizeHint().width() <= 1000
+    panel = PlayerPanel()
+    r = video("x")
+    r.title = title
+    panel.show_result(r)
+    assert panel.minimumSizeHint().width() <= 500

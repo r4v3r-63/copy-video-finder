@@ -64,7 +64,7 @@ class PlayerPanel(QWidget):
         controls.addWidget(self.play_button)
         controls.addWidget(self.position, 1)
 
-        self.quality = QComboBox()
+        self.quality = theme.compact_combo(QComboBox())
         self.quality.setToolTip("Качество файла для скачивания")
         self.download_button = QPushButton("Скачать")
         self.download_button.clicked.connect(self._download)

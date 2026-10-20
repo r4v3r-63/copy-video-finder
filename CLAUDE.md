@@ -116,6 +116,7 @@ tests/
 - Стиль Copy.ru: технологичный минимализм, нейтральные поверхности, синий `#246BEE` — главные действия и активные элементы, фиолетовый `#7B35B5` — редкие акценты, шрифт Inter. Коды ориентировочные (по маркетинг-киту); основную цветовую концепцию без согласования не менять.
 - Все цвета, размеры, скругления и шрифты — только в `app/design.py` (`PALETTES` светлой и тёмной темы). HEX-коды в остальном коде запрещены (тест `test_no_colors_outside_tokens`).
 - `app/ui/theme.py` собирает из токенов стиль Qt с состояниями hover, focus, pressed, disabled. Кнопкам назначается роль `theme.set_role(button, PRIMARY | SECONDARY)` (по умолчанию — tertiary), панелям — `theme.make_card`. Кнопка по умолчанию в диалогах выглядит как primary.
+- Минимальная ширина окна — максимум по всем вкладкам, и скрытым тоже: списки — `theme.compact_combo` (ширина не от самого длинного пункта), панели каталога — с явной `setMinimumWidth`. Тест `test_catalog_tab_does_not_widen_window`.
 - HTML-экспорт берёт те же токены: `design.css_variables()`.
 - Тема — `Settings.theme`: `system` (по Windows), `light`, `dark`. Контраст по WCAG AA проверяет `tests/test_design.py`.
 

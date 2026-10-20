@@ -7,7 +7,7 @@
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPalette
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QApplication, QComboBox, QWidget
 
 from app import paths
 
@@ -70,6 +70,16 @@ def load_fonts() -> str:
             families = QFontDatabase.applicationFontFamilies(font_id)
             family = families[0] if families else None
     return family or ""
+
+
+def compact_combo(combo: QComboBox, chars: int = 16) -> QComboBox:
+    """Список, ширина которого не зависит от самого длинного пункта (названия услуг, качества).
+
+    Иначе длинный пункт растягивает панель, а через неё — минимальную ширину всего окна.
+    """
+    combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+    combo.setMinimumContentsLength(chars)
+    return combo
 
 
 def set_role(button: QWidget, role: str) -> QWidget:
