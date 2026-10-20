@@ -79,7 +79,7 @@ _PRINT_WORDS = {
 
 
 def print_stems(processes) -> set[str]:
-    """Основы слов полиграфии: из всех 43 услуг справочника и общих терминов."""
+    """Основы слов полиграфии: из всех групп услуг справочника и общих терминов."""
     texts = [t for p in processes for t in (p.name, *p.aliases, *p.phrases_ru, *p.phrases_en, *p.key_ru, *p.key_en,
                                              *(t for level in p.levels for ts in level.phrases.values() for t in ts))]
     return (topic_stems(texts) - {_stem(w) for w in NOT_PRINT}) | {_stem(w) for w in _PRINT_WORDS}
@@ -108,7 +108,7 @@ def is_excluded(result: VideoResult, exclude) -> bool:
 _AMBIGUOUS = {_stem(w) for w in AMBIGUOUS}
 
 def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_description: bool = True,
-                domain=frozenset()) -> bool:
+                domain=frozenset(), allow=frozenset()) -> bool:
     """Есть ли в названии или тегах ролика ВСЕ значимые слова хотя бы одной фразы поиска.
 
     Поиск площадок нечёткий: Wikimedia находит слово где угодно, вплоть до категорий,
@@ -122,7 +122,7 @@ def is_relevant(result: VideoResult, phrases: list[frozenset[str]], use_descript
     if not tokens:
         return True
     # Только полиграфия и сувенирка: слово этой области и никаких слов стройки, еды, природы.
-    if not in_print_domain(tokens, domain):
+    if not in_print_domain(tokens, domain, allow):
         return False
     if not phrases:
         return True
@@ -295,11 +295,11 @@ class SearchWorker(QThread):
             if level > upto:
                 break
             if self._level_phrases[level] and is_relevant(r, self._level_phrases[level], use_description,
-                                                          self.printing):
+                                                          self.printing, self.plan.allow):
                 return level
         # Ни у одного уровня нет значимых слов — судить не по чему, как в is_relevant.
         if not any(self._level_phrases[lv] for lv in self._levels if lv <= upto):
-            return upto if is_relevant(r, [], use_description, self.printing) else None
+            return upto if is_relevant(r, [], use_description, self.printing, self.plan.allow) else None
         return None
 
     def _run_one(self, source: Source, query) -> list[VideoResult]:

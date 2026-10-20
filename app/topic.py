@@ -175,12 +175,13 @@ def _in_domain(token: str, extra=frozenset()) -> bool:
         len(token) > 8 and any(d in token for d in PRINT_INNER))
 
 
-def in_print_domain(tokens: set[str], extra=frozenset()) -> bool:
+def in_print_domain(tokens: set[str], extra=frozenset(), allow=frozenset()) -> bool:
     """Ролик про полиграфию или сувенирку: есть слово этой области и нет слов чужих областей.
 
-    extra — основы слов из фраз всех 43 услуг (`search.print_stems`): термины самих услуг
+    extra — основы слов из фраз всех групп услуг справочника (`search.print_stems`): термины самих услуг
     («saddle stitching», «corner rounder», «Rückendrahtheftung») — тоже слова полиграфии.
     """
-    if any(t.startswith(f) for t in tokens for f in FOREIGN):
+    # allow — основы, которые для этой услуги свои, а не чужие: «дерев» у гравировки по дереву.
+    if any(t.startswith(f) and not any(t.startswith(a) for a in allow) for t in tokens for f in FOREIGN):
         return False
     return any(_in_domain(t, extra) for t in tokens)

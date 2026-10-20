@@ -46,7 +46,6 @@ from app.sources.videezy import VideezySource
 from app.sources.vimeo import VimeoSource
 from app.sources.vk import VkSource
 from app.sources.web import WebSource
-from app.sources.wikimedia import WikimediaSource
 from app.sources.yandex_video import YandexVideoSource
 from app.ui import theme
 from app.ui.batch_view import BatchView
@@ -83,7 +82,7 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         PixabaySource(settings.key("pixabay_api_key"), cache),
         CoverrSource(settings.key("coverr_api_key"), cache),
         VimeoSource(settings.key("vimeo_token"), cache),
-        WikimediaSource(cache),
+        # Wikimedia Commons не ищется (решение пользователя 20.10.2026); его страницы из интернета — тоже.
         EuropeanaSource(settings.key("europeana_api_key"), cache),
         ArchiveSource(cache),
         VideezySource(cache),
@@ -449,14 +448,14 @@ class MainWindow(QMainWindow):
         if skipped:
             self.query_info.setText(
                 f"Без ключа API пропускаются: {', '.join(skipped)}. Ключи вводятся в меню «Файл → Настройки». "
-                "Wikimedia Commons, Internet Archive, Videezy и поиск по интернету работают без ключа."
+                "Internet Archive, Videezy, Яндекс Видео и поиск по интернету работают без ключа."
             )
         else:
             self.query_info.setText("")
 
     def _update_suggestions(self, text: str):
-        found = processes.suggest(self.processes, text)
-        self._suggestions.setStringList([p.display for p in found])
+        found = processes.suggestion_texts(self.processes, text)
+        self._suggestions.setStringList(found)
         if found:
             self.completer.complete()
 

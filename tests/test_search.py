@@ -272,7 +272,7 @@ def test_service_exclude_words():
     perforation = build_plan("Перфорация", procs, Dictionary.load())
     assert is_excluded(tagged("6", "Tectonic Penetrating Keratoplasty for Corneal Perforation"), perforation.exclude)
     assert not is_relevant(tagged("7", "пощечина, перфоратор, бить, драка"), [])
-    eyelets = build_plan("Установка пикколо / люверсов", procs, Dictionary.load())
+    eyelets = build_plan("люверсы", procs, Dictionary.load())  # синоним группы баннеров
     assert is_excluded(tagged("8", "Car Air Box Grommet Assembly"), eyelets.exclude)
     assert not is_excluded(tagged("9", "Heavy_Duty_Grommet_Press"), eyelets.exclude)
 

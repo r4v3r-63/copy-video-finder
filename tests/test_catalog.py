@@ -204,3 +204,22 @@ def test_old_absolute_paths_become_portable(tmp_path, monkeypatch):
     assert store._db.execute("SELECT downloaded_path FROM videos").fetchone()[0] == "Данные/Видео/a.mp4"
     assert store.get(vid).downloaded_path == str(data / "Видео" / "a.mp4")
     store.close()
+
+
+def test_links_of_retired_processes_move_to_groups(tmp_path):
+    """Справочник v5: ролики убранных техпроцессов (люверсы, бейджи…) — у новых групп, один раз."""
+    path = tmp_path / "c.sqlite"
+    store = Catalog(path)
+    a = store.add(VideoResult(source="Pixabay", source_id="1", title="x", description="", preview_url=None,
+                              duration=10, width=1920, height=1080, has_audio=None, page_url=""))
+    store.link(a, "eyelets", EXACT)
+    store.link(a, "wf_ecosolvent", RELATED)  # уже у группы — остаётся более точная степень
+    store.link(a, "badge_punch", PARTIAL)
+    store._db.execute("DELETE FROM meta WHERE key = 'directory_version'")
+    store._db.commit()
+    store.close()
+    store = Catalog(path)
+    assert store.get(a).links == {"wf_ecosolvent": EXACT, "badges": PARTIAL}
+    store.link(a, "eyelets", EXACT)  # после переноса — не трогается повторно
+    store.close()
+    assert Catalog(path).get(a).links["eyelets"] == EXACT

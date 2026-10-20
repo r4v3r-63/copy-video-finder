@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from app import licenses, paths
+from app import licenses, paths, processes
 from app.sources.base import LicenseInfo, VideoFile, VideoResult
 
 # Степень соответствия ролика услуге.
@@ -136,12 +136,35 @@ class Catalog:
             for column, decl in _ADDED_COLUMNS.items():
                 if column not in have:
                     self._db.execute(f"ALTER TABLE videos ADD COLUMN {column} {decl}")
+            self._migrate_links()
             # Старые записи с абсолютным путём внутри папки программы — в переносимый вид.
             rows = self._db.execute("SELECT id, downloaded_path FROM videos WHERE downloaded_path != ''").fetchall()
             for row in rows:
                 stored = paths.portable_path(row["downloaded_path"])
                 if stored != row["downloaded_path"]:
                     self._db.execute("UPDATE videos SET downloaded_path = ? WHERE id = ?", (stored, row["id"]))
+
+    def _migrate_links(self) -> None:
+        """Справочник v5 (услуги сайта): привязки к убранным техпроцессам — на их новые группы.
+
+        Если ролик уже привязан к новой группе, остаётся более точная из двух степеней соответствия.
+        Делается один раз (`meta.directory_version`).
+        """
+        row = self._db.execute("SELECT value FROM meta WHERE key = 'directory_version'").fetchone()
+        if row and int(row["value"]) >= processes.VERSION:
+            return
+        rank = {m: i for i, m in enumerate(MATCHES)}  # точное — первое
+        for old, new in processes.migrated_ids().items():
+            for link in self._db.execute("SELECT video_id, match FROM links WHERE process_id = ?", (old,)).fetchall():
+                have = self._db.execute("SELECT match FROM links WHERE video_id = ? AND process_id = ?",
+                                        (link["video_id"], new)).fetchone()
+                best = link["match"] if have is None or rank.get(link["match"], 9) < rank.get(have["match"], 9) \
+                    else have["match"]
+                self._db.execute("INSERT INTO links VALUES (?, ?, ?, ?) ON CONFLICT (video_id, process_id) "
+                                 "DO UPDATE SET match = excluded.match",
+                                 (link["video_id"], new, best, self._now()))
+            self._db.execute("DELETE FROM links WHERE process_id = ?", (old,))
+        self._db.execute("INSERT OR REPLACE INTO meta VALUES ('directory_version', ?)", (str(processes.VERSION),))
 
     def close(self) -> None:
         self._db.close()

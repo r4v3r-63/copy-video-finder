@@ -121,7 +121,7 @@ def test_dialog_lists_ready_services(tmp_path):
     a = add(store, tmp_path, 1, "lam_roll")
     dialog = ShowreelDialog(store, processes.load_catalog())
     items = [dialog.scope.itemText(i) for i in range(dialog.scope.count())]
-    assert items[0] == "Все услуги (1)" and any("Рулонная ламинация" in t for t in items)
+    assert items[0] == "Все услуги (1)" and any("Рулонное ламинирование" in t for t in items)
     assert [e.id for e in dialog.entries()] == [a] and dialog.ok.isEnabled()
     dialog.fade.setChecked(False)
     assert dialog.fade_seconds() == 0

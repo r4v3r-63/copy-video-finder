@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app import paths
-from app.processes import LANGS, Process, find_by_display, normalize, suggest
+from app.processes import LANGS, Process, find_by_display, find_variant, normalize, suggest
 from app.topic import key_words
 
 RU = "ru"
@@ -45,6 +45,7 @@ class SearchPlan:
     queries: list[SearchQuery]
     note: str = ""
     exclude: frozenset[str] = frozenset()  # слова-исключения услуг плана
+    allow: frozenset[str] = frozenset()  # «чужие» слова, которые для услуг плана свои (Process.allow)
     levels: list[str] = None  # названия уровней: [0] — название услуги, дальше — расширение
 
     def __post_init__(self):
@@ -130,10 +131,17 @@ def _unique(queries: list[SearchQuery]) -> list[SearchQuery]:
     return result
 
 
+def _clean(variant: str) -> str:
+    """Название услуги как запрос: без скобок, кавычек и «/» («Визитки на бумаге Маджестик (Majestic)»)."""
+    text = re.sub(r"[()\"«»/]", " ", variant)
+    return " ".join(text.split())
+
+
 def matching_group(processes: list[Process], text: str) -> list[Process]:
     """Услуги, у которых запрос совпал с названием категории или с синонимом."""
     norm = normalize(text)
-    return [p for p in processes if norm == normalize(p.category) or norm in (normalize(a) for a in p.aliases)]
+    return [p for p in processes if norm == normalize(p.category)
+            or norm in (normalize(a) for a in (*p.aliases, *p.variants))]
 
 
 def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> SearchPlan:
@@ -148,8 +156,21 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
         for i, level in enumerate(proc.levels, 1):
             queries += [SearchQuery(t, lang, level=i, match=level.match)
                         for lang in LANGS for t in level.phrases.get(lang, [])]
-        return SearchPlan(proc, _unique(queries), exclude=frozenset(proc.exclude),
+        return SearchPlan(proc, _unique(queries), exclude=frozenset(proc.exclude), allow=frozenset(proc.allow),
                           levels=[BASE_LEVEL] + [lv.name for lv in proc.levels])
+
+    # Услуга сайта («Визитки с фольгой»): фразы её группы и само название — по-русски и в переводе.
+    found = find_variant(processes, text)
+    if found:
+        group, variant = found
+        plan = build_plan(group.display, processes, dictionary)
+        own = [SearchQuery(_clean(variant), RU)]
+        english = dictionary.translate(variant)
+        if len(english.split()) >= 2:  # одно слово («printing», «photo») — только лишние запросы
+            own.append(SearchQuery(english, EN))
+        plan.queries = _unique(own + plan.queries)
+        plan.note = f"Услуга сайта «{variant}» — ищем по ней и по группе «{group.name}»."
+        return plan
 
     # В первую очередь — полиграфические услуги справочника: точное совпадение с категорией
     # или синонимом, иначе услуги, в названии которых есть все слова запроса.
@@ -166,7 +187,8 @@ def build_plan(text: str, processes: list[Process], dictionary: Dictionary) -> S
         note = (f"Запрос подходит к услугам: {names}. "
                 "Ищем по фразам всех; для точного поиска выберите услугу из подсказок.")
         return SearchPlan(None, _unique(with_key_words(queries, group)), note,
-                          exclude=frozenset(w for p in group for w in p.exclude))
+                          exclude=frozenset(w for p in group for w in p.exclude),
+                          allow=frozenset(w for p in group for w in p.allow))
 
     if is_russian(text):
         english = dictionary.translate(text)

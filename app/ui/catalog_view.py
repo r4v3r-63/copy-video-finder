@@ -390,7 +390,7 @@ class CatalogView(QWidget):
             for p in c.processes:
                 item = QTreeWidgetItem([p.name, str(totals.get(p.id, 0)), f"{coverage.get(p.id, 0)} из {p.target}"])
                 item.setData(0, Qt.ItemDataRole.UserRole, p.id)
-                item.setToolTip(0, p.name)
+                item.setToolTip(0, p.name + ("\n\nУслуги на сайте:\n" + "\n".join(p.variants) if p.variants else ""))
                 for col in range(3):
                     item.setBackground(col, level_brush(coverage.get(p.id, 0), p.target))
                 cat_item.addChild(item)

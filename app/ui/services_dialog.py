@@ -91,6 +91,7 @@ class ServicesDialog(QDialog):
         self.name = QLineEdit()
         self.name.textEdited.connect(self._rename_current)
         self.category = QComboBox()
+        self.variants = _text_field("Услуги сайта Copy.ru в этой группе — по одной в строке: «Визитки с фольгой»")
         self.aliases = _text_field("Синонимы для подсказок — по одному в строке: «ламинирование», «ламинация»")
         self.phrases_ru = _text_field("Поисковые фразы на русском — по одной в строке")
         self.phrases_en = _text_field("Поисковые фразы на английском — по одной в строке")
@@ -126,6 +127,7 @@ class ServicesDialog(QDialog):
         form = QFormLayout(service_page)
         form.addRow("Название:", self.name)
         form.addRow("Категория:", self.category)
+        form.addRow("Услуги на сайте:", self.variants)
         form.addRow("Синонимы:", self.aliases)
         form.addRow("Фразы (русский):", self.phrases_ru)
         form.addRow("Фразы (английский):", self.phrases_en)
@@ -217,6 +219,7 @@ class ServicesDialog(QDialog):
             for c in self.categories:
                 self.category.addItem(c.name, c.id)
             self.category.setCurrentIndex(max(self.category.findData(self._category_of(obj).id), 0))
+            self.variants.setPlainText("\n".join(obj.variants))
             self.aliases.setPlainText("\n".join(obj.aliases))
             self.phrases_ru.setPlainText("\n".join(obj.phrases_ru))
             self.phrases_en.setPlainText("\n".join(obj.phrases_en))
@@ -259,6 +262,7 @@ class ServicesDialog(QDialog):
                 p.category = obj.name
         elif isinstance(obj, Process):
             obj.name = self.name.text().strip() or obj.name
+            obj.variants = _lines(self.variants)
             obj.aliases = _lines(self.aliases)
             obj.phrases_ru = _lines(self.phrases_ru)
             obj.phrases_en = _lines(self.phrases_en)

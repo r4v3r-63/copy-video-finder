@@ -41,6 +41,11 @@ class Process:
     # Слова, при которых ролик точно не про эту услугу (для лазерной печати — «3d»).
     exclude: list[str] = field(default_factory=list)
     levels: list[Level] = field(default_factory=list)  # расширение поиска, от узкого к общему
+    # Услуги сайта Copy.ru в этой группе («Визитки с фольгой», «Фото на визу в Японию»): по ним
+    # подсказки в строке поиска; ищем и считаем покрытие по группе.
+    variants: list[str] = field(default_factory=list)
+    # Основы «чужих» слов (topic.FOREIGN), которые для этой группы — по теме: «дерев» у гравировки по дереву.
+    allow: list[str] = field(default_factory=list)
 
     @property
     def display(self) -> str:
@@ -54,8 +59,28 @@ class Category:
     processes: list[Process]
 
 
+VERSION = 5  # с версии 5 справочник — услуги сайта Copy.ru, сгруппированные для поиска
+
+
 def builtin_file() -> Path:
     return paths.resources_dir() / "processes.json"
+
+
+def migrated_ids() -> dict[str, str]:
+    """Коды услуг прежних версий справочника → коды групп, куда перенесены их ролики."""
+    return dict(json.loads(builtin_file().read_text(encoding="utf-8")).get("migrated", {}))
+
+
+def _retire_old_copy(path: Path) -> bool:
+    """Пользовательская копия справочника старше версии 5 — по 43 техпроцессам: откладывается."""
+    try:
+        version = json.loads(path.read_text(encoding="utf-8")).get("version", 1)
+    except (OSError, ValueError):
+        return False
+    if version >= VERSION:
+        return False
+    path.replace(path.with_name(f"processes.v{version}.json"))
+    return True
 
 
 def load_catalog(path: Path | None = None) -> list[Category]:
@@ -66,6 +91,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
     """
     if path is None:
         user_copy = paths.processes_file()
+        if user_copy.exists():
+            _retire_old_copy(user_copy)
         path = user_copy if user_copy.exists() else builtin_file()
     raw = json.loads(path.read_text(encoding="utf-8"))
     if path != builtin_file() and builtin_file().exists():
@@ -89,6 +116,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
                 key_ru=list(p.get("key_ru", [])),
                 key_en=list(p.get("key_en", [])),
                 exclude=list(p.get("exclude", [])),
+                variants=list(p.get("variants", [])),
+                allow=list(p.get("allow", [])),
                 levels=[Level(name=lv["name"], match=lv.get("match", EXACT),
                               phrases={lang: list(lv[lang]) for lang in LANGS if lv.get(lang)})
                         for lv in p.get("levels", [])],
@@ -101,8 +130,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
 
 def process_dict(p: Process) -> dict:
     """Услуга в формате справочника (пустые поля не пишутся)."""
-    d = {"id": p.id, "name": p.name, "aliases": p.aliases, "phrases_ru": p.phrases_ru, "phrases_en": p.phrases_en,
-         "key_ru": p.key_ru, "key_en": p.key_en, "exclude": p.exclude}
+    d = {"id": p.id, "name": p.name, "variants": p.variants, "aliases": p.aliases, "phrases_ru": p.phrases_ru,
+         "phrases_en": p.phrases_en, "key_ru": p.key_ru, "key_en": p.key_en, "exclude": p.exclude, "allow": p.allow}
     d = {k: v for k, v in d.items() if v or k in ("id", "name")}
     if p.target != 3:
         d["target"] = p.target
@@ -112,7 +141,7 @@ def process_dict(p: Process) -> dict:
     return d
 
 
-_LIST_FIELDS = ("aliases", "phrases_ru", "phrases_en", "key_ru", "key_en", "exclude")
+_LIST_FIELDS = ("variants", "aliases", "phrases_ru", "phrases_en", "key_ru", "key_en", "exclude", "allow")
 
 
 def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
@@ -144,7 +173,11 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
                           for li, lv in enumerate(levels)]
                 lines.append("         ]}" + ("," if pi < len(c.processes) - 1 else ""))
         lines += ["      ]", "    }" + ("," if ci < len(categories) - 1 else "")]
-    lines += ["  ]", "}"]
+    migrated = builtin_raw.get("migrated")
+    lines += ["  ]" + ("," if migrated else "")]
+    if migrated:
+        lines.append(f'  "migrated": {json.dumps(migrated, ensure_ascii=False)}')
+    lines += ["}"]
     text = "\n".join(lines) + "\n"
     json.loads(text)  # проверка: файл должен читаться
     path.write_text(text, encoding="utf-8")
@@ -187,7 +220,7 @@ def suggest(processes: list[Process], text: str, limit: int = 10) -> list[Proces
     words = query.split()
     scored = []
     for order, proc in enumerate(processes):
-        haystacks = [normalize(s) for s in (proc.name, proc.category, *proc.aliases)]
+        haystacks = [normalize(s) for s in (proc.name, proc.category, *proc.aliases, *proc.variants)]
         tokens = [t for h in haystacks for t in h.replace("/", " ").replace("-", " ").split()]
         if not all(any(t.startswith(w) for t in tokens) for w in words):
             continue
@@ -201,6 +234,45 @@ def suggest(processes: list[Process], text: str, limit: int = 10) -> list[Proces
         scored.append((rank, order, proc))
     scored.sort(key=lambda item: (item[0], item[1]))
     return [proc for _, _, proc in scored[:limit]]
+
+
+def variant_display(proc: Process, variant: str) -> str:
+    return f"{variant} ({proc.category})"
+
+
+def suggestion_texts(processes: list[Process], text: str, limit: int = 12) -> list[str]:
+    """Подсказки строки поиска: услуги сайта (варианты) и группы, сначала начинающиеся с запроса."""
+    query = normalize(text)
+    if not query:
+        return []
+    words = query.split()
+    scored = []
+    for order, proc in enumerate(processes):
+        for vi, name in enumerate([proc.name, *(v for v in proc.variants if normalize(v) != normalize(proc.name))]):
+            tokens = normalize(name).replace("/", " ").replace("-", " ").replace("(", " ").split()
+            if not all(any(t.startswith(w) for t in tokens) for w in words):
+                continue
+            rank = 0 if normalize(name).startswith(query) else 1
+            display = proc.display if vi == 0 else variant_display(proc, name)
+            scored.append((rank, order, vi, display))
+    scored.sort()
+    result = []
+    for *_, display in scored:
+        if display not in result:
+            result.append(display)
+    if len(result) < limit:  # совпадения по синонимам и категории — после названий
+        result += [p.display for p in suggest(processes, text, limit) if p.display not in result]
+    return result[:limit]
+
+
+def find_variant(processes: list[Process], text: str) -> tuple[Process, str] | None:
+    """Услуга сайта по подсказке «Визитки с фольгой (Визитки)» или по точному названию."""
+    norm = normalize(text)
+    for proc in processes:
+        for v in proc.variants:
+            if norm in (normalize(variant_display(proc, v)), normalize(v)):
+                return proc, v
+    return None
 
 
 def find_by_display(processes: list[Process], text: str) -> Process | None:

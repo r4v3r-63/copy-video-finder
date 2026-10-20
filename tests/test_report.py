@@ -41,7 +41,7 @@ def test_report_pdf(tmp_path):
     categories = processes.load_catalog()
     thumbs = {ids[0]: png()}
     html = report.report_html(store, categories, thumbs)
-    assert "Пакетная ламинация" in html and "Где нужен поиск" in html
+    assert "Пакетное ламинирование" in html and "Где нужен поиск" in html
     assert f'src="thumb:{ids[0]}"' in html and f'src="thumb:{ids[1]}"' not in html  # без превью — без картинки
     path = report.write_pdf(tmp_path / "r.pdf", html, thumbs)
     data = path.read_bytes()

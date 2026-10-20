@@ -99,11 +99,13 @@ def _result(clip: dict, doc: dict) -> VideoResult | None:
 class YandexVideoSource(HttpSource):
     name = "Яндекс Видео"
     homepage = "https://yandex.ru/video"
-    languages = frozenset({"ru", "en"})
-    max_level = 2  # название, оборудование, действие — дальше страница выдачи расходуется впустую
+    # Только русские фразы названия и оборудования: англоязычные ролики YouTube приходят и из интернета,
+    # а лимит у страницы выдачи невелик — на одну услугу хватает (решение 20.10.2026, проверено вживую).
+    languages = frozenset({"ru"})
+    max_level = 1
     max_parallel = 1
     topic_in_description = True
-    limits = [(6, 60, "в минуту"), (150, 86400, "в сутки")]
+    limits = [(10, 60, "в минуту"), (300, 86400, "в сутки")]
 
     def __init__(self, cache: Cache, session=None, now=time.time):
         super().__init__(cache, session, now=now)

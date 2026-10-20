@@ -74,17 +74,17 @@ def test_is_russian():
 
 
 def test_category_word_searches_all_its_services():
-    plan = build_plan("ламинация", PROCS, DICT)
+    plan = build_plan("календари", PROCS, DICT)
     assert plan.process is None
-    lam = [by_id(i) for i in ("lam_pouch", "lam_roll", "lam_wide")]
-    assert plan.texts(RU) == [p.phrases_ru[0] for p in lam] + ["ламинатор"]
-    assert plan.texts(EN) == [ph for p in lam for ph in p.phrases_en[:2]] + ["laminator"]
+    groups = [by_id(i) for i in ("calendar_rigel", "wall_calendars", "desk_calendars", "pocket_calendars")]
+    assert [p.phrases_ru[0] for p in groups] == plan.texts(RU)[:4]
+    assert plan.texts(EN)[:2] == groups[0].phrases_en[:2]
     assert "Запрос подходит к услугам" in plan.note
 
 
 def test_alias_of_one_service_is_that_service():
     plan = build_plan("люверсы", PROCS, DICT)
-    assert plan.process is by_id("eyelets")
+    assert plan.process is by_id("wf_ecosolvent")
     plan = build_plan("брошюровка на пружину", PROCS, DICT)  # синоним двух услуг
     assert {by_id("wire_binding").phrases_ru[0], by_id("comb_binding").phrases_ru[0]} <= set(plan.texts(RU))
 
@@ -116,5 +116,16 @@ def test_every_service_has_key_words_and_they_are_searched():
 
 
 def test_lamination_searched_by_short_key_word():
-    plan = build_plan("Широкоформатная ламинация (Ламинация)", PROCS, DICT)
+    plan = build_plan("Ламинирование плакатов (Ламинирование)", PROCS, DICT)
     assert "laminator" in plan.texts(EN) and "ламинатор" in plan.texts(RU)
+
+
+def test_site_service_searched_by_its_name_and_group():
+    """«Визитки с фольгой (Визитки)»: название услуги по-русски и в переводе, затем фразы группы."""
+    plan = build_plan("Визитки с фольгой (Визитки)", PROCS, DICT)
+    group = by_id("business_cards_premium")
+    assert plan.process is group and plan.texts(RU)[0] == "Визитки с фольгой"
+    assert set(group.phrases_en) <= set(plan.texts(EN)) and "Визитки с фольгой" in plan.note
+    assert len(plan.levels) == len(group.levels) + 1
+    plan = build_plan("Визитки на бумаге Маджестик (Majestic)", PROCS, DICT)
+    assert plan.texts(RU)[0] == "Визитки на бумаге Маджестик Majestic"

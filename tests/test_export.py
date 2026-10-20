@@ -52,7 +52,7 @@ def test_registry_rows_one_per_link(store, cats):
     assert keyed == [(1, "lam_pouch", cat.EXACT, "да"), (1, "lam_roll", cat.RELATED, "да"),
                      (2, "comb_binding", cat.PRODUCT, "нет"), (3, "", "", "нет"), (4, "", "", "нет")]
     first = rows[0]
-    assert first["category"] == "Ламинация" and first["service"] == "Пакетная ламинация"
+    assert first["category"] == "Ламинирование" and first["service"] == "Пакетное ламинирование"
     assert first["license_confirmed"] == "да" and first["comment"] == "в холл" and first["has_audio"] == "да"
     assert rows[2]["attribution"] == "Анна — Брошюровщик — CC BY-SA 4.0 — https://page/2"
 
@@ -129,7 +129,7 @@ def test_html_catalog_is_self_contained(store, cats, tmp_path):
     assert {i["id"] for i in data["items"]} == {1, 2, 3, 5}
     assert html.count("</script>") == 1  # опасное название не закрыло тег
     item = next(i for i in data["items"] if i["id"] == 1)
-    assert item["services"][0] == {"category": "Ламинация", "name": "Пакетная ламинация", "match": cat.EXACT}
+    assert item["services"][0] == {"category": "Ламинирование", "name": "Пакетное ламинирование", "match": cat.EXACT}
     assert item["files"][0]["url"] == "https://cdn/1.mp4"
 
 

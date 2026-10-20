@@ -275,3 +275,13 @@ def test_tavily_quota_message(cache, clock):
         src.engines[0].find("wire binding")
     assert len(src.search("wire binding", SearchFilters())) == 1  # без Tavily — через DuckDuckGo
     assert len(src.engines[0].session.calls) == 1  # сутки Tavily не спрашиваем
+
+
+def test_wikimedia_not_searched(cache):
+    """Wikimedia Commons исключён из поиска (решение пользователя 20.10.2026) — и его страницы из интернета."""
+    from app.settings import Settings
+    from app.ui.main_window import all_sources
+    sources = all_sources(Settings(), cache)
+    assert "Wikimedia Commons" not in [s.name for s in sources]
+    web = next(s for s in sources if isinstance(s, WebSource))
+    assert web.open("https://commons.wikimedia.org/wiki/File:Paper_Cutter.webm") is None

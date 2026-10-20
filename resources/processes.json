@@ -1,39 +1,16 @@
 {
-  "version": 4,
+  "version": 5,
   "categories": [
     {
-      "id": "photo",
-      "name": "Фотографии",
+      "id": "print_docs",
+      "name": "Печать, копирование, сканирование",
       "processes": [
-        {"id": "photo_id", "name": "Фотосъёмка на документы", "aliases": ["фото на паспорт", "фото на документы"],
-         "phrases_ru": ["фото на документы", "фото на паспорт"],
-         "phrases_en": ["passport photo studio", "id photo booth", "passport photo camera"],
-         "key_ru": ["фото на паспорт"],
-         "key_en": ["passport photo"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["photo booth machine", "id photo printer"], "ru": ["фотобудка"], "de": ["Passfoto Automat"], "fr": ["photomaton"]},
-           {"name": "Действие", "match": "точное", "en": ["taking passport photo", "id photo taking"], "ru": ["фотографирование на паспорт"], "de": ["Passfoto"], "fr": ["photo d'identité"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["portrait photo studio", "headshot photography studio"], "ru": ["портретная фотосъёмка"]}
-         ]},
-        {"id": "photo_kiosk", "name": "Фотопечать через фотокиоск", "aliases": ["печать фото", "фотокиоск"],
-         "phrases_ru": ["печать фотографий", "фотокиоск"],
-         "phrases_en": ["photo printing kiosk", "photo kiosk", "dye sublimation photo printer"],
-         "key_ru": ["фотокиоск"],
-         "key_en": ["photo kiosk"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["photo printing machine", "dye sublimation photo printer", "instant photo printer"], "ru": ["фотопринтер"], "de": ["Fotodrucker"], "fr": ["imprimante photo"]},
-           {"name": "Действие", "match": "точное", "en": ["printing photos from phone", "photo prints coming out"], "ru": ["печать фото"], "de": ["Fotos drucken"], "fr": ["impression photo"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["photo lab printing", "printed photographs"], "ru": ["фотолаборатория"], "de": ["Fotolabor"], "fr": ["tirage photo"]}
-         ]}
-      ]
-    },
-    {
-      "id": "digital",
-      "name": "Цифровая печать",
-      "processes": [
-        {"id": "digital_color_laser", "name": "Цифровая цветная лазерная печать", "aliases": ["лазерная печать", "цветная печать"],
-         "phrases_ru": ["цветная лазерная печать", "цифровая печать"],
-         "phrases_en": ["color laser printer printing", "digital printing press", "production printer output"],
+        {"id": "digital_color_laser",
+         "name": "Печать документов и цифровая печать",
+         "variants": ["Печать документов А3/А4", "Печать презентаций", "Печать авторефератов", "Цифровая печать"],
+         "aliases": ["печать документов", "распечатать", "лазерная печать", "цветная печать"],
+         "phrases_ru": ["цветная лазерная печать", "цифровая печать", "печать документов"],
+         "phrases_en": ["color laser printer printing", "digital printing press", "production printer output", "document printing", "digital printing press"],
          "key_ru": ["лазерный принтер", "принтер"],
          "key_en": ["laser printer", "printer"],
          "exclude": ["3d", "3д"],
@@ -41,16 +18,13 @@
            {"name": "Оборудование", "match": "точное", "en": ["digital production printer", "color laser printer", "xerox printer printing"], "ru": ["лазерный принтер"], "de": ["Farblaserdrucker"], "fr": ["imprimante laser couleur"]},
            {"name": "Действие", "match": "точное", "en": ["printing color flyers", "printer paper output", "copy shop printing"], "ru": ["печать листовок"], "de": ["Digitaldruck"], "fr": ["impression numérique"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["offset printing press", "print shop work"], "ru": ["типография"], "de": ["Druckerei"], "fr": ["imprimerie"]}
-         ]}
-      ]
-    },
-    {
-      "id": "drawings",
-      "name": "Чертежи",
-      "processes": [
-        {"id": "drawing_print", "name": "Широкоформатная печать чертежей", "aliases": ["печать чертежей", "плоттер"],
-         "phrases_ru": ["печать чертежей", "широкоформатный плоттер"],
-         "phrases_en": ["wide format plotter printing", "blueprint printing plotter", "engineering drawing plotter"],
+         ]},
+        {"id": "drawing_print",
+         "name": "Печать чертежей и лекал",
+         "variants": ["Печать чертежей", "Печать лекал"],
+         "aliases": ["печать чертежей", "плоттер"],
+         "phrases_ru": ["печать чертежей", "широкоформатный плоттер", "печать лекал"],
+         "phrases_en": ["wide format plotter printing", "blueprint printing plotter", "engineering drawing plotter", "pattern plotter printing"],
          "key_ru": ["плоттер"],
          "key_en": ["plotter"],
          "levels": [
@@ -58,7 +32,36 @@
            {"name": "Действие", "match": "точное", "en": ["printing blueprints", "printing architectural drawings", "cad drawing print"], "ru": ["печать чертежей"], "de": ["Pläne drucken"], "fr": ["impression plans"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["architect drawings paper", "blueprint paper roll"], "ru": ["чертёж"], "de": ["Bauplan"], "fr": ["plan d'architecte"]}
          ]},
-        {"id": "drawing_scan", "name": "Широкоформатное сканирование чертежей", "aliases": ["сканирование чертежей"],
+        {"id": "copying",
+         "name": "Копирование документов и чертежей",
+         "variants": ["Копирование документов", "Копирование чертежей"],
+         "aliases": ["ксерокопия", "ксерокс", "копия"],
+         "phrases_ru": ["копирование документов", "ксерокопия документов"],
+         "phrases_en": ["photocopier copying documents", "office copier", "photocopy machine"],
+         "key_ru": ["копир"],
+         "key_en": ["photocopier"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["photocopier", "copy machine", "multifunction printer copier"], "ru": ["копировальный аппарат", "МФУ"], "de": ["Kopierer"], "fr": ["photocopieuse"]},
+           {"name": "Действие", "match": "точное", "en": ["making photocopies", "copying a document", "copy center"], "ru": ["ксерокопирование"], "de": ["Fotokopie"], "fr": ["photocopie"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["office printer", "printing documents"], "ru": ["печать документов"]}
+         ]},
+        {"id": "scanning",
+         "name": "Сканирование документов и фото",
+         "variants": ["Сканирование документов", "Сканирование фотографий", "Сканирование плакатов / постеров / афиш"],
+         "aliases": ["сканирование", "отсканировать", "оцифровка"],
+         "phrases_ru": ["сканирование документов", "сканирование фотографий"],
+         "phrases_en": ["document scanner scanning", "scanning photos", "flatbed scanner"],
+         "key_ru": ["сканер"],
+         "key_en": ["scanner"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["document scanner", "flatbed scanner", "photo scanner"], "ru": ["сканер документов"], "de": ["Dokumentenscanner"], "fr": ["scanner de documents"]},
+           {"name": "Действие", "match": "точное", "en": ["scanning documents", "scanning old photos", "digitizing photos"], "ru": ["оцифровка фотографий"], "de": ["Scannen"], "fr": ["numérisation"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["photocopier", "office scanner"], "ru": ["копировальный аппарат"]}
+         ]},
+        {"id": "drawing_scan",
+         "name": "Сканирование чертежей",
+         "variants": ["Сканирование чертежей"],
+         "aliases": ["сканирование чертежей"],
          "phrases_ru": ["широкоформатный сканер", "сканирование чертежей"],
          "phrases_en": ["large format scanner", "wide format scanning", "blueprint scanner"],
          "key_ru": ["сканер"],
@@ -68,105 +71,30 @@
            {"name": "Действие", "match": "точное", "en": ["scanning blueprints", "scanning large drawings", "document digitization"], "ru": ["сканирование документов"], "de": ["Dokumente scannen"], "fr": ["numérisation documents"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["document scanner office", "scanning paper documents"], "ru": ["сканер документов"], "de": ["Dokumentenscanner"], "fr": ["scanner documents"]}
          ]},
-        {"id": "drawing_folding", "name": "Фальцовка чертежей", "aliases": ["складывание чертежей"],
-         "phrases_ru": ["фальцовка чертежей", "фальцевальная машина"],
-         "phrases_en": ["drawing folding machine", "blueprint folding", "paper folding machine"],
-         "key_ru": ["фальцовка"],
-         "key_en": ["paper folding"],
+        {"id": "translation",
+         "name": "Перевод документов",
+         "variants": ["Перевод документов"],
+         "aliases": ["перевод", "нотариальный перевод"],
+         "phrases_ru": ["перевод документов", "переводчик документов"],
+         "phrases_en": ["document translation", "translator documents", "certified translation"],
+         "key_ru": ["перевод документов"],
+         "key_en": ["document translation"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["plan folding machine", "folding machine paper", "paper folder machine"], "ru": ["фальцевальная машина"], "de": ["Falzmaschine"], "fr": ["plieuse papier"]},
-           {"name": "Действие", "match": "точное", "en": ["folding large drawings", "folding blueprints", "paper folding process"], "ru": ["фальцовка"], "de": ["Pläne falzen"], "fr": ["plieuse plans"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["folding leaflets machine", "brochure folding"], "ru": ["фальцовка листовок"], "de": ["Falzen Papier"], "fr": ["pliage papier"]}
-         ]}
-      ]
-    },
-    {
-      "id": "wide_format",
-      "name": "Ш/Ф печать и материалы",
-      "processes": [
-        {"id": "wf_aqueous", "name": "Широкоформатная печать водными чернилами", "aliases": ["водные чернила", "интерьерная печать"],
-         "phrases_ru": ["широкоформатная печать", "струйный плоттер"],
-         "phrases_en": ["large format inkjet printer", "wide format inkjet printing", "aqueous ink printer"],
-         "key_ru": ["плоттер"],
-         "key_en": ["inkjet printer"],
-         "exclude": ["handheld", "ручной"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["large format inkjet printer", "wide format printer", "poster printer"], "ru": ["широкоформатный принтер"], "de": ["Großformatdrucker"], "fr": ["imprimante grand format"]},
-           {"name": "Действие", "match": "точное", "en": ["printing large poster", "poster printing process", "inkjet poster print"], "ru": ["печать плакатов"], "de": ["Plakatdruck"], "fr": ["impression affiche"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "printing banners"], "ru": ["печать баннеров"], "de": ["Großformatdruck"], "fr": ["impression grand format"]}
-         ]},
-        {"id": "wf_latex", "name": "Латексная печать", "aliases": ["латекс"],
-         "phrases_ru": ["латексная печать", "латексный принтер"],
-         "phrases_en": ["latex printer", "latex large format printing", "latex ink printing"],
-         "key_ru": ["латексная печать"],
-         "key_en": ["latex printer"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["hp latex printer", "latex printing machine"], "ru": ["латексный принтер"], "de": ["Latexdrucker"], "fr": ["imprimante latex"]},
-           {"name": "Действие", "match": "точное", "en": ["latex wallpaper printing", "printing vinyl wrap"], "ru": ["печать обоев"], "de": ["Latexdruck"], "fr": ["impression latex"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "wide format inkjet printing"], "ru": ["широкоформатная печать"], "de": ["Großformatdruck"], "fr": ["impression grand format"]}
-         ]},
-        {"id": "wf_ecosolvent", "name": "Экосольвентная печать", "aliases": ["экосольвент", "печать баннеров"],
-         "phrases_ru": ["экосольвентная печать", "печать баннеров"],
-         "phrases_en": ["eco solvent printer", "solvent printer banner printing", "vinyl printing machine"],
-         "key_ru": ["печать баннеров"],
-         "key_en": ["banner printing"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["eco solvent printer", "solvent printer", "roland printer printing"], "ru": ["экосольвентный принтер"], "de": ["Ecosolvent Drucker"], "fr": ["imprimante éco-solvant"]},
-           {"name": "Действие", "match": "точное", "en": ["banner printing process", "vinyl banner printing", "printing self adhesive vinyl"], "ru": ["печать на баннере"], "de": ["Bannerdruck"], "fr": ["impression bâche"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "sign printing shop"], "ru": ["печать наружной рекламы"], "de": ["Großformatdruck"], "fr": ["impression grand format"]}
-         ]}
-      ]
-    },
-    {
-      "id": "plotter_cutting",
-      "name": "Плоттерная резка",
-      "processes": [
-        {"id": "plotter_roll", "name": "Рулонная плоттерная резка", "aliases": ["резка плёнки", "оракал"],
-         "phrases_ru": ["плоттерная резка", "режущий плоттер"],
-         "phrases_en": ["vinyl cutter plotter", "cutting plotter vinyl", "vinyl sticker cutting"],
-         "key_ru": ["плоттерная резка"],
-         "key_en": ["vinyl cutter"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["vinyl cutting plotter", "cutting plotter", "roland cutter"], "ru": ["режущий плоттер"], "de": ["Schneideplotter"], "fr": ["plotter de découpe"]},
-           {"name": "Действие", "match": "точное", "en": ["cutting vinyl letters", "vinyl lettering cutting", "plotter cutting stickers"], "ru": ["резка плёнки"], "de": ["Folie plotten"], "fr": ["découpe vinyle"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["weeding vinyl", "vinyl transfer tape"], "ru": ["выборка плёнки"], "de": ["Folie entgittern"], "fr": ["échenillage vinyle"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["vinyl sticker application", "vinyl decal"], "ru": ["наклейка из плёнки"], "de": ["Folienbeschriftung"], "fr": ["lettrage adhésif"]}
-         ]},
-        {"id": "plotter_sheet", "name": "Листовая плоттерная резка", "aliases": ["резка наклеек"],
-         "phrases_ru": ["листовой режущий плоттер", "резка наклеек"],
-         "phrases_en": ["sheet cutting plotter", "sticker sheet cutting", "digital die cutting paper"],
-         "key_ru": ["резка наклеек"],
-         "key_en": ["sticker cutting"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["cricut machine cutting", "silhouette cameo cutting", "sheet cutting plotter"], "ru": ["режущий плоттер"], "de": ["Schneideplotter"], "fr": ["machine de découpe"]},
-           {"name": "Действие", "match": "точное", "en": ["cutting stickers sheet", "kiss cut stickers", "die cut stickers"], "ru": ["резка наклеек"], "de": ["Aufkleber schneiden"], "fr": ["découpe autocollants"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sticker printing", "paper cutting machine craft"], "ru": ["печать наклеек"], "de": ["Aufkleber drucken"], "fr": ["impression autocollants"]}
-         ]}
-      ]
-    },
-    {
-      "id": "flatbed_cutting",
-      "name": "Планшетная резка",
-      "processes": [
-        {"id": "flatbed_cutting", "name": "Планшетная резка", "aliases": ["резка пенокартона", "резка картона"],
-         "phrases_ru": ["планшетный плоттер", "планшетная резка"],
-         "phrases_en": ["flatbed cutter", "flatbed cutting table", "cnc knife cutting"],
-         "key_ru": ["планшетный плоттер"],
-         "key_en": ["cnc cutting"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["flatbed cutting plotter", "digital cutting table", "zund cutter"], "ru": ["планшетный режущий плоттер"], "de": ["Flachbettschneider"], "fr": ["table de découpe numérique"]},
-           {"name": "Действие", "match": "точное", "en": ["cutting cardboard cnc", "cutting foam board knife", "packaging prototype cutting"], "ru": ["резка картона"], "de": ["Karton schneiden"], "fr": ["découpe carton"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["cnc knife cutting", "die cutting machine"], "ru": ["вырубка"], "de": ["Stanzmaschine"], "fr": ["découpe à l'emporte-pièce"]}
+           {"name": "Действие", "match": "точное", "en": ["translating documents", "translator office documents"], "ru": ["письменный перевод"], "de": ["Übersetzung Dokumente"], "fr": ["traduction documents"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["office documents paperwork", "printing documents"], "ru": ["печать документов"]}
          ]}
       ]
     },
     {
       "id": "lamination",
-      "name": "Ламинация",
+      "name": "Ламинирование",
       "processes": [
-        {"id": "lam_pouch", "name": "Пакетная ламинация", "aliases": ["ламинирование"],
-         "phrases_ru": ["пакетный ламинатор", "ламинирование документов"],
-         "phrases_en": ["pouch laminator", "laminating pouch", "laminating document"],
+        {"id": "lam_pouch",
+         "name": "Пакетное ламинирование",
+         "variants": ["Ламинирование", "Ламинирование фотографий", "Пакетное ламинирование"],
+         "aliases": ["ламинирование", "ламинация"],
+         "phrases_ru": ["пакетный ламинатор", "ламинирование документов", "ламинирование фотографий"],
+         "phrases_en": ["pouch laminator", "laminating pouch", "laminating document", "laminating photos"],
          "key_ru": ["ламинатор"],
          "key_en": ["laminator"],
          "levels": [
@@ -174,9 +102,12 @@
            {"name": "Действие", "match": "точное", "en": ["laminating paper", "laminating a document", "laminating sheet"], "ru": ["ламинирование"], "de": ["Laminieren"], "fr": ["plastification"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["laminated card", "lamination film"], "ru": ["ламинированный"], "de": ["Laminierfolie"], "fr": ["pochette plastification"]}
          ]},
-        {"id": "lam_roll", "name": "Рулонная ламинация листовой продукции", "aliases": ["ламинирование"],
-         "phrases_ru": ["рулонный ламинатор", "ламинирование листов"],
-         "phrases_en": ["roll laminator", "thermal laminating machine", "sheet lamination"],
+        {"id": "lam_roll",
+         "name": "Рулонное ламинирование",
+         "variants": ["Рулонное ламинирование", "Ламинирование наклеек"],
+         "aliases": ["ламинирование"],
+         "phrases_ru": ["рулонный ламинатор", "ламинирование листов", "ламинирование наклеек"],
+         "phrases_en": ["roll laminator", "thermal laminating machine", "sheet lamination", "laminating stickers"],
          "key_ru": ["ламинатор"],
          "key_en": ["laminator"],
          "exclude": ["magnetic", "магнитн"],
@@ -185,9 +116,12 @@
            {"name": "Действие", "match": "точное", "en": ["laminating printed sheets", "film lamination process", "laminating paper sheets"], "ru": ["ламинирование листов"], "de": ["Laminieren"], "fr": ["pelliculage"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["lamination film roll", "laminating paper"], "ru": ["ламинация"], "de": ["Kaschieren"], "fr": ["plastification"]}
          ]},
-        {"id": "lam_wide", "name": "Широкоформатная ламинация", "aliases": ["ламинирование"],
-         "phrases_ru": ["широкоформатный ламинатор", "холодная ламинация"],
-         "phrases_en": ["wide format laminator", "cold laminator", "large format lamination"],
+        {"id": "lam_wide",
+         "name": "Ламинирование плакатов",
+         "variants": ["Ламинирование плакатов / постеров / афиш"],
+         "aliases": ["ламинирование"],
+         "phrases_ru": ["широкоформатный ламинатор", "холодная ламинация", "ламинирование плакатов"],
+         "phrases_en": ["wide format laminator", "cold laminator", "large format lamination", "poster lamination"],
          "key_ru": ["ламинатор"],
          "key_en": ["laminator"],
          "levels": [
@@ -198,80 +132,584 @@
       ]
     },
     {
-      "id": "binding",
-      "name": "Переплёт",
+      "id": "sheet",
+      "name": "Листовая полиграфия",
       "processes": [
-        {"id": "saddle_stitch", "name": "Скоба внакидку", "aliases": ["брошюровка на скобу", "сшивка скобой"],
-         "phrases_ru": ["брошюровка на скобу", "сшивка скобой"],
-         "phrases_en": ["saddle stitching", "saddle stitcher", "booklet stapler"],
-         "key_ru": ["брошюровка"],
-         "key_en": ["stapler"],
+        {"id": "flyers",
+         "name": "Листовки, флаеры, буклеты",
+         "variants": ["Листовая полиграфия", "Листовки / Флаеры", "Листовки / Флаеры с ламинацией", "Буклеты / Лифлеты"],
+         "aliases": ["листовки", "флаеры", "буклеты", "лифлеты", "листовая полиграфия"],
+         "phrases_ru": ["печать листовок", "печать флаеров", "печать буклетов"],
+         "phrases_en": ["flyer printing", "leaflet printing", "brochure printing", "printing flyers"],
+         "key_ru": ["листовки"],
+         "key_en": ["flyers"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["saddle stitcher", "booklet maker machine", "electric stapler booklet"], "ru": ["брошюровщик на скобу"], "de": ["Rückendrahtheftung"], "fr": ["piqûre à cheval"]},
-           {"name": "Действие", "match": "точное", "en": ["stapling booklet", "stitching magazine", "booklet stapling"], "ru": ["сшивка брошюры"], "de": ["Broschüre heften"], "fr": ["agrafage brochure"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["folding booklet", "collating paper"], "ru": ["подборка листов"], "de": ["Broschüre falzen"], "fr": ["pliage brochure"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["stapler paper", "brochure printing"], "ru": ["степлер"], "de": ["Heftgerät"], "fr": ["agrafeuse"]}
+           {"name": "Оборудование", "match": "точное", "en": ["digital printing press flyers", "offset press leaflets"], "ru": ["печатная машина листовки"], "de": ["Flyer drucken"], "fr": ["impression flyers"]},
+           {"name": "Действие", "match": "точное", "en": ["folding leaflets", "printed flyers stack", "trifold brochure"], "ru": ["фальцовка буклетов"], "de": ["Faltblatt"], "fr": ["dépliant"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing house", "print shop", "printed matter"], "ru": ["типография"], "de": ["Druckerei"], "fr": ["imprimerie"]}
          ]},
-        {"id": "metal_bind", "name": "Твёрдый переплёт Metal Bind", "aliases": ["твёрдый переплёт", "металбинд"],
-         "phrases_ru": ["твёрдый переплёт", "металбинд"],
-         "phrases_en": ["hardcover binding", "metal bind", "hard cover binding machine"],
-         "key_ru": ["переплёт"],
-         "key_en": ["hardcover"],
+        {"id": "cards_invites",
+         "name": "Открытки, приглашения, сертификаты",
+         "variants": ["Открытки", "Приглашения", "Сертификаты", "Дипломы / Грамоты", "Билеты"],
+         "aliases": ["открытки", "приглашения", "сертификаты", "дипломы", "грамоты", "билеты"],
+         "phrases_ru": ["печать открыток", "печать приглашений", "печать дипломов"],
+         "phrases_en": ["greeting card printing", "wedding invitation printing", "printing certificates", "ticket printing"],
+         "key_ru": ["открытки"],
+         "key_en": ["greeting cards"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["metal bind machine", "hardcover binding machine", "channel binding"], "ru": ["металбинд"], "de": ["Hardcover Bindung"], "fr": ["reliure couverture rigide"]},
-           {"name": "Действие", "match": "точное", "en": ["binding hardcover book", "hard cover book making", "book binding hardcover"], "ru": ["твёрдый переплёт"], "de": ["Buchbinden"], "fr": ["reliure livre"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["bookbinding", "book binding process"], "ru": ["переплёт книги"], "de": ["Buchbinderei"], "fr": ["reliure"]}
+           {"name": "Оборудование", "match": "точное", "en": ["card printing press", "invitation printing machine"], "ru": ["печать открыток"], "de": ["Grußkarten drucken"], "fr": ["impression cartes"]},
+           {"name": "Действие", "match": "точное", "en": ["printed invitations", "printed greeting cards", "diploma printing"], "ru": ["пригласительные"], "de": ["Einladungskarten"], "fr": ["faire-part"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["postcards printing", "print shop cards"], "ru": ["типография"]}
          ]},
-        {"id": "wire_binding", "name": "Брошюровка на металлическую пружину", "aliases": ["брошюровка на пружину", "металлическая пружина"],
-         "phrases_ru": ["брошюровка на металлическую пружину", "переплёт на пружину"],
-         "phrases_en": ["wire binding machine", "wire o binding", "spiral binding"],
-         "key_ru": ["брошюровка"],
-         "key_en": ["spiral binding"],
+        {"id": "letterheads",
+         "name": "Бланки и конверты",
+         "variants": ["Фирменные бланки", "Конверты"],
+         "aliases": ["бланки", "конверты"],
+         "phrases_ru": ["печать бланков", "печать конвертов"],
+         "phrases_en": ["letterhead printing", "envelope printing", "printing envelopes"],
+         "key_ru": ["конверты"],
+         "key_en": ["envelope printing"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["wire binding machine", "wire-o binding equipment", "wire binding closer"], "ru": ["брошюровщик на пружину"], "de": ["Drahtkammbindung"], "fr": ["relieuse wire-o"]},
-           {"name": "Действие", "match": "точное", "en": ["wire binding process", "metal wire book binding", "binding paper with metal wire", "closing wire binding"], "ru": ["переплёт на металлическую пружину"], "de": ["Drahtbindung"], "fr": ["reliure spirale métallique"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["punching holes for wire binding", "binding hole punch"], "ru": ["перфорация под пружину"], "de": ["Lochen Bindung"], "fr": ["perforation reliure"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["spiral notebook binding", "spiral binding"], "ru": ["спиральный переплёт"], "de": ["Spiralbindung"], "fr": ["reliure spirale"]}
+           {"name": "Оборудование", "match": "точное", "en": ["envelope printer", "envelope printing machine"], "ru": ["печать на конвертах"], "de": ["Kuvert drucken"], "fr": ["impression enveloppes"]},
+           {"name": "Действие", "match": "точное", "en": ["printed letterhead", "printing company stationery"], "ru": ["фирменный бланк"], "de": ["Briefpapier"], "fr": ["papier à en-tête"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["office stationery printing", "print shop"], "ru": ["типография"]}
          ]},
-        {"id": "comb_binding", "name": "Брошюровка на пластиковую пружину", "aliases": ["брошюровка на пружину", "пластиковая пружина"],
-         "phrases_ru": ["брошюровка на пластиковую пружину", "брошюровщик"],
-         "phrases_en": ["comb binding machine", "plastic comb binding", "comb binder"],
-         "key_ru": ["брошюровка"],
-         "key_en": ["comb binding"],
+        {"id": "tags",
+         "name": "Бирки и ярлыки для одежды",
+         "variants": ["Бирки / Ярлыки для одежды"],
+         "aliases": ["бирки", "ярлыки"],
+         "phrases_ru": ["печать бирок", "бирки для одежды"],
+         "phrases_en": ["hang tag printing", "clothing labels printing", "garment tags"],
+         "key_ru": ["бирки"],
+         "key_en": ["hang tags"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["comb binding machine", "plastic comb binder", "binding machine office"], "ru": ["брошюровщик"], "de": ["Plastikbindung"], "fr": ["relieuse anneaux plastiques"]},
-           {"name": "Действие", "match": "точное", "en": ["plastic comb binding", "binding document plastic comb", "comb binding process"], "ru": ["переплёт на пластиковую пружину"], "de": ["Kammbindung"], "fr": ["reliure plastique"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["punching holes for binding", "binding hole punch"], "ru": ["перфорация под пружину"], "de": ["Lochen Bindung"], "fr": ["perforation reliure"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["spiral binding", "document binding"], "ru": ["переплёт документов"], "de": ["Bindegerät"], "fr": ["reliure document"]}
+           {"name": "Оборудование", "match": "точное", "en": ["label printer clothing tags", "woven label machine"], "ru": ["печать ярлыков"], "de": ["Etiketten Kleidung"], "fr": ["étiquettes vêtements"]},
+           {"name": "Действие", "match": "точное", "en": ["printing hang tags", "clothing label printing"], "ru": ["ярлыки для одежды"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label printing", "printed labels"], "ru": ["печать этикеток"]}
          ]},
-        {"id": "perfect_binding", "name": "Клеевое бесшвейное скрепление (КБС)", "aliases": ["КБС", "клеевой переплёт"],
-         "phrases_ru": ["клеевой переплёт", "термоклеевая машина"],
-         "phrases_en": ["perfect binding machine", "perfect binder", "glue binding"],
-         "key_ru": ["переплёт"],
-         "key_en": ["bookbinding"],
+        {"id": "tarot",
+         "name": "Карты Таро",
+         "variants": ["Карты Таро"],
+         "aliases": ["таро", "игральные карты"],
+         "phrases_ru": ["печать карт таро", "печать игральных карт"],
+         "phrases_en": ["tarot card printing", "playing card printing", "printing card deck"],
+         "key_ru": ["карты таро"],
+         "key_en": ["tarot cards"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["perfect binder", "glue binding machine", "hot melt binding"], "ru": ["термоклеевая машина"], "de": ["Klebebinder"], "fr": ["relieuse dos carré collé"]},
-           {"name": "Действие", "match": "точное", "en": ["perfect binding book", "glue binding book", "paperback binding"], "ru": ["клеевой переплёт"], "de": ["Klebebindung"], "fr": ["dos carré collé"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["book block gluing", "book cover trimming"], "ru": ["склейка блока"], "de": ["Buchblock leimen"], "fr": ["encollage livre"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["bookbinding", "book printing"], "ru": ["печать книг"], "de": ["Buchbinderei"], "fr": ["impression livre"]}
+           {"name": "Оборудование", "match": "точное", "en": ["playing card printing machine", "card deck printing"], "ru": ["печать колоды карт"], "de": ["Spielkarten drucken"], "fr": ["impression cartes à jouer"]},
+           {"name": "Действие", "match": "точное", "en": ["printing tarot deck", "card deck cutting corners"], "ru": ["колода карт таро"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["card printing", "print shop cards"], "ru": ["печать карточек"]}
+         ]}
+      ]
+    },
+    {
+      "id": "business_cards",
+      "name": "Визитки",
+      "processes": [
+        {"id": "business_cards",
+         "name": "Визитки",
+         "variants": ["Визитки", "Визитки на дизайнерской бумаге", "Визитки на бумаге Touch Paper", "Визитки на бумаге лён", "Визитки на бумаге Маджестик (Majestic)", "Визитки на бумаге Модильяни (Modigliani)", "Визитки на картоне", "Визитки на крафтовой бумаге", "Визитки на бумаге Color Сopy", "Визитки на кальке", "Квадратные визитки", "Визитки на дизайнерском картоне", "Цифровая печать визиток", "Офсетная печать визиток", "Визитки со скруглением", "Визитки с ламинацией"],
+         "aliases": ["визитки", "визитные карточки"],
+         "phrases_ru": ["печать визиток", "визитные карточки"],
+         "phrases_en": ["business card printing", "printing business cards", "business cards"],
+         "key_ru": ["визитки"],
+         "key_en": ["business cards"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["business card printer", "business card cutter", "digital press business cards"], "ru": ["резак для визиток"], "de": ["Visitenkarten drucken"], "fr": ["impression cartes de visite"]},
+           {"name": "Действие", "match": "точное", "en": ["cutting business cards", "printed business cards stack", "designer paper business cards"], "ru": ["нарезка визиток"], "de": ["Visitenkarten"], "fr": ["cartes de visite"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["card printing", "print shop", "offset printing cards"], "ru": ["типография"]}
          ]},
-        {"id": "thermal_binding", "name": "Термопереплёт Unibind", "aliases": ["термопереплёт", "юнибинд"],
-         "phrases_ru": ["термопереплёт", "термобиндер"],
-         "phrases_en": ["thermal binding machine", "thermal binder", "unibind"],
-         "key_ru": ["термопереплёт"],
-         "key_en": ["thermal binding"],
+        {"id": "business_cards_premium",
+         "name": "Визитки с отделкой",
+         "variants": ["Визитки с фольгой", "Визитки с тиснением", "УФ печать визиток", "Визитки с белилами", "Многослойные / кашированные визитки", "Визитки с объемным лаком", "Визитки с шелкографией"],
+         "aliases": ["визитки с фольгой", "визитки с тиснением"],
+         "phrases_ru": ["визитки с фольгой", "визитки с тиснением", "визитки с лаком"],
+         "phrases_en": ["foil business cards", "embossed business cards", "spot uv business cards", "letterpress business cards"],
+         "key_ru": ["визитки"],
+         "key_en": ["business cards"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["thermal binding machine", "thermal binder", "unibind machine"], "ru": ["термобиндер"], "de": ["Thermobindegerät"], "fr": ["relieuse thermique"]},
-           {"name": "Действие", "match": "точное", "en": ["thermal binding document", "thermal cover binding"], "ru": ["термопереплёт"], "de": ["Thermobindung"], "fr": ["reliure thermique"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["glue binding", "document binding"], "ru": ["переплёт документов"], "de": ["Bindegerät"], "fr": ["reliure document"]}
+           {"name": "Оборудование", "match": "точное", "en": ["foil stamping business cards", "spot uv coating machine", "letterpress cards"], "ru": ["тиснение фольгой"], "de": ["Heißfolienprägung Visitenkarten"], "fr": ["dorure à chaud cartes"]},
+           {"name": "Действие", "match": "точное", "en": ["hot foil business card", "embossing business cards", "raised uv varnish cards"], "ru": ["конгревное тиснение"], "de": ["Prägung"], "fr": ["gaufrage"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["foil stamping", "embossing paper", "luxury cards printing"], "ru": ["фольгирование"]}
+         ]},
+        {"id": "business_cards_special",
+         "name": "Пластиковые и магнитные визитки",
+         "variants": ["Магнитные визитки", "Визитки на пластике"],
+         "aliases": ["пластиковые визитки", "магнитные визитки"],
+         "phrases_ru": ["пластиковые визитки", "магнитные визитки"],
+         "phrases_en": ["plastic business cards", "magnetic business cards", "pvc card printing"],
+         "key_ru": ["пластиковые карты"],
+         "key_en": ["plastic cards"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["plastic card printer", "pvc card printer"], "ru": ["принтер пластиковых карт"], "de": ["Plastikkarten drucken"], "fr": ["impression cartes plastique"]},
+           {"name": "Действие", "match": "точное", "en": ["printing plastic cards", "magnet business card"], "ru": ["печать пластиковых карт"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["card printing", "fridge magnet printing"], "ru": ["печать магнитов"]}
+         ]}
+      ]
+    },
+    {
+      "id": "wide_format",
+      "name": "Широкоформатная печать",
+      "processes": [
+        {"id": "wf_aqueous",
+         "name": "Интерьерная и широкоформатная печать",
+         "variants": ["Интерьерная печать", "Широкоформатная печать"],
+         "aliases": ["интерьерная печать", "широкоформатная печать", "водные чернила", "латекс"],
+         "phrases_ru": ["широкоформатная печать", "струйный плоттер", "широкоформатная печать"],
+         "phrases_en": ["large format inkjet printer", "wide format inkjet printing", "aqueous ink printer", "large format printing"],
+         "key_ru": ["плоттер"],
+         "key_en": ["inkjet printer"],
+         "exclude": ["handheld", "ручной"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["large format inkjet printer", "wide format printer", "poster printer"], "ru": ["широкоформатный принтер"], "de": ["Großformatdrucker"], "fr": ["imprimante grand format"]},
+           {"name": "Действие", "match": "точное", "en": ["printing large poster", "poster printing process", "inkjet poster print"], "ru": ["печать плакатов"], "de": ["Plakatdruck"], "fr": ["impression affiche"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "printing banners"], "ru": ["печать баннеров"], "de": ["Großformatdruck"], "fr": ["impression grand format"]}
+         ]},
+        {"id": "wf_ecosolvent",
+         "name": "Наружная печать и баннеры",
+         "variants": ["Наружная печать", "Баннеры"],
+         "aliases": ["баннеры", "наружная печать", "экосольвент", "люверсы", "проварка баннера"],
+         "phrases_ru": ["экосольвентная печать", "печать баннеров", "печать баннеров", "установка люверсов"],
+         "phrases_en": ["eco solvent printer", "solvent printer banner printing", "vinyl printing machine", "outdoor banner printing", "banner grommets"],
+         "key_ru": ["печать баннеров"],
+         "key_en": ["banner printing"],
+         "exclude": ["car", "lace", "shoe", "обувь"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["eco solvent printer", "solvent printer", "roland printer printing"], "ru": ["экосольвентный принтер"], "de": ["Ecosolvent Drucker"], "fr": ["imprimante éco-solvant"]},
+           {"name": "Действие", "match": "точное", "en": ["banner printing process", "vinyl banner printing", "printing self adhesive vinyl"], "ru": ["печать на баннере"], "de": ["Bannerdruck"], "fr": ["impression bâche"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "sign printing shop"], "ru": ["печать наружной рекламы"], "de": ["Großformatdruck"], "fr": ["impression grand format"]}
+         ]},
+        {"id": "canvas",
+         "name": "Холсты и картины",
+         "variants": ["Холсты", "Модульные картины", "Картины"],
+         "aliases": ["холст", "картины", "модульные картины"],
+         "phrases_ru": ["печать на холсте", "модульные картины"],
+         "phrases_en": ["canvas printing", "canvas print stretching", "printing on canvas"],
+         "key_ru": ["холст"],
+         "key_en": ["canvas print"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["canvas printer", "large format canvas printing"], "ru": ["печать на холсте"], "de": ["Leinwanddruck"], "fr": ["impression sur toile"]},
+           {"name": "Действие", "match": "точное", "en": ["stretching canvas print", "canvas gallery wrap"], "ru": ["натяжка холста на подрамник"], "de": ["Leinwand spannen"], "fr": ["tendre toile"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["art print", "photo canvas", "poster printing"], "ru": ["печать постеров"]}
+         ]},
+        {"id": "wallpaper",
+         "name": "Фотообои",
+         "variants": ["Фотообои"],
+         "aliases": ["фотообои", "обои"],
+         "phrases_ru": ["печать фотообоев", "фотообои"],
+         "phrases_en": ["wallpaper printing", "photo wallpaper printing", "printed wall mural"],
+         "key_ru": ["фотообои"],
+         "key_en": ["wallpaper printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["wallpaper printer", "large format wallpaper print"], "ru": ["печать обоев"], "de": ["Tapetendruck"], "fr": ["impression papier peint"]},
+           {"name": "Действие", "match": "точное", "en": ["installing printed wallpaper", "wall mural printing"], "ru": ["поклейка фотообоев"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "interior printing"], "ru": ["интерьерная печать"]}
+         ]},
+        {"id": "film_print",
+         "name": "Печать на плёнке",
+         "variants": ["Печать на плёнке бэклит", "Печать на самоклеящейся плёнке", "Печать на плёнке"],
+         "aliases": ["плёнка", "бэклит", "оракал"],
+         "phrases_ru": ["печать на плёнке", "печать на самоклеящейся плёнке", "печать на бэклите"],
+         "phrases_en": ["vinyl printing", "printing on vinyl film", "backlit film printing", "adhesive vinyl print"],
+         "key_ru": ["самоклеящаяся плёнка"],
+         "key_en": ["vinyl print"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["vinyl printer", "eco solvent printer vinyl", "large format vinyl printing"], "ru": ["печать на виниле"], "de": ["Folie drucken"], "fr": ["impression vinyle"]},
+           {"name": "Действие", "match": "точное", "en": ["applying printed vinyl", "backlit print lightbox"], "ru": ["оклейка плёнкой"], "de": ["Folierung"], "fr": ["covering vinyle"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sticker printing", "window graphics vinyl"], "ru": ["печать наклеек"]}
+         ]},
+        {"id": "foamboard_mounting",
+         "name": "Печать на пенокартоне и ПВХ",
+         "variants": ["Печать на белом / чёрном пенокартоне", "Накатка на пенокартон", "Печать с накаткой на ПВХ", "Печать на ПВХ"],
+         "aliases": ["накатка", "пенокартон", "ПВХ"],
+         "phrases_ru": ["накатка на пенокартон", "монтаж на ПВХ", "печать на пенокартоне", "печать на ПВХ"],
+         "phrases_en": ["foam board mounting", "mounting print on foam board", "pvc board mounting", "printing on foam board", "pvc board printing"],
+         "key_ru": ["пенокартон"],
+         "key_en": ["foam board"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["mounting laminator", "foam board laminator", "cold laminator mounting"], "ru": ["накатка"], "de": ["Kaschieranlage"], "fr": ["contrecolleuse"]},
+           {"name": "Действие", "match": "точное", "en": ["mounting poster on foam board", "mounting print on board", "foamboard mounting"], "ru": ["накатка на пенокартон"], "de": ["Kaschieren"], "fr": ["contrecollage"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["foam board sign", "pvc sign printing"], "ru": ["таблички из пвх"], "de": ["Schaumplatte"], "fr": ["panneau pvc"]}
+         ]},
+        {"id": "rollup",
+         "name": "Roll Up и Press Wall",
+         "variants": ["Roll Up", "Press Wall"],
+         "aliases": ["роллап", "roll up", "пресс волл", "press wall", "мобильный стенд"],
+         "phrases_ru": ["сборка роллапа", "мобильный стенд роллап", "пресс волл"],
+         "phrases_en": ["roll up banner stand assembly", "roll up banner", "pull up banner", "press wall backdrop"],
+         "key_ru": ["роллап"],
+         "key_en": ["roll up banner"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["roll up banner stand", "pull up banner stand", "retractable banner"], "ru": ["роллап"], "de": ["Roll-up Banner"], "fr": ["kakémono"]},
+           {"name": "Действие", "match": "точное", "en": ["roll up banner assembly", "setting up roll up banner", "retractable banner setup"], "ru": ["сборка роллапа"], "de": ["Roll-up aufbauen"], "fr": ["montage kakémono"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["exhibition stand banner", "trade show banner"], "ru": ["баннерный стенд"], "de": ["Messestand"], "fr": ["kakémono salon"]}
+         ]},
+        {"id": "immortal_regiment",
+         "name": "Транспаранты",
+         "variants": ["Изготовление транспарантов"],
+         "aliases": ["транспарант", "бессмертный полк"],
+         "phrases_ru": ["бессмертный полк", "транспарант с портретом", "изготовление транспарантов"],
+         "phrases_en": ["portrait poster printing", "placard on stick", "photo poster mounting", "protest sign printing"],
+         "key_ru": ["бессмертный полк"],
+         "key_en": ["immortal regiment"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["poster printing large", "portrait poster mounting"], "ru": ["печать портрета"], "de": ["Plakatdruck"], "fr": ["impression affiche"]},
+           {"name": "Действие", "match": "точное", "en": ["memorial portrait march", "portrait placard parade", "victory day parade portraits"], "ru": ["шествие с портретами"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing photo poster", "photo poster on board"], "ru": ["фотоплакат"], "de": ["Fotoplakat"], "fr": ["affiche photo"]}
+         ]}
+      ]
+    },
+    {
+      "id": "posters",
+      "name": "Плакаты и постеры",
+      "processes": [
+        {"id": "posters",
+         "name": "Плакаты, постеры, афиши",
+         "variants": ["Плакаты / Постеры / Афиши", "Плакаты / Постеры / Афиши на матовой бумаге", "Плакаты / Постеры / Афиши на глянцевой бумаге", "Плакаты / Постеры / Афиши на бумаге сатин", "Плакаты / Постеры / Афиши на матовой плёнке", "Плакаты / Постеры / Афиши на глянцевой плёнке", "Плакаты / Постеры / Афиши на плёнке сатин"],
+         "aliases": ["плакаты", "постеры", "афиши"],
+         "phrases_ru": ["печать плакатов", "печать постеров", "печать афиш"],
+         "phrases_en": ["poster printing", "printing posters", "large poster print"],
+         "key_ru": ["плакаты"],
+         "key_en": ["poster printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["poster printer", "large format poster printer"], "ru": ["печать постеров"], "de": ["Plakatdruck"], "fr": ["impression affiches"]},
+           {"name": "Действие", "match": "точное", "en": ["printing a poster", "poster coming out of printer", "glossy poster print"], "ru": ["печать афиши"], "de": ["Poster drucken"], "fr": ["affiche imprimée"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["large format printing", "art print"], "ru": ["широкоформатная печать"]}
+         ]},
+        {"id": "posters_finish",
+         "name": "Плакаты с ламинацией и накаткой",
+         "variants": ["Плакаты / Постеры / Афиши с ламинацией", "Плакаты / Постеры / Афиши с накаткой на пенокартон", "Плакаты / Постеры / Афиши с накаткой на ПВХ"],
+         "aliases": ["плакат на пенокартоне"],
+         "phrases_ru": ["плакат на пенокартоне", "ламинирование плакатов"],
+         "phrases_en": ["poster mounting foam board", "poster lamination", "mounted poster"],
+         "key_ru": ["накатка плаката"],
+         "key_en": ["poster mounting"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["poster laminator", "foam board mounting poster"], "ru": ["накатка на пенокартон"], "de": ["Plakat kaschieren"], "fr": ["contrecollage affiche"]},
+           {"name": "Действие", "match": "точное", "en": ["mounting a print on foam board", "laminating a poster"], "ru": ["ламинирование плаката"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["foam board printing", "large format lamination"], "ru": ["пенокартон"]}
+         ]}
+      ]
+    },
+    {
+      "id": "stickers",
+      "name": "Наклейки и стикерпаки",
+      "processes": [
+        {"id": "stickers",
+         "name": "Печать наклеек",
+         "variants": ["Печать и изготовление наклеек", "Наклейки на самоклеящейся бумаге", "Наклейки на самоклеящейся плёнке", "FSC наклейки", "Круглые наклейки", "Квадратные наклейки", "Прямоугольные наклейки", "Наклейки в листах", "Цифровая печать наклеек", "Широкоформатные наклейки", "Двусторонние наклейки", "Легкоснимаемые наклейки"],
+         "aliases": ["наклейки", "стикеры"],
+         "phrases_ru": ["печать наклеек", "изготовление наклеек"],
+         "phrases_en": ["sticker printing", "printing stickers", "custom stickers printing"],
+         "key_ru": ["наклейки"],
+         "key_en": ["sticker printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["sticker printer", "sticker printing machine", "label printer stickers"], "ru": ["печать стикеров"], "de": ["Aufkleber drucken"], "fr": ["impression autocollants"]},
+           {"name": "Действие", "match": "точное", "en": ["printing stickers on vinyl", "sticker sheets printing", "round stickers printing"], "ru": ["самоклеящаяся бумага"], "de": ["Sticker drucken"], "fr": ["autocollants"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label printing", "vinyl cutter stickers"], "ru": ["печать этикеток"]}
+         ]},
+        {"id": "plotter_sheet",
+         "name": "Наклейки с плоттерной резкой и высечкой",
+         "variants": ["Наклейки с плоттерной резкой", "Фигурные наклейки / наклейки с высечкой"],
+         "aliases": ["фигурные наклейки", "высечка наклеек", "резка наклеек"],
+         "phrases_ru": ["листовой режущий плоттер", "резка наклеек", "фигурные наклейки"],
+         "phrases_en": ["sheet cutting plotter", "sticker sheet cutting", "digital die cutting paper", "die cut stickers", "kiss cut stickers"],
+         "key_ru": ["резка наклеек"],
+         "key_en": ["sticker cutting"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["cricut machine cutting", "silhouette cameo cutting", "sheet cutting plotter"], "ru": ["режущий плоттер"], "de": ["Schneideplotter"], "fr": ["machine de découpe"]},
+           {"name": "Действие", "match": "точное", "en": ["cutting stickers sheet", "kiss cut stickers", "die cut stickers"], "ru": ["резка наклеек"], "de": ["Aufkleber schneiden"], "fr": ["découpe autocollants"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sticker printing", "paper cutting machine craft"], "ru": ["печать наклеек"], "de": ["Aufkleber drucken"], "fr": ["impression autocollants"]}
+         ]},
+        {"id": "thermal_labels",
+         "name": "Наклейки в рулоне и этикетки",
+         "variants": ["Наклейки в рулоне", "Флексографическая печать наклеек", "Офсетная печать наклеек", "Наклейки со штрих-кодом", "Наклейки с QR-кодом", "Наклейки с персонализацией / переменной информацией", "Наклейки-клапаны"],
+         "aliases": ["этикетки", "наклейки в рулоне", "штрих-код"],
+         "phrases_ru": ["печать этикеток", "термопринтер этикеток", "наклейки в рулоне", "этикетки со штрих-кодом"],
+         "phrases_en": ["thermal label printer", "label printing machine", "barcode label printer", "roll labels printing", "barcode labels"],
+         "key_ru": ["термопринтер"],
+         "key_en": ["label printer"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["thermal label printer", "barcode label printer", "zebra label printer"], "ru": ["термопринтер этикеток"], "de": ["Etikettendrucker"], "fr": ["imprimante étiquettes"]},
+           {"name": "Действие", "match": "точное", "en": ["printing barcode labels", "label printing", "shipping label printing"], "ru": ["печать этикеток"], "de": ["Etiketten drucken"], "fr": ["impression étiquettes"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label roll", "label applicator"], "ru": ["рулон этикеток"], "de": ["Etikettenrolle"], "fr": ["rouleau étiquettes"]}
+         ]},
+        {"id": "stickers_finish",
+         "name": "Наклейки с отделкой",
+         "variants": ["Наклейки с ламинацией", "Наклейки с тиснением фольгой", "Наклейки с конгревным тиснением", "Наклейки с объёмным 3D лаком", "Наклейки с объёмной смолой", "Печать наклеек со смолой \"Квадрат\"", "UV DTF наклейки"],
+         "aliases": ["объёмные наклейки", "наклейки со смолой", "uv dtf"],
+         "phrases_ru": ["объёмные наклейки", "наклейки со смолой", "наклейки с фольгой"],
+         "phrases_en": ["epoxy dome stickers", "resin stickers", "foil stickers", "uv dtf stickers"],
+         "key_ru": ["объёмные наклейки"],
+         "key_en": ["dome stickers"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["doming machine stickers", "uv dtf printer", "foil sticker printing"], "ru": ["заливка наклеек смолой"], "de": ["Doming Aufkleber"], "fr": ["autocollants résine"]},
+           {"name": "Действие", "match": "точное", "en": ["pouring resin on stickers", "applying uv dtf sticker", "embossed labels"], "ru": ["наклейки с 3D лаком"], "de": ["3D Aufkleber"], "fr": ["étiquettes gaufrées"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sticker printing", "label printing"], "ru": ["печать наклеек"]}
+         ]},
+        {"id": "security_stickers",
+         "name": "Защитные и светоотражающие наклейки",
+         "variants": ["Наклейки с контролем вскрытия", "Светоотражающие наклейки"],
+         "aliases": ["пломбы", "светоотражающие наклейки", "контроль вскрытия"],
+         "phrases_ru": ["наклейки с контролем вскрытия", "светоотражающие наклейки"],
+         "phrases_en": ["tamper evident labels", "void security labels", "reflective stickers"],
+         "key_ru": ["пломбировочные наклейки"],
+         "key_en": ["tamper evident labels"],
+         "levels": [
+           {"name": "Действие", "match": "точное", "en": ["void label peeling", "security seal sticker", "reflective vinyl sticker"], "ru": ["наклейка пломба"], "de": ["Siegeletiketten"], "fr": ["étiquettes inviolables"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label printing", "sticker printing"], "ru": ["печать наклеек"]}
+         ]},
+        {"id": "stickerpacks",
+         "name": "Стикерпаки",
+         "variants": ["Стикерпаки", "Объёмные / 3D стикерпаки со смолой", "Стикерпаки на бумаге", "Стикерпаки на плёнке", "Стикерпаки с ламинацией", "Стикерпаки на голографической плёнке", "Стикерпаки с 3D лаком", "Стикерпаки с 3D фольгой"],
+         "aliases": ["стикерпак", "стикеры"],
+         "phrases_ru": ["стикерпаки", "печать стикерпаков"],
+         "phrases_en": ["sticker sheet printing", "holographic stickers", "sticker pack printing"],
+         "key_ru": ["стикерпак"],
+         "key_en": ["sticker sheets"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["sticker sheet cutting plotter", "holographic sticker printing"], "ru": ["плоттерная резка стикеров"], "de": ["Stickerbogen"], "fr": ["planche autocollants"]},
+           {"name": "Действие", "match": "точное", "en": ["making sticker sheets", "kiss cut sticker sheet"], "ru": ["стикеры на листе"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sticker printing", "die cut stickers"], "ru": ["печать наклеек"]}
+         ]}
+      ]
+    },
+    {
+      "id": "souvenirs",
+      "name": "Сувениры и печать на предметах",
+      "processes": [
+        {"id": "sublimation",
+         "name": "Печать на кружках и посуде",
+         "variants": ["Печать на кружках", "Печать на термокружках", "Печать на тарелках", "Печать на посуде", "Надглазурная деколь", "Сублимационная печать"],
+         "aliases": ["печать на кружках", "кружки", "сублимация", "деколь"],
+         "phrases_ru": ["сублимационная печать", "печать на кружках", "печать на кружках", "печать на тарелках"],
+         "phrases_en": ["sublimation printing", "mug heat press", "sublimation transfer", "mug printing", "plate printing decal"],
+         "key_ru": ["сублимационная печать"],
+         "key_en": ["sublimation printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["sublimation printer", "mug press machine", "heat press mug"], "ru": ["термопресс для кружек"], "de": ["Sublimationsdrucker"], "fr": ["imprimante sublimation"]},
+           {"name": "Действие", "match": "точное", "en": ["sublimation printing mug", "printing on mug", "sublimation transfer"], "ru": ["печать на кружках"], "de": ["Sublimationsdruck"], "fr": ["impression sublimation"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["custom mug printing", "personalized mug"], "ru": ["кружка с принтом"], "de": ["Tasse bedrucken"], "fr": ["mug personnalisé"]}
+         ]},
+        {"id": "puzzles",
+         "name": "Печать на пазлах",
+         "variants": ["Печать на пазлах"],
+         "aliases": ["пазлы"],
+         "phrases_ru": ["печать на пазлах", "пазлы с фото"],
+         "phrases_en": ["puzzle printing", "photo puzzle sublimation", "custom jigsaw puzzle"],
+         "key_ru": ["пазлы"],
+         "key_en": ["photo puzzle"],
+         "levels": [
+           {"name": "Действие", "match": "точное", "en": ["sublimation puzzle printing", "printing jigsaw puzzle"], "ru": ["сублимация пазлов"], "de": ["Fotopuzzle"], "fr": ["puzzle photo"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["sublimation printing", "photo gifts printing"], "ru": ["сувениры с фото"]}
+         ]},
+        {"id": "vinyl_magnets",
+         "name": "Магниты",
+         "variants": ["Виниловые магниты", "Печать акриловых магнитов", "Производство магнитов"],
+         "aliases": ["магниты", "магнит на холодильник"],
+         "phrases_ru": ["виниловые магниты", "печать магнитов", "акриловые магниты"],
+         "phrases_en": ["fridge magnet printing", "magnetic vinyl", "printed magnets", "acrylic fridge magnets"],
+         "key_ru": ["магниты на холодильник"],
+         "key_en": ["fridge magnet"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["magnet cutting machine", "magnetic sheet printing"], "ru": ["магнитный винил"], "de": ["Magnetfolie"], "fr": ["aimant souple"]},
+           {"name": "Действие", "match": "точное", "en": ["making fridge magnets", "printing fridge magnets", "custom fridge magnet"], "ru": ["магниты на холодильник"], "de": ["Kühlschrankmagnet"], "fr": ["magnet frigo"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["fridge magnet souvenir", "souvenir magnets"], "ru": ["сувенирные магниты"], "de": ["Souvenir Magnet"], "fr": ["magnet souvenir"]}
+         ]},
+        {"id": "pad_print",
+         "name": "Тампопечать: ручки, флешки, часы, зонты",
+         "variants": ["Тампопечать", "Печать на флешках", "Печать на ручках", "Печать на электронике", "Печать на часах", "Печать на зонтах"],
+         "aliases": ["тампопечать", "печать на ручках", "печать на флешках"],
+         "phrases_ru": ["тампопечать", "печать на ручках", "печать на флешках"],
+         "phrases_en": ["pad printing", "pad printing pens", "logo printing on pens", "pad printing machine"],
+         "key_ru": ["тампопечать"],
+         "key_en": ["pad printing"],
+         "allow": ["electronic", "электроник"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["pad printing machine", "tampo printing machine", "uv printer pens"], "ru": ["тампонный станок"], "de": ["Tampondruck"], "fr": ["tampographie"]},
+           {"name": "Действие", "match": "точное", "en": ["printing logo on pens", "printing on usb flash drive", "umbrella logo printing"], "ru": ["логотип на ручках"], "de": ["Kugelschreiber bedrucken"], "fr": ["impression stylos"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["promotional products printing", "uv printing souvenirs"], "ru": ["нанесение логотипа"]}
+         ]},
+        {"id": "corporate_gifts",
+         "name": "Корпоративные и промосувениры",
+         "variants": ["Корпоративные / Промосувениры с логотипом", "Письменные сувениры", "Офисные сувениры", "Элитные подарки", "Сувениры в автомобиль", "Сладкие подарки", "Подарочные наборы", "Корпоративные подарки", "Сувениры для дома", "Сувениры для отдыха", "Печать на новогодних подарках"],
+         "aliases": ["сувениры", "промосувениры", "корпоративные подарки", "подарки с логотипом"],
+         "phrases_ru": ["сувениры с логотипом", "корпоративные подарки", "промосувениры"],
+         "phrases_en": ["promotional products logo", "corporate gifts logo printing", "branded merchandise"],
+         "key_ru": ["сувениры с логотипом"],
+         "key_en": ["promotional products"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["promotional products printing", "uv printer souvenirs"], "ru": ["нанесение логотипа на сувениры"], "de": ["Werbeartikel bedrucken"], "fr": ["objets publicitaires"]},
+           {"name": "Действие", "match": "точное", "en": ["packing branded gift set", "corporate gift box logo"], "ru": ["подарочный набор с логотипом"], "de": ["Werbegeschenke"], "fr": ["cadeaux d'entreprise"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["souvenir printing", "logo engraving souvenirs"], "ru": ["сувенирная продукция"]}
+         ]},
+        {"id": "boxes",
+         "name": "Производство коробок",
+         "variants": ["Производство коробок"],
+         "aliases": ["коробки", "упаковка"],
+         "phrases_ru": ["производство коробок", "печать на коробках"],
+         "phrases_en": ["box packaging printing", "printed boxes manufacturing", "cardboard box printing"],
+         "key_ru": ["коробки"],
+         "key_en": ["packaging printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["box die cutting machine", "packaging printing machine"], "ru": ["вырубка коробок"], "de": ["Verpackungsdruck"], "fr": ["impression emballage"]},
+           {"name": "Действие", "match": "точное", "en": ["folding gluing boxes", "printed packaging boxes"], "ru": ["склейка коробок"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["die cutting cardboard", "packaging design"], "ru": ["упаковка"]}
+         ]}
+      ]
+    },
+    {
+      "id": "textile",
+      "name": "Печать на текстиле",
+      "processes": [
+        {"id": "dtf",
+         "name": "Печать на футболках",
+         "variants": ["Печать на футболках", "DTF печать на футболках", "Прямая печать на футболках", "УФ печать на футболках", "Сублимационная печать на футболках", "Печать футболок шелкографией", "DTF печать", "Прямая печать"],
+         "aliases": ["печать на футболках", "футболки", "DTF", "DTG"],
+         "phrases_ru": ["DTF печать", "печать на футболках", "печать на футболках"],
+         "phrases_en": ["dtf printing", "dtf transfer", "direct to film printing", "t-shirt printing", "dtg printing t-shirt"],
+         "key_ru": ["печать на футболках"],
+         "key_en": ["dtf"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["dtf printer", "direct to film printer", "dtf powder shaker"], "ru": ["dtf принтер"], "de": ["DTF Drucker"], "fr": ["imprimante DTF"]},
+           {"name": "Действие", "match": "точное", "en": ["dtf transfer t-shirt", "dtf printing process", "pressing dtf transfer"], "ru": ["dtf печать"], "de": ["DTF Druck"], "fr": ["impression DTF"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt heat press", "t-shirt printing"], "ru": ["печать на футболках"], "de": ["T-Shirt Druck"], "fr": ["impression t-shirt"]}
+         ]},
+        {"id": "textile_wear",
+         "name": "Печать на одежде и аксессуарах",
+         "variants": ["Печать на сумках / шопперах", "Текстиль с логотипом", "Печать на поло", "Печать на толстовках", "Печать на свитшотах", "Печать на лонгсливах", "Печать на водолазках", "Печать на жилетах", "Печать на шарфах", "Печать на куртках", "Козырьки от солнца", "Кепки и бейсболки", "Печать на вязаных комплектах", "Печать на вязаных шапках", "Печать на детской одежде", "Печать на ветровках", "Печать на банданах", "Печать на брюках", "Печать на перчатках", "Печать на варежках", "Печать на спортивной одежде", "Печать на офисных рубашках", "Печать на шортах", "Печать на майках", "Печать на джемпере", "Печать на носках"],
+         "aliases": ["печать на одежде", "текстиль с логотипом", "толстовки", "худи", "кепки", "шопперы"],
+         "phrases_ru": ["печать на одежде", "печать на толстовках", "печать на кепках", "печать на шопперах"],
+         "phrases_en": ["hoodie printing", "printing on hoodies", "cap printing logo", "tote bag printing", "apparel printing"],
+         "key_ru": ["печать на одежде"],
+         "key_en": ["apparel printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["heat press hoodie", "cap heat press", "dtf printer apparel"], "ru": ["термопресс для кепок"], "de": ["Textildruck"], "fr": ["impression textile"]},
+           {"name": "Действие", "match": "точное", "en": ["pressing logo on hoodie", "printing tote bags", "custom printed caps"], "ru": ["нанесение на толстовку"], "de": ["Hoodie bedrucken"], "fr": ["impression sweat"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt printing", "textile printing", "embroidery logo apparel"], "ru": ["печать на футболках"]}
+         ]},
+        {"id": "heat_transfer",
+         "name": "Термотрансферная печать",
+         "variants": ["Термотрансферная печать"],
+         "aliases": ["термотрансфер", "термоплёнка", "флекс"],
+         "phrases_ru": ["термотрансфер", "термопресс футболка", "термотрансферная печать"],
+         "phrases_en": ["heat transfer vinyl", "heat press t-shirt", "htv application", "heat transfer printing"],
+         "key_ru": ["термопресс"],
+         "key_en": ["heat press"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["heat press machine", "t-shirt heat press", "heat transfer press"], "ru": ["термопресс"], "de": ["Transferpresse"], "fr": ["presse à chaud t-shirt"]},
+           {"name": "Действие", "match": "точное", "en": ["heat transfer vinyl t-shirt", "pressing vinyl on shirt", "htv application"], "ru": ["термотрансфер на футболку"], "de": ["Flexfolie"], "fr": ["flex thermocollant"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["cutting heat transfer vinyl", "weeding htv"], "ru": ["резка термоплёнки"], "de": ["Flexfolie plotten"], "fr": ["découpe flex"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt printing", "custom t-shirt"], "ru": ["печать на футболках"], "de": ["T-Shirt Druck"], "fr": ["impression t-shirt"]}
+         ]},
+        {"id": "embroidery",
+         "name": "Вышивка",
+         "variants": ["Вышивка"],
+         "aliases": ["вышивка", "вышивка логотипа"],
+         "phrases_ru": ["вышивка логотипа", "машинная вышивка"],
+         "phrases_en": ["logo embroidery", "embroidery machine logo", "machine embroidery apparel"],
+         "key_ru": ["вышивка"],
+         "key_en": ["embroidery machine"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["embroidery machine", "multi head embroidery machine"], "ru": ["вышивальная машина"], "de": ["Stickmaschine"], "fr": ["machine à broder"]},
+           {"name": "Действие", "match": "точное", "en": ["embroidering logo on shirt", "cap embroidery"], "ru": ["вышивка на кепке"], "de": ["Logo sticken"], "fr": ["broderie logo"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["textile printing", "apparel decoration"], "ru": ["печать на одежде"]}
+         ]}
+      ]
+    },
+    {
+      "id": "methods",
+      "name": "Нанесение логотипа и виды печати",
+      "processes": [
+        {"id": "logo",
+         "name": "Нанесение логотипа",
+         "variants": ["Нанесение логотипа", "Печать на вставках"],
+         "aliases": ["нанесение логотипа", "логотип", "брендирование"],
+         "phrases_ru": ["нанесение логотипа", "брендирование сувениров"],
+         "phrases_en": ["logo printing on products", "branding promotional items", "logo application"],
+         "key_ru": ["нанесение логотипа"],
+         "key_en": ["logo printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["uv printer logo", "pad printing logo", "laser engraving logo"], "ru": ["УФ печать логотипа"], "de": ["Logo drucken"], "fr": ["impression logo"]},
+           {"name": "Действие", "match": "точное", "en": ["printing a logo", "branding merchandise"], "ru": ["брендирование"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["promotional products", "souvenir printing"], "ru": ["сувениры с логотипом"]}
+         ]},
+        {"id": "screen_print",
+         "name": "Шелкография",
+         "variants": ["Шелкография / трафаретная печать"],
+         "aliases": ["шелкография", "трафаретная печать"],
+         "phrases_ru": ["шелкография", "трафаретная печать"],
+         "phrases_en": ["screen printing", "silk screen printing", "screen printing press"],
+         "key_ru": ["шелкография"],
+         "key_en": ["screen printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["screen printing press", "carousel screen printer"], "ru": ["станок шелкографии"], "de": ["Siebdruck"], "fr": ["sérigraphie"]},
+           {"name": "Действие", "match": "точное", "en": ["squeegee screen printing", "screen printing t-shirt", "screen printing ink"], "ru": ["печать через трафарет"], "de": ["Siebdruck Shirt"], "fr": ["sérigraphie t-shirt"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt printing", "textile printing"], "ru": ["печать на футболках"]}
+         ]},
+        {"id": "foil",
+         "name": "Тиснение и фольгирование",
+         "variants": ["Тиснение", "Фольгирование"],
+         "aliases": ["тиснение", "фольгирование", "конгрев"],
+         "phrases_ru": ["фольгирование", "тиснение фольгой", "тиснение"],
+         "phrases_en": ["foil stamping process", "hot foil stamping", "digital foiling", "blind embossing paper"],
+         "key_ru": ["тиснение"],
+         "key_en": ["foil stamping"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["hot foil stamping machine", "foil printer", "digital foil machine"], "ru": ["машина для фольгирования"], "de": ["Heißfolienprägung"], "fr": ["dorure à chaud"]},
+           {"name": "Действие", "match": "точное", "en": ["foil stamping", "gold foil business cards", "applying foil print"], "ru": ["тиснение фольгой"], "de": ["Folienprägung"], "fr": ["marquage à chaud"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["embossing paper", "letterpress printing"], "ru": ["тиснение"], "de": ["Prägung"], "fr": ["gaufrage"]}
+         ]},
+        {"id": "uv_print",
+         "name": "УФ печать",
+         "variants": ["УФ Печать"],
+         "aliases": ["уф печать", "uv печать"],
+         "phrases_ru": ["уф печать", "печать на уф принтере"],
+         "phrases_en": ["uv printing", "uv flatbed printer", "uv printer printing"],
+         "key_ru": ["уф принтер"],
+         "key_en": ["uv printer"],
+         "allow": ["wood", "дерев"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["uv flatbed printer", "uv led printer"], "ru": ["планшетный уф принтер"], "de": ["UV Drucker"], "fr": ["imprimante uv"]},
+           {"name": "Действие", "match": "точное", "en": ["uv printing on acrylic", "uv printing on wood panel", "uv printing phone cases"], "ru": ["уф печать на акриле"], "de": ["UV Druck"], "fr": ["impression uv"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing on plastic", "uv dtf printing"], "ru": ["печать на пластике"]}
+         ]},
+        {"id": "offset",
+         "name": "Офсетная и высокая печать",
+         "variants": ["Офсетная печать", "Высокая печать"],
+         "aliases": ["офсет", "офсетная печать", "высокая печать", "letterpress"],
+         "phrases_ru": ["офсетная печать", "высокая печать"],
+         "phrases_en": ["offset printing press", "offset printing", "letterpress printing"],
+         "key_ru": ["офсет"],
+         "key_en": ["offset printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["heidelberg offset press", "offset printing machine", "letterpress machine"], "ru": ["офсетная машина"], "de": ["Offsetdruck"], "fr": ["impression offset"]},
+           {"name": "Действие", "match": "точное", "en": ["offset press running", "printing plates offset", "letterpress printing cards"], "ru": ["печатные формы"], "de": ["Druckmaschine"], "fr": ["presse offset"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing house", "printing press"], "ru": ["типография"]}
+         ]},
+        {"id": "flexo",
+         "name": "Флексопечать",
+         "variants": ["Флексопечать"],
+         "aliases": ["флексография", "флексопечать"],
+         "phrases_ru": ["флексопечать", "флексографская печать"],
+         "phrases_en": ["flexographic printing", "flexo printing press", "flexo label printing"],
+         "key_ru": ["флексография"],
+         "key_en": ["flexo printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["flexo printing machine", "flexographic press"], "ru": ["флексографская машина"], "de": ["Flexodruck"], "fr": ["flexographie"]},
+           {"name": "Действие", "match": "точное", "en": ["flexo label printing", "printing roll labels"], "ru": ["печать этикеток в рулоне"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label printing", "packaging printing"], "ru": ["печать этикеток"]}
          ]}
       ]
     },
     {
       "id": "postpress",
-      "name": "Послепечатные работы",
+      "name": "Постпечатная обработка",
       "processes": [
-        {"id": "guillotine", "name": "Гильотинная резка", "aliases": ["резка бумаги", "гильотина"],
+        {"id": "guillotine",
+         "name": "Гильотинная резка",
+         "variants": ["Гильотинная резка"],
+         "aliases": ["резка бумаги", "гильотина"],
          "phrases_ru": ["гильотина для бумаги", "резка бумаги"],
          "phrases_en": ["guillotine paper cutter", "paper cutting machine", "guillotine cutter"],
          "key_ru": ["резка бумаги"],
@@ -282,27 +720,76 @@
            {"name": "Действие", "match": "точное", "en": ["cutting paper stack", "trimming printed sheets", "cutting business cards"], "ru": ["резка бумаги"], "de": ["Papier schneiden"], "fr": ["coupe papier"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["paper trimmer", "cutting paper"], "ru": ["резак для бумаги"], "de": ["Papierschneider"], "fr": ["rogneuse papier"]}
          ]},
-        {"id": "badge_punch", "name": "Вырубка отверстий под бейджи", "aliases": ["бейджи", "отверстие под бейдж"],
-         "phrases_ru": ["пробойник для бейджей", "дырокол для бейджей"],
-         "phrases_en": ["slot punch", "badge hole punch", "id card slot punch"],
-         "key_ru": ["дырокол"],
-         "key_en": ["hole punch"],
+        {"id": "folding",
+         "name": "Фальцовка",
+         "variants": ["Фальцовка"],
+         "aliases": ["фальцовка", "сложить листовки"],
+         "phrases_ru": ["фальцовка", "фальцевальная машина"],
+         "phrases_en": ["paper folding machine", "folding leaflets machine"],
+         "key_ru": ["фальцовка"],
+         "key_en": ["paper folding machine"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["slot punch", "card slot punch", "badge hole punch"], "ru": ["пробойник"], "de": ["Langlochstanze"], "fr": ["perforateur badge"]},
-           {"name": "Действие", "match": "точное", "en": ["punching id card", "punching badge hole", "lanyard hole punch"], "ru": ["вырубка отверстия"], "de": ["Ausweis lochen"], "fr": ["perforation badge"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["paper hole punch", "hole punch paper"], "ru": ["дырокол"], "de": ["Locher"], "fr": ["perforatrice"]}
+           {"name": "Оборудование", "match": "точное", "en": ["paper folder machine", "folding machine leaflets"], "ru": ["фальцевальный аппарат"], "de": ["Falzmaschine"], "fr": ["plieuse"]},
+           {"name": "Действие", "match": "точное", "en": ["folding brochures", "tri fold leaflets"], "ru": ["фальцовка буклетов"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["creasing paper", "paper finishing"], "ru": ["биговка"]}
          ]},
-        {"id": "creasing", "name": "Биговка", "aliases": ["бигование"],
-         "phrases_ru": ["биговка", "биговальная машина"],
-         "phrases_en": ["creasing machine", "paper creasing", "scoring machine"],
-         "key_ru": ["биговка"],
-         "key_en": ["creasing"],
+        {"id": "drawing_folding",
+         "name": "Фальцовка чертежей",
+         "variants": ["Фальцовка чертежей"],
+         "aliases": ["складывание чертежей"],
+         "phrases_ru": ["фальцовка чертежей", "фальцевальная машина"],
+         "phrases_en": ["drawing folding machine", "blueprint folding", "paper folding machine"],
+         "key_ru": ["фальцовка"],
+         "key_en": ["paper folding"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["creasing machine", "scoring machine paper", "digital creaser"], "ru": ["биговальная машина"], "de": ["Rillmaschine"], "fr": ["rainureuse"]},
-           {"name": "Действие", "match": "точное", "en": ["paper creasing", "scoring paper", "creasing cover"], "ru": ["биговка"], "de": ["Rillen Papier"], "fr": ["rainage papier"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["paper folding", "folding cardstock"], "ru": ["фальцовка"], "de": ["Falzen"], "fr": ["pliage papier"]}
+           {"name": "Оборудование", "match": "точное", "en": ["plan folding machine", "folding machine paper", "paper folder machine"], "ru": ["фальцевальная машина"], "de": ["Falzmaschine"], "fr": ["plieuse papier"]},
+           {"name": "Действие", "match": "точное", "en": ["folding large drawings", "folding blueprints", "paper folding process"], "ru": ["фальцовка"], "de": ["Pläne falzen"], "fr": ["plieuse plans"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["folding leaflets machine", "brochure folding"], "ru": ["фальцовка листовок"], "de": ["Falzen Papier"], "fr": ["pliage papier"]}
          ]},
-        {"id": "perforation", "name": "Перфорация", "aliases": ["перфорирование"],
+        {"id": "die_cutting",
+         "name": "Вырубка и фигурная резка",
+         "variants": ["Вырубка / Высечка", "Фигурная резка"],
+         "aliases": ["вырубка", "высечка", "фигурная резка"],
+         "phrases_ru": ["вырубка", "высечка", "фигурная резка"],
+         "phrases_en": ["die cutting machine", "die cutting paper", "die cut printing"],
+         "key_ru": ["вырубка"],
+         "key_en": ["die cutting"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["die cutting press", "digital die cutter", "cutting plotter paper"], "ru": ["вырубной пресс"], "de": ["Stanzmaschine"], "fr": ["découpe forme"]},
+           {"name": "Действие", "match": "точное", "en": ["die cutting cardboard", "shaped cutting paper"], "ru": ["высечка картона"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["plotter cutting", "laser cutting paper"], "ru": ["плоттерная резка"]}
+         ]},
+        {"id": "lacquering",
+         "name": "Лакирование и праймирование",
+         "variants": ["Лакирование", "Праймирование"],
+         "aliases": ["лакирование", "уф лак", "праймер"],
+         "phrases_ru": ["лакирование", "уф лакирование", "праймирование"],
+         "phrases_en": ["uv coating machine", "spot uv varnish", "print varnishing"],
+         "key_ru": ["лакирование"],
+         "key_en": ["uv coating"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["uv coating machine", "varnishing machine print"], "ru": ["лакировальная машина"], "de": ["Lackiermaschine"], "fr": ["vernis uv"]},
+           {"name": "Действие", "match": "точное", "en": ["spot uv varnish printing", "coating printed sheets"], "ru": ["выборочный лак"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["print finishing", "lamination"], "ru": ["ламинирование"]}
+         ]},
+        {"id": "plotter_roll",
+         "name": "Плоттерная резка",
+         "variants": ["Плоттерная резка"],
+         "aliases": ["плоттерная резка", "резка плёнки", "оракал"],
+         "phrases_ru": ["плоттерная резка", "режущий плоттер"],
+         "phrases_en": ["vinyl cutter plotter", "cutting plotter vinyl", "vinyl sticker cutting"],
+         "key_ru": ["плоттерная резка"],
+         "key_en": ["vinyl cutter"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["vinyl cutting plotter", "cutting plotter", "roland cutter"], "ru": ["режущий плоттер"], "de": ["Schneideplotter"], "fr": ["plotter de découpe"]},
+           {"name": "Действие", "match": "точное", "en": ["cutting vinyl letters", "vinyl lettering cutting", "plotter cutting stickers"], "ru": ["резка плёнки"], "de": ["Folie plotten"], "fr": ["découpe vinyle"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["weeding vinyl", "vinyl transfer tape"], "ru": ["выборка плёнки"], "de": ["Folie entgittern"], "fr": ["échenillage vinyle"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["vinyl sticker application", "vinyl decal"], "ru": ["наклейка из плёнки"], "de": ["Folienbeschriftung"], "fr": ["lettrage adhésif"]}
+         ]},
+        {"id": "perforation",
+         "name": "Перфорация бумаги",
+         "variants": ["Перфорация бумаги"],
+         "aliases": ["перфорирование"],
          "phrases_ru": ["перфорация бумаги", "перфоратор для бумаги"],
          "phrases_en": ["perforating machine", "paper perforation", "perforation tear off"],
          "key_ru": ["перфорация"],
@@ -313,7 +800,37 @@
            {"name": "Действие", "match": "точное", "en": ["paper perforation", "perforated tear off", "perforating tickets"], "ru": ["перфорация бумаги"], "de": ["Perforieren Papier"], "fr": ["perforation papier"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["tear off coupon", "ticket printing"], "ru": ["отрывной талон"], "de": ["Abreißcoupon"], "fr": ["coupon détachable"]}
          ]},
-        {"id": "corner_rounding", "name": "Скругление углов", "aliases": ["углы"],
+        {"id": "laser_cutting",
+         "name": "Лазерная резка",
+         "variants": ["Лазерная резка"],
+         "aliases": ["лазерная резка", "резка акрила"],
+         "phrases_ru": ["лазерная резка", "лазерная резка акрила"],
+         "phrases_en": ["laser cutting acrylic", "laser cutting paper", "co2 laser cutter"],
+         "key_ru": ["лазерная резка"],
+         "key_en": ["laser cutting acrylic"],
+         "allow": ["wood", "дерев", "plywood"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["co2 laser cutter", "laser cutting machine acrylic"], "ru": ["лазерный станок"], "de": ["Laserschneiden"], "fr": ["découpe laser"]},
+           {"name": "Действие", "match": "точное", "en": ["laser cutting plywood", "laser cutting cardboard"], "ru": ["резка фанеры лазером"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["laser engraving", "die cutting"], "ru": ["лазерная гравировка"]}
+         ]},
+        {"id": "flatbed_cutting",
+         "name": "Планшетная резка",
+         "variants": ["Планшетная резка"],
+         "aliases": ["резка пенокартона", "резка картона"],
+         "phrases_ru": ["планшетный плоттер", "планшетная резка"],
+         "phrases_en": ["flatbed cutter", "flatbed cutting table", "cnc knife cutting"],
+         "key_ru": ["планшетный плоттер"],
+         "key_en": ["cnc cutting"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["flatbed cutting plotter", "digital cutting table", "zund cutter"], "ru": ["планшетный режущий плоттер"], "de": ["Flachbettschneider"], "fr": ["table de découpe numérique"]},
+           {"name": "Действие", "match": "точное", "en": ["cutting cardboard cnc", "cutting foam board knife", "packaging prototype cutting"], "ru": ["резка картона"], "de": ["Karton schneiden"], "fr": ["découpe carton"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["cnc knife cutting", "die cutting machine"], "ru": ["вырубка"], "de": ["Stanzmaschine"], "fr": ["découpe à l'emporte-pièce"]}
+         ]},
+        {"id": "corner_rounding",
+         "name": "Скругление углов",
+         "variants": ["Скругление углов"],
+         "aliases": ["углы"],
          "phrases_ru": ["скругление углов", "углоскругление"],
          "phrases_en": ["corner rounding machine", "corner rounder", "corner cutter"],
          "key_ru": ["скругление углов"],
@@ -323,17 +840,10 @@
            {"name": "Действие", "match": "точное", "en": ["rounding corners paper", "rounded corners business cards", "corner punch"], "ru": ["скругление углов"], "de": ["Ecken abrunden"], "fr": ["arrondir angles"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["business card cutting", "card trimming"], "ru": ["резка визиток"], "de": ["Visitenkarten schneiden"], "fr": ["découpe cartes de visite"]}
          ]},
-        {"id": "foil", "name": "Выборочное фольгирование", "aliases": ["фольгирование", "тиснение фольгой"],
-         "phrases_ru": ["фольгирование", "тиснение фольгой"],
-         "phrases_en": ["foil stamping process", "hot foil stamping", "digital foiling"],
-         "key_ru": ["тиснение"],
-         "key_en": ["foil stamping"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["hot foil stamping machine", "foil printer", "digital foil machine"], "ru": ["машина для фольгирования"], "de": ["Heißfolienprägung"], "fr": ["dorure à chaud"]},
-           {"name": "Действие", "match": "точное", "en": ["foil stamping", "gold foil business cards", "applying foil print"], "ru": ["тиснение фольгой"], "de": ["Folienprägung"], "fr": ["marquage à chaud"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["embossing paper", "letterpress printing"], "ru": ["тиснение"], "de": ["Prägung"], "fr": ["gaufrage"]}
-         ]},
-        {"id": "drilling", "name": "Сверление отверстий", "aliases": ["сверление бумаги"],
+        {"id": "drilling",
+         "name": "Сверление",
+         "variants": ["Сверление"],
+         "aliases": ["сверление бумаги"],
          "phrases_ru": ["сверление бумаги", "бумагосверлильная машина"],
          "phrases_en": ["paper drilling machine", "paper drill", "hole drilling paper stack"],
          "key_ru": ["сверление бумаги"],
@@ -343,21 +853,108 @@
            {"name": "Действие", "match": "точное", "en": ["drilling holes in paper", "drilling paper stack"], "ru": ["сверление бумаги"], "de": ["Papier bohren"], "fr": ["perçage papier"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["hole punch paper", "paper hole punching"], "ru": ["дырокол"], "de": ["Locher"], "fr": ["perforatrice"]}
          ]},
-        {"id": "eyelets", "name": "Установка пикколо / люверсов", "aliases": ["люверсы", "пикколо"],
-         "phrases_ru": ["установка люверсов", "люверсный пресс"],
-         "phrases_en": ["eyelet setting machine", "grommet press", "grommet machine"],
-         "key_ru": ["люверсы"],
-         "key_en": ["grommet"],
-         "exclude": ["car", "lace", "shoe", "обувь"],
+        {"id": "creasing",
+         "name": "Биговка",
+         "variants": ["Биговка"],
+         "aliases": ["бигование"],
+         "phrases_ru": ["биговка", "биговальная машина"],
+         "phrases_en": ["creasing machine", "paper creasing", "scoring machine"],
+         "key_ru": ["биговка"],
+         "key_en": ["creasing"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["eyelet setting machine", "grommet press machine", "eyelet press"], "ru": ["люверсный пресс"], "de": ["Ösenpresse"], "fr": ["presse à œillets"]},
-           {"name": "Действие", "match": "точное", "en": ["installing metal eyelets", "banner grommet installation", "setting grommets"], "ru": ["установка люверсов"], "de": ["Ösen einsetzen"], "fr": ["pose d'œillets"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["metal eyelet press close up", "punching hole banner"], "ru": ["пробивка отверстий"], "de": ["Lochstanze"], "fr": ["perforation bâche"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["leather eyelet setting", "fabric grommet"], "ru": ["люверсы на ткани"], "de": ["Ösen Stoff"], "fr": ["œillets tissu"]}
+           {"name": "Оборудование", "match": "точное", "en": ["creasing machine", "scoring machine paper", "digital creaser"], "ru": ["биговальная машина"], "de": ["Rillmaschine"], "fr": ["rainureuse"]},
+           {"name": "Действие", "match": "точное", "en": ["paper creasing", "scoring paper", "creasing cover"], "ru": ["биговка"], "de": ["Rillen Papier"], "fr": ["rainage papier"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["paper folding", "folding cardstock"], "ru": ["фальцовка"], "de": ["Falzen"], "fr": ["pliage papier"]}
+         ]}
+      ]
+    },
+    {
+      "id": "photo",
+      "name": "Фото и фото на документы",
+      "processes": [
+        {"id": "photo_kiosk",
+         "name": "Печать фотографий",
+         "variants": ["Печать фотографий"],
+         "aliases": ["печать фото", "фотопечать", "фотокиоск"],
+         "phrases_ru": ["печать фотографий", "фотокиоск"],
+         "phrases_en": ["photo printing kiosk", "photo kiosk", "dye sublimation photo printer"],
+         "key_ru": ["фотокиоск"],
+         "key_en": ["photo kiosk"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["photo printing machine", "dye sublimation photo printer", "instant photo printer"], "ru": ["фотопринтер"], "de": ["Fotodrucker"], "fr": ["imprimante photo"]},
+           {"name": "Действие", "match": "точное", "en": ["printing photos from phone", "photo prints coming out"], "ru": ["печать фото"], "de": ["Fotos drucken"], "fr": ["impression photo"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["photo lab printing", "printed photographs"], "ru": ["фотолаборатория"], "de": ["Fotolabor"], "fr": ["tirage photo"]}
          ]},
-        {"id": "calendar_rigel", "name": "Установка ригеля на календарь", "aliases": ["ригель", "календарь"],
-         "phrases_ru": ["ригель для календаря", "календарь на ригеле"],
-         "phrases_en": ["calendar binding", "calendar hanger", "wire binding calendar"],
+        {"id": "photo_id",
+         "name": "Фото на документы",
+         "variants": ["Фото на документы", "Фото на паспорт РФ", "Фото на загранпаспорт", "Фото на медицинскую книжку", "Фото на справку для водительского удостоверения", "Фото на вид на жительство", "Фото на военный билет", "Фото на водительские права международного образца", "Фото на разрешение на временное проживание", "Фото на разрешение на оружие", "Фото на патент на работу", "Фото на паспорт болельщика"],
+         "aliases": ["фото на паспорт", "фото на документы"],
+         "phrases_ru": ["фото на документы", "фото на паспорт"],
+         "phrases_en": ["passport photo studio", "id photo booth", "passport photo camera"],
+         "key_ru": ["фото на паспорт"],
+         "key_en": ["passport photo"],
+         "allow": ["medical", "медицин"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["photo booth machine", "id photo printer"], "ru": ["фотобудка"], "de": ["Passfoto Automat"], "fr": ["photomaton"]},
+           {"name": "Действие", "match": "точное", "en": ["taking passport photo", "id photo taking"], "ru": ["фотографирование на паспорт"], "de": ["Passfoto"], "fr": ["photo d'identité"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["portrait photo studio", "headshot photography studio"], "ru": ["портретная фотосъёмка"]}
+         ]},
+        {"id": "photo_visa",
+         "name": "Фото на визу",
+         "variants": ["Фото на визу", "Фото на визу в США", "Фото на визу в Великобританию", "Фото на визу в Германию", "Фото на визу в Болгарию", "Фото на визу в Венгрию", "Фото на визу в Грецию", "Фото на визу в Израиль", "Фото на визу в Индию", "Фото на визу в Испанию", "Фото на визу в Ирландию", "Фото на визу в Италию", "Фото на визу в Канаду", "Фото на визу в Кипр", "Фото на визу в Китай", "Фото на визу в Литву", "Фото на Грин Карту", "Фото на визу в Нидерланды", "Фото на визу в Польшу", "Фото на визу в Португалию", "Фото на визу в Сингапур", "Фото на визу в Таиланд", "Фото на визу в Финляндию", "Фото на визу в Эстонию", "Фото на визу в Чехию", "Фото на визу во Францию", "Фото на визу в Швейцарию", "Фото на визу в Японию"],
+         "aliases": ["фото на визу", "фото на грин карту"],
+         "phrases_ru": ["фото на визу", "фотография на визу"],
+         "phrases_en": ["visa photo", "passport photo studio", "visa photo requirements"],
+         "key_ru": ["фото на визу"],
+         "key_en": ["visa photo"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["photo booth machine", "id photo printer"], "ru": ["фотобудка"], "de": ["Passfoto Automat"], "fr": ["photomaton"]},
+           {"name": "Действие", "match": "точное", "en": ["taking passport photo", "id photo taking"], "ru": ["фотографирование на паспорт"], "de": ["Passfoto"], "fr": ["photo d'identité"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["portrait photo studio", "headshot photography studio"], "ru": ["портретная фотосъёмка"]}
+         ]}
+      ]
+    },
+    {
+      "id": "horeca",
+      "name": "Меню и полиграфия для кафе",
+      "processes": [
+        {"id": "menu",
+         "name": "Меню, барные и винные карты",
+         "variants": ["Тематическая полиграфия", "Чайная карта", "Винная карта", "Кальянное меню", "Десертное меню"],
+         "aliases": ["меню", "винная карта", "барная карта"],
+         "phrases_ru": ["печать меню", "меню для ресторана", "винная карта"],
+         "phrases_en": ["restaurant menu printing", "menu printing", "printed menu cafe"],
+         "key_ru": ["печать меню"],
+         "key_en": ["menu printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["menu printing laminated", "printing restaurant menus"], "ru": ["ламинированное меню"], "de": ["Speisekarte drucken"], "fr": ["impression menu restaurant"]},
+           {"name": "Действие", "match": "точное", "en": ["menu cover binding", "printed wine list", "menu design print"], "ru": ["папка для меню"], "de": ["Speisekarte"], "fr": ["carte des vins"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["brochure printing", "print shop"], "ru": ["типография"]}
+         ]},
+        {"id": "table_tents",
+         "name": "Тейбл-тенты, плейсметы, папки для счёта",
+         "variants": ["Тейбл тенты", "Расчётницы / Папки для счёта / Кэш-холдеры", "Чек-буки", "Плейсметы"],
+         "aliases": ["тейбл тент", "плейсмат", "папка для счёта"],
+         "phrases_ru": ["тейбл тенты", "печать плейсметов"],
+         "phrases_en": ["table tent printing", "printed placemats", "table tent cards"],
+         "key_ru": ["тейбл тент"],
+         "key_en": ["table tent"],
+         "levels": [
+           {"name": "Действие", "match": "точное", "en": ["printing table tents", "paper placemats printing", "check presenter folder"], "ru": ["плейсметы для кафе"], "de": ["Tischaufsteller"], "fr": ["chevalet de table"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["menu printing", "promotional printing"], "ru": ["печать меню"]}
+         ]}
+      ]
+    },
+    {
+      "id": "calendars",
+      "name": "Календари",
+      "processes": [
+        {"id": "calendar_rigel",
+         "name": "Квартальные календари",
+         "variants": ["Квартальные календари / Фотокалендари", "Квартальные календари мини", "Квартальные календари миди", "Квартальные календари макси"],
+         "aliases": ["квартальный календарь", "календарь трио", "ригель"],
+         "phrases_ru": ["ригель для календаря", "календарь на ригеле", "квартальный календарь"],
+         "phrases_en": ["calendar binding", "calendar hanger", "wire binding calendar", "quarterly calendar"],
          "key_ru": ["ригель"],
          "key_en": ["calendar binding"],
          "levels": [
@@ -366,87 +963,101 @@
            {"name": "Отдельные этапы", "match": "частичное", "en": ["wire binding", "wire binding closing"], "ru": ["переплёт на пружину"], "de": ["Drahtbindung"], "fr": ["reliure wire-o"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["calendar printing", "printed calendar"], "ru": ["печать календарей"], "de": ["Kalenderdruck"], "fr": ["impression calendrier"]}
          ]},
-        {"id": "foamboard_mounting", "name": "Накатка на пенокартон и ПВХ", "aliases": ["накатка", "пенокартон", "ПВХ"],
-         "phrases_ru": ["накатка на пенокартон", "монтаж на ПВХ"],
-         "phrases_en": ["foam board mounting", "mounting print on foam board", "pvc board mounting"],
-         "key_ru": ["пенокартон"],
-         "key_en": ["foam board"],
+        {"id": "wall_calendars",
+         "name": "Настенные календари и календари-плакаты",
+         "variants": ["Печать календарей / Фотокалендарей", "Перекидные настенные календари / Фотокалендари", "Перекидные настенные календари А4", "Перекидные настенные календари А3", "Календари-плакаты / Фотокалендари-плакаты", "Календари-плакаты А4", "Календари-плакаты А3", "Календари планинги", "Адвент календари"],
+         "aliases": ["календари", "фотокалендарь", "настенный календарь", "адвент календарь"],
+         "phrases_ru": ["печать календарей", "настенный календарь", "фотокалендарь"],
+         "phrases_en": ["wall calendar printing", "calendar printing", "photo calendar printing"],
+         "key_ru": ["печать календарей"],
+         "key_en": ["calendar printing"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["mounting laminator", "foam board laminator", "cold laminator mounting"], "ru": ["накатка"], "de": ["Kaschieranlage"], "fr": ["contrecolleuse"]},
-           {"name": "Действие", "match": "точное", "en": ["mounting poster on foam board", "mounting print on board", "foamboard mounting"], "ru": ["накатка на пенокартон"], "de": ["Kaschieren"], "fr": ["contrecollage"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["foam board sign", "pvc sign printing"], "ru": ["таблички из пвх"], "de": ["Schaumplatte"], "fr": ["panneau pvc"]}
+           {"name": "Оборудование", "match": "точное", "en": ["calendar binding machine", "wire binding calendar"], "ru": ["переплёт календаря"], "de": ["Kalender drucken"], "fr": ["impression calendrier"]},
+           {"name": "Действие", "match": "точное", "en": ["printing wall calendars", "making photo calendar", "advent calendar printing"], "ru": ["печать настенных календарей"], "de": ["Wandkalender"], "fr": ["calendrier mural"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["poster printing", "spiral binding"], "ru": ["брошюровка на пружину"]}
          ]},
-        {"id": "banner_finishing", "name": "Обработка баннеров", "aliases": ["баннер", "проварка баннера"],
-         "phrases_ru": ["проварка баннера", "люверсы на баннер"],
-         "phrases_en": ["banner welding", "banner hemming", "banner grommets"],
-         "key_ru": ["печать баннеров"],
-         "key_en": ["banner printing"],
+        {"id": "desk_calendars",
+         "name": "Настольные календари",
+         "variants": ["Настольные перекидные календари-домики / Фотокалендари", "Настольные перекидные календари домики 20X15", "Настольные перекидные календари домики 15X15", "Настольные перекидные календари домики 30X10", "Настольные перекидные календари пирамидки", "Календари-линейки"],
+         "aliases": ["календарь домик", "настольный календарь"],
+         "phrases_ru": ["настольный календарь домик", "настольный календарь"],
+         "phrases_en": ["desk calendar printing", "tent desk calendar", "desktop calendar making"],
+         "key_ru": ["календарь домик"],
+         "key_en": ["desk calendar"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["banner welder", "hot air banner welding", "banner hemming machine"], "ru": ["сварка баннеров"], "de": ["Bannerschweißgerät"], "fr": ["soudeuse bâche"]},
-           {"name": "Действие", "match": "точное", "en": ["banner welding", "banner hemming", "installing banner grommets"], "ru": ["проварка баннера"], "de": ["Banner schweißen"], "fr": ["soudure bâche"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["banner grommets", "banner eyelets"], "ru": ["люверсы на баннер"], "de": ["Banner Ösen"], "fr": ["œillets bâche"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["banner printing", "vinyl banner"], "ru": ["печать баннеров"], "de": ["Bannerdruck"], "fr": ["impression bâche"]}
+           {"name": "Оборудование", "match": "точное", "en": ["desk calendar wire binding", "calendar creasing"], "ru": ["биговка календаря"], "de": ["Tischkalender"], "fr": ["calendrier de bureau"]},
+           {"name": "Действие", "match": "точное", "en": ["assembling desk calendar", "printing desk calendars"], "ru": ["сборка календаря домика"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["calendar printing", "wire binding"], "ru": ["печать календарей"]}
          ]},
-        {"id": "rollup", "name": "Сборка роллапов", "aliases": ["роллап", "мобильный стенд"],
-         "phrases_ru": ["сборка роллапа", "мобильный стенд роллап"],
-         "phrases_en": ["roll up banner stand assembly", "roll up banner", "pull up banner"],
-         "key_ru": ["роллап"],
-         "key_en": ["roll up banner"],
+        {"id": "pocket_calendars",
+         "name": "Карманные и магнитные календари",
+         "variants": ["Карманные календари / Фотокалендари", "Магнитные календари / Фотокалендари"],
+         "aliases": ["карманный календарь", "магнитный календарь"],
+         "phrases_ru": ["карманный календарь", "магнитный календарь"],
+         "phrases_en": ["pocket calendar printing", "magnetic calendar printing", "calendar card"],
+         "key_ru": ["карманный календарь"],
+         "key_en": ["pocket calendar"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["roll up banner stand", "pull up banner stand", "retractable banner"], "ru": ["роллап"], "de": ["Roll-up Banner"], "fr": ["kakémono"]},
-           {"name": "Действие", "match": "точное", "en": ["roll up banner assembly", "setting up roll up banner", "retractable banner setup"], "ru": ["сборка роллапа"], "de": ["Roll-up aufbauen"], "fr": ["montage kakémono"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["exhibition stand banner", "trade show banner"], "ru": ["баннерный стенд"], "de": ["Messestand"], "fr": ["kakémono salon"]}
-         ]},
-        {"id": "thermal_labels", "name": "Печать на термоэтикетках", "aliases": ["этикетки", "термоэтикетки"],
-         "phrases_ru": ["печать этикеток", "термопринтер этикеток"],
-         "phrases_en": ["thermal label printer", "label printing machine", "barcode label printer"],
-         "key_ru": ["термопринтер"],
-         "key_en": ["label printer"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["thermal label printer", "barcode label printer", "zebra label printer"], "ru": ["термопринтер этикеток"], "de": ["Etikettendrucker"], "fr": ["imprimante étiquettes"]},
-           {"name": "Действие", "match": "точное", "en": ["printing barcode labels", "label printing", "shipping label printing"], "ru": ["печать этикеток"], "de": ["Etiketten drucken"], "fr": ["impression étiquettes"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["label roll", "label applicator"], "ru": ["рулон этикеток"], "de": ["Etikettenrolle"], "fr": ["rouleau étiquettes"]}
+           {"name": "Действие", "match": "точное", "en": ["printing pocket calendars", "fridge magnet calendar"], "ru": ["календарь магнит"], "de": ["Taschenkalender"], "fr": ["calendrier de poche"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["business card printing", "fridge magnet printing"], "ru": ["магнитный календарь"]}
          ]}
       ]
     },
     {
-      "id": "souvenirs",
-      "name": "Сувенирная продукция",
+      "id": "stamps_signs",
+      "name": "Печати, таблички, бейджи",
       "processes": [
-        {"id": "sublimation", "name": "Сублимационный перенос", "aliases": ["сублимация", "печать на кружках"],
-         "phrases_ru": ["сублимационная печать", "печать на кружках"],
-         "phrases_en": ["sublimation printing", "mug heat press", "sublimation transfer"],
-         "key_ru": ["сублимационная печать"],
-         "key_en": ["sublimation printing"],
+        {"id": "stamps",
+         "name": "Печати и штампы",
+         "variants": ["Изготовление печатей", "Изготовление штампов", "Изготовление факсимиле", "Изготовление сургучных печатей", "Изготовление печатей для пластилина"],
+         "aliases": ["печать", "штамп", "факсимиле", "сургучная печать"],
+         "phrases_ru": ["оснастка для печати", "печати и штампы", "сургучная печать"],
+         "phrases_en": ["rubber stamp making", "self inking stamp", "stamp laser engraving", "wax seal stamp"],
+         "key_ru": ["резиновый штамп"],
+         "key_en": ["rubber stamp"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["sublimation printer", "mug press machine", "heat press mug"], "ru": ["термопресс для кружек"], "de": ["Sublimationsdrucker"], "fr": ["imprimante sublimation"]},
-           {"name": "Действие", "match": "точное", "en": ["sublimation printing mug", "printing on mug", "sublimation transfer"], "ru": ["печать на кружках"], "de": ["Sublimationsdruck"], "fr": ["impression sublimation"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["custom mug printing", "personalized mug"], "ru": ["кружка с принтом"], "de": ["Tasse bedrucken"], "fr": ["mug personnalisé"]}
+           {"name": "Оборудование", "match": "точное", "en": ["stamp maker machine", "laser engraving rubber stamp", "self inking stamp"], "ru": ["изготовление штампов печатей"], "de": ["Stempelherstellung"], "fr": ["fabrication tampon"]},
+           {"name": "Действие", "match": "точное", "en": ["stamping document", "rubber stamp on paper", "stamp imprint"], "ru": ["печать на документе"], "de": ["Stempel"], "fr": ["tampon encreur"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["rubber stamp", "office stamp"], "ru": ["штамп на бумаге"], "de": ["Stempel Büro"], "fr": ["tampon bureau"]}
          ]},
-        {"id": "dtf", "name": "DTF-нанесение на текстиль", "aliases": ["DTF", "печать на футболках"],
-         "phrases_ru": ["DTF печать", "печать на футболках"],
-         "phrases_en": ["dtf printing", "dtf transfer", "direct to film printing"],
-         "key_ru": ["печать на футболках"],
-         "key_en": ["dtf"],
+        {"id": "signs",
+         "name": "Таблички",
+         "variants": ["Изготовление табличек", "Изготовление табличек из пластика / ПВХ", "Изготовление табличек из ПВХ с аппликацией", "Изготовление табличек из акрила с аппликацией", "Изготовление УФ табличек", "План эвакуации"],
+         "aliases": ["таблички", "вывески", "план эвакуации"],
+         "phrases_ru": ["изготовление табличек", "таблички из пластика", "план эвакуации"],
+         "phrases_en": ["sign making", "acrylic sign printing", "office door sign", "pvc sign printing"],
+         "key_ru": ["таблички"],
+         "key_en": ["sign making"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["dtf printer", "direct to film printer", "dtf powder shaker"], "ru": ["dtf принтер"], "de": ["DTF Drucker"], "fr": ["imprimante DTF"]},
-           {"name": "Действие", "match": "точное", "en": ["dtf transfer t-shirt", "dtf printing process", "pressing dtf transfer"], "ru": ["dtf печать"], "de": ["DTF Druck"], "fr": ["impression DTF"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt heat press", "t-shirt printing"], "ru": ["печать на футболках"], "de": ["T-Shirt Druck"], "fr": ["impression t-shirt"]}
+           {"name": "Оборудование", "match": "точное", "en": ["uv printer signs", "sign plotter vinyl", "acrylic sign laser"], "ru": ["печать табличек"], "de": ["Schilder drucken"], "fr": ["signalétique"]},
+           {"name": "Действие", "match": "точное", "en": ["making acrylic signs", "office signage installation", "evacuation plan sign"], "ru": ["табличка на дверь"], "de": ["Türschild"], "fr": ["plaque de porte"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["signage printing", "vinyl lettering"], "ru": ["печать вывесок"]}
          ]},
-        {"id": "heat_transfer", "name": "Термотрансферная аппликация", "aliases": ["термоплёнка", "термотрансфер"],
-         "phrases_ru": ["термотрансфер", "термопресс футболка"],
-         "phrases_en": ["heat transfer vinyl", "heat press t-shirt", "htv application"],
-         "key_ru": ["термопресс"],
-         "key_en": ["heat press"],
+        {"id": "badges",
+         "name": "Бейджи",
+         "variants": ["Бейджи", "Пластиковые бейджи", "Бейджи с полиграфической вставкой", "Бейджи с ламинацией", "Металлические бейджи", "Бейджи с лазерной гравировкой"],
+         "aliases": ["бейджи", "бейдж", "значки"],
+         "phrases_ru": ["изготовление бейджей", "бейджи с именем"],
+         "phrases_en": ["name badge printing", "name badge making", "id badge printing"],
+         "key_ru": ["бейджи"],
+         "key_en": ["name badge"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["heat press machine", "t-shirt heat press", "heat transfer press"], "ru": ["термопресс"], "de": ["Transferpresse"], "fr": ["presse à chaud t-shirt"]},
-           {"name": "Действие", "match": "точное", "en": ["heat transfer vinyl t-shirt", "pressing vinyl on shirt", "htv application"], "ru": ["термотрансфер на футболку"], "de": ["Flexfolie"], "fr": ["flex thermocollant"]},
-           {"name": "Отдельные этапы", "match": "частичное", "en": ["cutting heat transfer vinyl", "weeding htv"], "ru": ["резка термоплёнки"], "de": ["Flexfolie plotten"], "fr": ["découpe flex"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["t-shirt printing", "custom t-shirt"], "ru": ["печать на футболках"], "de": ["T-Shirt Druck"], "fr": ["impression t-shirt"]}
-         ]},
-        {"id": "laser_engraving", "name": "Лазерная гравировка", "aliases": ["гравировка"],
-         "phrases_ru": ["лазерная гравировка", "лазерный гравер"],
-         "phrases_en": ["laser engraving", "laser engraver", "co2 laser engraving"],
+           {"name": "Оборудование", "match": "точное", "en": ["badge printer", "card printer id badge", "badge making machine"], "ru": ["принтер бейджей"], "de": ["Namensschilder"], "fr": ["badge nominatif"]},
+           {"name": "Действие", "match": "точное", "en": ["printing name badges", "laminating id badge", "button badge making"], "ru": ["закатные значки"], "de": ["Ausweis drucken"], "fr": ["impression badge"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["card printing", "laser engraving badge"], "ru": ["лазерная гравировка"]}
+         ]}
+      ]
+    },
+    {
+      "id": "engraving",
+      "name": "Гравировка",
+      "processes": [
+        {"id": "laser_engraving",
+         "name": "Лазерная гравировка и сувениры с гравировкой",
+         "variants": ["Лазерная гравировка", "Гравировка", "Сувениры с гравировкой", "Гравировка на ручке", "Гравировка на зажигалках", "Гравировка на флешках", "Гравировка на ежедневниках", "Гравировка на ноутбуках / MacBook"],
+         "aliases": ["гравировка", "лазерная гравировка", "гравировка на ручке"],
+         "phrases_ru": ["лазерная гравировка", "лазерный гравер", "гравировка на ручке"],
+         "phrases_en": ["laser engraving", "laser engraver", "co2 laser engraving", "engraving pens", "laptop laser engraving"],
          "key_ru": ["лазерная гравировка"],
          "key_en": ["laser engraving"],
          "levels": [
@@ -454,53 +1065,37 @@
            {"name": "Действие", "match": "точное", "en": ["laser engraving leather", "laser engraving gift", "laser marking metal"], "ru": ["лазерная гравировка"], "de": ["Lasergravur"], "fr": ["gravure laser"]},
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["laser cutting acrylic", "engraved souvenir"], "ru": ["гравировка сувениров"], "de": ["Gravur"], "fr": ["gravure"]}
          ]},
-        {"id": "vinyl_magnets", "name": "Виниловые магниты", "aliases": ["магниты"],
-         "phrases_ru": ["виниловые магниты", "печать магнитов"],
-         "phrases_en": ["fridge magnet printing", "magnetic vinyl", "printed magnets"],
-         "key_ru": ["магниты на холодильник"],
-         "key_en": ["fridge magnet"],
+        {"id": "engraving_materials",
+         "name": "Гравировка по материалам",
+         "variants": ["Гравировка на металле", "Гравировка на пластике", "Гравировка на стекле", "Гравировка на коже", "Гравировка на дереве", "Гравировка на камне", "Гравировка на граните"],
+         "aliases": ["гравировка на металле", "гравировка на стекле", "гравировка на дереве"],
+         "phrases_ru": ["гравировка на металле", "гравировка на стекле", "гравировка на дереве"],
+         "phrases_en": ["laser engraving metal", "glass engraving", "wood laser engraving", "leather laser engraving"],
+         "key_ru": ["гравировка"],
+         "key_en": ["laser engraving"],
+         "allow": ["wood", "дерев", "steel", "стал", "стальн"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["magnet cutting machine", "magnetic sheet printing"], "ru": ["магнитный винил"], "de": ["Magnetfolie"], "fr": ["aimant souple"]},
-           {"name": "Действие", "match": "точное", "en": ["making fridge magnets", "printing fridge magnets", "custom fridge magnet"], "ru": ["магниты на холодильник"], "de": ["Kühlschrankmagnet"], "fr": ["magnet frigo"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["fridge magnet souvenir", "souvenir magnets"], "ru": ["сувенирные магниты"], "de": ["Souvenir Magnet"], "fr": ["magnet souvenir"]}
+           {"name": "Оборудование", "match": "точное", "en": ["fiber laser engraver", "co2 laser engraving machine"], "ru": ["лазерный гравер"], "de": ["Lasergravur"], "fr": ["gravure laser"]},
+           {"name": "Действие", "match": "точное", "en": ["engraving on glass", "engraving stone granite", "engraving leather"], "ru": ["гравировка на граните"], "de": ["Gravur Glas"], "fr": ["gravure verre"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["laser marking", "laser cutting"], "ru": ["лазерная маркировка"]}
          ]},
-        {"id": "button_badges", "name": "Закатные металлические значки", "aliases": ["значки"],
-         "phrases_ru": ["закатные значки", "значки на булавке"],
-         "phrases_en": ["button badge maker", "pin button machine", "badge press"],
-         "key_ru": ["закатные значки"],
-         "key_en": ["button badge"],
+        {"id": "engraving_tags",
+         "name": "Гравировка жетонов, номерков, шильдов",
+         "variants": ["Гравировка на бейджах", "Гравировка на жетонах", "Гравировка на номерках", "Гравировка шильдов"],
+         "aliases": ["жетоны", "шильды", "номерки"],
+         "phrases_ru": ["гравировка жетонов", "гравировка шильдов"],
+         "phrases_en": ["dog tag engraving", "nameplate engraving", "metal tag laser marking"],
+         "key_ru": ["гравировка жетонов"],
+         "key_en": ["tag engraving"],
          "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["button badge machine", "badge maker press", "pin button maker"], "ru": ["пресс для значков"], "de": ["Buttonmaschine"], "fr": ["machine à badges"]},
-           {"name": "Действие", "match": "точное", "en": ["making button badges", "making pin buttons", "pressing badge"], "ru": ["значки на заказ"], "de": ["Buttons herstellen"], "fr": ["fabrication badges"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["pin badges", "custom buttons"], "ru": ["значки с логотипом"], "de": ["Anstecker"], "fr": ["badges"]}
+           {"name": "Оборудование", "match": "точное", "en": ["fiber laser marking tags", "nameplate engraving machine"], "ru": ["маркировка жетонов"], "de": ["Gravur Schilder"], "fr": ["gravure plaques"]},
+           {"name": "Действие", "match": "точное", "en": ["engraving dog tags", "engraving nameplates", "laser marking badges"], "ru": ["гравировка номерков"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["laser engraving", "laser marking"], "ru": ["лазерная гравировка"]}
          ]},
-        {"id": "immortal_regiment", "name": "Транспаранты «Бессмертный полк»", "aliases": ["бессмертный полк", "транспарант"],
-         "phrases_ru": ["бессмертный полк", "транспарант с портретом"],
-         "phrases_en": ["portrait poster printing", "placard on stick", "photo poster mounting"],
-         "key_ru": ["бессмертный полк"],
-         "key_en": ["immortal regiment"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["poster printing large", "portrait poster mounting"], "ru": ["печать портрета"], "de": ["Plakatdruck"], "fr": ["impression affiche"]},
-           {"name": "Действие", "match": "точное", "en": ["memorial portrait march", "portrait placard parade", "victory day parade portraits"], "ru": ["шествие с портретами"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing photo poster", "photo poster on board"], "ru": ["фотоплакат"], "de": ["Fotoplakat"], "fr": ["affiche photo"]}
-         ]},
-        {"id": "stamps", "name": "Печати и штампы", "aliases": ["печать", "штамп"],
-         "phrases_ru": ["оснастка для печати", "печати и штампы"],
-         "phrases_en": ["rubber stamp making", "self inking stamp", "stamp laser engraving"],
-         "key_ru": ["резиновый штамп"],
-         "key_en": ["rubber stamp"],
-         "levels": [
-           {"name": "Оборудование", "match": "точное", "en": ["stamp maker machine", "laser engraving rubber stamp", "self inking stamp"], "ru": ["изготовление штампов печатей"], "de": ["Stempelherstellung"], "fr": ["fabrication tampon"]},
-           {"name": "Действие", "match": "точное", "en": ["stamping document", "rubber stamp on paper", "stamp imprint"], "ru": ["печать на документе"], "de": ["Stempel"], "fr": ["tampon encreur"]},
-           {"name": "Похожие операции", "match": "смежный процесс", "en": ["rubber stamp", "office stamp"], "ru": ["штамп на бумаге"], "de": ["Stempel Büro"], "fr": ["tampon bureau"]}
-         ]}
-      ]
-    },
-    {
-      "id": "extra",
-      "name": "Доп. услуги",
-      "processes": [
-        {"id": "printing_3d", "name": "3D-печать", "aliases": ["3д печать", "3D принтер"],
+        {"id": "printing_3d",
+         "name": "3D-печать",
+         "variants": ["3D-печать"],
+         "aliases": ["3д печать", "3D принтер"],
          "phrases_ru": ["3D печать", "3D принтер"],
          "phrases_en": ["3d printer printing", "3d printing timelapse", "fdm 3d printer"],
          "key_ru": ["3d принтер"],
@@ -511,6 +1106,177 @@
            {"name": "Похожие операции", "match": "смежный процесс", "en": ["3d printed part", "3d printing prototype"], "ru": ["прототипирование"], "de": ["3D Druck Prototyp"], "fr": ["prototype impression 3D"]}
          ]}
       ]
+    },
+    {
+      "id": "binding",
+      "name": "Брошюровка и переплёт",
+      "processes": [
+        {"id": "comb_binding",
+         "name": "Брошюровка на пластиковую пружину",
+         "variants": ["Брошюровка на пластиковую пружину", "Печать брошюр на пластиковой пружине", "Печать брошюр на пластиковой пружине без обложки"],
+         "aliases": ["брошюровка на пружину", "пластиковая пружина"],
+         "phrases_ru": ["брошюровка на пластиковую пружину", "брошюровщик"],
+         "phrases_en": ["comb binding machine", "plastic comb binding", "comb binder"],
+         "key_ru": ["брошюровка"],
+         "key_en": ["comb binding"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["comb binding machine", "plastic comb binder", "binding machine office"], "ru": ["брошюровщик"], "de": ["Plastikbindung"], "fr": ["relieuse anneaux plastiques"]},
+           {"name": "Действие", "match": "точное", "en": ["plastic comb binding", "binding document plastic comb", "comb binding process"], "ru": ["переплёт на пластиковую пружину"], "de": ["Kammbindung"], "fr": ["reliure plastique"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["punching holes for binding", "binding hole punch"], "ru": ["перфорация под пружину"], "de": ["Lochen Bindung"], "fr": ["perforation reliure"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["spiral binding", "document binding"], "ru": ["переплёт документов"], "de": ["Bindegerät"], "fr": ["reliure document"]}
+         ]},
+        {"id": "wire_binding",
+         "name": "Брошюровка на металлическую пружину",
+         "variants": ["Брошюровка на металлическую пружину", "Печать брошюр на металлической пружине", "Печать брошюр в твердом переплете на металлической пружине", "Навивка на пружину", "Брошюровка документов", "Печать блокнотов на металлической пружине"],
+         "aliases": ["брошюровка", "брошюровка на пружину", "металлическая пружина", "навивка"],
+         "phrases_ru": ["брошюровка на металлическую пружину", "переплёт на пружину"],
+         "phrases_en": ["wire binding machine", "wire o binding", "spiral binding"],
+         "key_ru": ["брошюровка"],
+         "key_en": ["spiral binding"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["wire binding machine", "wire-o binding equipment", "wire binding closer"], "ru": ["брошюровщик на пружину"], "de": ["Drahtkammbindung"], "fr": ["relieuse wire-o"]},
+           {"name": "Действие", "match": "точное", "en": ["wire binding process", "metal wire book binding", "binding paper with metal wire", "closing wire binding"], "ru": ["переплёт на металлическую пружину"], "de": ["Drahtbindung"], "fr": ["reliure spirale métallique"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["punching holes for wire binding", "binding hole punch"], "ru": ["перфорация под пружину"], "de": ["Lochen Bindung"], "fr": ["perforation reliure"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["spiral notebook binding", "spiral binding"], "ru": ["спиральный переплёт"], "de": ["Spiralbindung"], "fr": ["reliure spirale"]}
+         ]},
+        {"id": "saddle_stitch",
+         "name": "Брошюры на скобе",
+         "variants": ["Брошюровка на скобу", "Печать брошюр на скобе", "Печать брошюр", "Печать блокнотов на скобе"],
+         "aliases": ["брошюры", "печать брошюр", "брошюровка на скобу"],
+         "phrases_ru": ["брошюровка на скобу", "сшивка скобой", "печать брошюр"],
+         "phrases_en": ["saddle stitching", "saddle stitcher", "booklet stapler", "booklet printing"],
+         "key_ru": ["брошюровка"],
+         "key_en": ["stapler"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["saddle stitcher", "booklet maker machine", "electric stapler booklet"], "ru": ["брошюровщик на скобу"], "de": ["Rückendrahtheftung"], "fr": ["piqûre à cheval"]},
+           {"name": "Действие", "match": "точное", "en": ["stapling booklet", "stitching magazine", "booklet stapling"], "ru": ["сшивка брошюры"], "de": ["Broschüre heften"], "fr": ["agrafage brochure"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["folding booklet", "collating paper"], "ru": ["подборка листов"], "de": ["Broschüre falzen"], "fr": ["pliage brochure"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["stapler paper", "brochure printing"], "ru": ["степлер"], "de": ["Heftgerät"], "fr": ["agrafeuse"]}
+         ]},
+        {"id": "metal_bind",
+         "name": "Твёрдый переплёт",
+         "variants": ["Твёрдый переплёт", "Печать книг в твёрдом переплёте / 7Б / 7БЦ", "Переплет 7Б", "Переплет 7БЦ"],
+         "aliases": ["твёрдый переплёт", "переплёт 7Б", "металбинд"],
+         "phrases_ru": ["твёрдый переплёт", "металбинд", "твёрдый переплёт книги"],
+         "phrases_en": ["hardcover binding", "metal bind", "hard cover binding machine", "hardcover book binding"],
+         "key_ru": ["переплёт"],
+         "key_en": ["hardcover"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["metal bind machine", "hardcover binding machine", "channel binding"], "ru": ["металбинд"], "de": ["Hardcover Bindung"], "fr": ["reliure couverture rigide"]},
+           {"name": "Действие", "match": "точное", "en": ["binding hardcover book", "hard cover book making", "book binding hardcover"], "ru": ["твёрдый переплёт"], "de": ["Buchbinden"], "fr": ["reliure livre"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["bookbinding", "book binding process"], "ru": ["переплёт книги"], "de": ["Buchbinderei"], "fr": ["reliure"]}
+         ]},
+        {"id": "perfect_binding",
+         "name": "Клеевой переплёт КБС / КШС",
+         "variants": ["Печать книг КБС", "Печать книг КБС (PUR клей)", "Печать книг КШС", "Переплет КБС", "Переплет КШС", "Печать брошюр с клеевым креплением (КБС / КШС)", "Печать книг в мягком переплете"],
+         "aliases": ["КБС", "КШС", "клеевой переплёт", "термопереплёт", "мягкий переплёт"],
+         "phrases_ru": ["клеевой переплёт", "термоклеевая машина", "клеевой переплёт"],
+         "phrases_en": ["perfect binding machine", "perfect binder", "glue binding", "pur perfect binding"],
+         "key_ru": ["переплёт"],
+         "key_en": ["bookbinding"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["perfect binder", "glue binding machine", "hot melt binding"], "ru": ["термоклеевая машина"], "de": ["Klebebinder"], "fr": ["relieuse dos carré collé"]},
+           {"name": "Действие", "match": "точное", "en": ["perfect binding book", "glue binding book", "paperback binding"], "ru": ["клеевой переплёт"], "de": ["Klebebindung"], "fr": ["dos carré collé"]},
+           {"name": "Отдельные этапы", "match": "частичное", "en": ["book block gluing", "book cover trimming"], "ru": ["склейка блока"], "de": ["Buchblock leimen"], "fr": ["encollage livre"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["bookbinding", "book printing"], "ru": ["печать книг"], "de": ["Buchbinderei"], "fr": ["impression livre"]}
+         ]},
+        {"id": "ring_binding",
+         "name": "Брошюры на кольцах и болтах",
+         "variants": ["Печать брошюр на кольцах", "Печать брошюр на болтах с открытым корешком", "Печать брошюр на болтах с закрытым корешком", "Печать брошюр на болтах с открытым корешком в твердом переплете", "Печать брошюр на болтах с закрытым корешком в твердом переплете", "Печать брошюр на болтах без обложки"],
+         "aliases": ["брошюры на кольцах", "переплёт на болтах", "винтовой переплёт"],
+         "phrases_ru": ["брошюры на кольцах", "переплёт на болтах"],
+         "phrases_en": ["screw post binding", "ring binder printing", "chicago screw binding"],
+         "key_ru": ["переплёт на болтах"],
+         "key_en": ["screw post binding"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["screw post binding", "binder ring printing"], "ru": ["винтовой переплёт"], "de": ["Schraubbindung"], "fr": ["reliure vis"]},
+           {"name": "Действие", "match": "точное", "en": ["assembling screw post book", "drilling holes binding screws"], "ru": ["сверление под болты"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["paper drilling", "hardcover binding"], "ru": ["сверление бумаги"]}
+         ]}
+      ]
+    },
+    {
+      "id": "books",
+      "name": "Книги, каталоги, журналы",
+      "processes": [
+        {"id": "books",
+         "name": "Печать книг и отчётов",
+         "variants": ["Печать книг", "Печать годовых отчетов"],
+         "aliases": ["печать книг", "годовой отчёт"],
+         "phrases_ru": ["печать книг", "типография книги"],
+         "phrases_en": ["book printing", "book printing press", "printing books"],
+         "key_ru": ["печать книг"],
+         "key_en": ["book printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["book printing machine", "digital book printing"], "ru": ["книжная типография"], "de": ["Buchdruck"], "fr": ["impression livres"]},
+           {"name": "Действие", "match": "точное", "en": ["binding printed books", "book block trimming"], "ru": ["переплёт книги"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing house", "perfect binding"], "ru": ["типография"]}
+         ]},
+        {"id": "catalogs",
+         "name": "Каталоги и журналы",
+         "variants": ["Печать каталогов", "Печать каталогов с креплением КБС", "Печать каталогов с креплением КБС на PUR клей", "Печать каталогов с креплением КШС", "Печать журналов", "Печать журналов с креплением КБС", "Печать журналов с креплением КБС на PUR клей", "Печать журналов с креплением КШС"],
+         "aliases": ["каталоги", "журналы"],
+         "phrases_ru": ["печать каталогов", "печать журналов"],
+         "phrases_en": ["catalog printing", "magazine printing", "magazine printing press"],
+         "key_ru": ["печать журналов"],
+         "key_en": ["magazine printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["magazine printing press", "web offset magazine"], "ru": ["печать журнала"], "de": ["Zeitschriftendruck"], "fr": ["impression magazine"]},
+           {"name": "Действие", "match": "точное", "en": ["binding magazines", "catalog perfect binding"], "ru": ["переплёт каталога"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["printing house", "brochure printing"], "ru": ["типография"]}
+         ]},
+        {"id": "notebooks",
+         "name": "Блокноты и ежедневники",
+         "variants": ["Печать блокнотов", "Печать блокнотов с креплением КБС", "Ежедневники"],
+         "aliases": ["блокноты", "ежедневники"],
+         "phrases_ru": ["печать блокнотов", "ежедневники с логотипом"],
+         "phrases_en": ["notebook printing", "custom notebook making", "planner printing"],
+         "key_ru": ["блокноты"],
+         "key_en": ["notebook printing"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["notebook binding machine", "notepad glue binding"], "ru": ["переплёт блокнотов"], "de": ["Notizblock"], "fr": ["carnet impression"]},
+           {"name": "Действие", "match": "точное", "en": ["making notebooks", "printing planners", "notepad padding"], "ru": ["склейка блокнотов"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["spiral binding", "perfect binding"], "ru": ["брошюровка"]}
+         ]}
+      ]
+    },
+    {
+      "id": "photobooks",
+      "name": "Фотокниги",
+      "processes": [
+        {"id": "photobooks",
+         "name": "Фотокниги",
+         "variants": ["Печать фотокниг", "Фотокниги в мягкой обложке", "Фотокнига на скрепке", "Фотокнига на пружине", "Фотокнига на PUR-клее", "Фотокниги в твердой обложке", "Фотокнига \"Премиум\" в твердой обложке", "Фотокнига в твёрдом переплёте, Лайфлат без прослойки", "Фотокнига в твёрдом переплёте, Лайфлат с прослойкой", "Фотокнига \"Полиграфическая\" в твёрдом переплёте", "Выпускные фотокниги", "Фотокниги планшеты", "Фотокниги Трюмо"],
+         "aliases": ["фотокнига", "фотоальбом", "выпускной альбом"],
+         "phrases_ru": ["печать фотокниг", "фотокнига"],
+         "phrases_en": ["photo book printing", "photobook making", "layflat photo book"],
+         "key_ru": ["фотокнига"],
+         "key_en": ["photo book"],
+         "levels": [
+           {"name": "Оборудование", "match": "точное", "en": ["photo book making machine", "photobook binding"], "ru": ["изготовление фотокниги"], "de": ["Fotobuch"], "fr": ["livre photo"]},
+           {"name": "Действие", "match": "точное", "en": ["layflat album binding", "making a photo album", "graduation album printing"], "ru": ["выпускной фотоальбом"], "de": ["Fotoalbum"], "fr": ["album photo"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["hardcover binding", "photo printing"], "ru": ["твёрдый переплёт"]}
+         ]}
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Дизайн",
+      "processes": [
+        {"id": "design",
+         "name": "Фирменный стиль и вёрстка",
+         "variants": ["Фирменный стиль", "Верстка полиграфии"],
+         "aliases": ["дизайн", "фирменный стиль", "вёрстка", "логотип"],
+         "phrases_ru": ["разработка фирменного стиля", "вёрстка полиграфии"],
+         "phrases_en": ["brand identity design print", "graphic designer print layout", "print design layout"],
+         "key_ru": ["фирменный стиль"],
+         "key_en": ["brand identity design"],
+         "levels": [
+           {"name": "Действие", "match": "точное", "en": ["graphic designer working on print", "designing business cards", "print layout design"], "ru": ["дизайн полиграфии"], "de": ["Grafikdesign Druck"], "fr": ["graphiste impression"]},
+           {"name": "Похожие операции", "match": "смежный процесс", "en": ["print shop", "printing proofs"], "ru": ["типография"]}
+         ]}
+      ]
     }
-  ]
+  ],
+  "migrated": {"wf_latex": "wf_aqueous", "banner_finishing": "wf_ecosolvent", "eyelets": "wf_ecosolvent", "badge_punch": "badges", "button_badges": "badges", "thermal_binding": "perfect_binding"}
 }

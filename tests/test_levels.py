@@ -64,15 +64,16 @@ def test_level_phrases_pass_own_topic_filter():
         plan = build_plan(p.display, PROCS, Dictionary.load())
         phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
         for q in plan.queries:
-            in_domain = in_print_domain(set(words(q.text)), DOMAIN)
+            in_domain = in_print_domain(set(words(q.text)), DOMAIN, plan.allow)
             r = video(1, q.text + " paper printing")
-            if not in_domain or not is_relevant(r, phrases, domain=DOMAIN) or is_excluded(r, plan.exclude):
+            if not in_domain or not is_relevant(r, phrases, domain=DOMAIN, allow=plan.allow) \
+                    or is_excluded(r, plan.exclude):
                 bad.append((p.id, q.text))
     assert bad == []
 
 
 def test_plan_has_levels_in_four_languages():
-    plan = build_plan("Брошюровка на металлическую пружину (Переплёт)", PROCS, Dictionary.load())
+    plan = build_plan("Брошюровка на металлическую пружину (Брошюровка и переплёт)", PROCS, Dictionary.load())
     assert plan.levels[0] == "Название услуги" and len(plan.levels) == 5
     langs = {q.lang for q in plan.queries if q.level > 0}
     assert {EN, DE, FR, "ru"} <= langs
@@ -133,16 +134,15 @@ def test_german_letters_are_words():
     "board, chips, closer, computer, science, technology, wires, electricity",
 ])
 def test_service_words_do_not_admit_junk(title):
-    plan = build_plan("Брошюровка на металлическую пружину (Переплёт)", PROCS, Dictionary.load())
+    plan = build_plan("Брошюровка на металлическую пружину (Брошюровка и переплёт)", PROCS, Dictionary.load())
     phrases = phrase_stems([q.text for q in plan.queries], keep={q.text for q in plan.queries if q.key})
     assert not is_relevant(video(1, title), phrases, domain=DOMAIN)
 
 
 @pytest.mark.parametrize("name, title", [
-    ("Скоба внакидку (Переплёт)", "saddle stitching booklet machine"),
-    ("Скругление углов (Послепечатные работы)", "corner rounder for cards"),
-    ("Биговка (Послепечатные работы)", "creasing with soft rubber"),
-    ("Термопереплёт Unibind (Переплёт)", "Unibind thermal binding system"),
+    ("Брошюры на скобе (Брошюровка и переплёт)", "saddle stitching booklet machine"),
+    ("Скругление углов (Постпечатная обработка)", "corner rounder for cards"),
+    ("Биговка (Постпечатная обработка)", "creasing with soft rubber"),
 ])
 def test_service_terms_now_pass(name, title):
     """Раньше эти ролики отсеивались: термины услуг не считались словами полиграфии."""
@@ -188,7 +188,7 @@ def test_match_from_matched_phrase_not_from_query():
 
     На уровне названия ролик не по теме; найденный позже, он предлагается как «смежный процесс», а не «точное».
     """
-    plan = build_plan("Установка ригеля на календарь (Послепечатные работы)", PROCS, Dictionary.load())
+    plan = build_plan("Квартальные календари (Календари)", PROCS, Dictionary.load())
     r = video(1, "Calendar printing")
     source = FakeSource({"calendar binding": [r], "calendar printing": [r]})
     QCoreApplication.instance() or QCoreApplication([])

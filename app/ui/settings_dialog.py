@@ -99,7 +99,7 @@ class SettingsDialog(QDialog):
         brave_row, self.brave_key = _key_field(settings.brave_api_key, "brave_api_key" in built)
         form.addRow("Ключ Brave Search:", brave_row)
         form.addRow("", _note("Brave — платный, необязательно (программа не выходит за бесплатные $5 в месяц)."))
-        form.addRow("", _note("Wikimedia Commons, Internet Archive и Videezy работают без ключа."))
+        form.addRow("", _note("Internet Archive, Videezy и Яндекс Видео работают без ключа."))
 
         # VK Видео: вход в браузере, пароль программа не видит; в программу — только токен из адреса.
         self.vk_app_id = QLineEdit(settings.vk_app_id)
