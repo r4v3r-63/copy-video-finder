@@ -4,23 +4,27 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtCore import QDate, QItemSelectionModel, Qt, QUrl, pyqtSignal
 from PyQt6.QtGui import QColor, QDesktopServices
 from PyQt6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QCheckBox,
     QComboBox,
+    QDateEdit,
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
+    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -290,6 +294,8 @@ class VideoCard(QWidget):
 
 class CatalogView(QWidget):
     add_link_requested = pyqtSignal()
+    download_requested = pyqtSignal(list)
+    check_links_requested = pyqtSignal(list)
 
     def __init__(self, catalog: cat.Catalog, categories: list[Category], parent=None):
         super().__init__(parent)
@@ -333,17 +339,71 @@ class CatalogView(QWidget):
         self.table.setMinimumWidth(420)
         self.table.verticalHeader().hide()
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.currentCellChanged.connect(lambda row, *_: self._show_row(row))
 
         self.card = theme.make_card(VideoCard(catalog, self.processes))
         self.card.changed.connect(self.refresh)
 
+        self.bulk = QToolButton()
+        self.bulk.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        actions = QMenu(self.bulk)
+        actions.addAction("Выделить все", self.table.selectAll)
+        actions.addAction("Снять выделение", self.table.clearSelection)
+        actions.addSeparator()
+        for title, status in (("Отметить выбранными", cat.SELECTED), ("Отклонить", cat.REJECTED),
+                              ("Снять отметку", cat.NEW)):
+            actions.addAction(title, lambda _checked=False, s=status: self._bulk_status(s))
+        actions.addAction("Скачать выбранные", lambda: self.download_requested.emit(self.selected_entries()))
+        actions.addAction("Скопировать ссылки", self._copy_links)
+        actions.addAction("Проверить ссылки выбранных",
+                          lambda: self.check_links_requested.emit(self.selected_entries()))
+        self.bulk.setMenu(actions)
+        self.table.itemSelectionChanged.connect(self._selection_changed)
+        self._selection_changed()
+        self.filter_button = QPushButton("Фильтры…")
+        self.filter_button.setCheckable(True)
+        options = QHBoxLayout()
+        options.addWidget(self.bulk)
+        options.addStretch()
+        options.addWidget(self.filter_button)
+        self.filter_panel = QWidget()
+        form = QFormLayout(self.filter_panel)
+        self.source_filter = theme.compact_combo(QComboBox())
+        self.license_filter = theme.compact_combo(QComboBox())
+        self.match_filter = theme.compact_combo(QComboBox())
+        self.match_filter.addItem("Любое соответствие", None)
+        for match in cat.MATCHES:
+            self.match_filter.addItem(match, match)
+        self.downloaded_filter = QCheckBox("Только скачанные (файл на диске)")
+        self.since_filter = QCheckBox("Добавленные с даты:")
+        self.since_date = QDateEdit(QDate.currentDate())
+        self.since_date.setCalendarPopup(True)
+        self.since_date.setEnabled(False)
+        self.since_filter.toggled.connect(self.since_date.setEnabled)
+        form.addRow("Площадка:", self.source_filter)
+        form.addRow("Лицензия:", self.license_filter)
+        form.addRow("Соответствие:", self.match_filter)
+        form.addRow(self.since_filter, self.since_date)
+        form.addRow(self.downloaded_filter)
+        reset = QPushButton("Сбросить фильтры")
+        reset.clicked.connect(self.reset_filters)
+        form.addRow(reset)
+        for combo in (self.source_filter, self.license_filter, self.match_filter):
+            combo.currentIndexChanged.connect(lambda _i: self.refresh_list())
+        for checkbox in (self.downloaded_filter, self.since_filter):
+            checkbox.toggled.connect(lambda _checked: self.refresh_list())
+        self.since_date.dateChanged.connect(lambda _date: self.refresh_list())
+        self.filter_button.toggled.connect(self.filter_panel.setVisible)
+        self.filter_panel.hide()
+
         middle = QWidget()
         middle_layout = QVBoxLayout(middle)
         middle_layout.setContentsMargins(0, 0, 0, 0)
         middle_layout.addLayout(filters)
+        middle_layout.addLayout(options)
+        middle_layout.addWidget(self.filter_panel)
         middle_layout.addWidget(self.table)
 
         splitter = QSplitter()
@@ -376,6 +436,17 @@ class CatalogView(QWidget):
         """Обновить дерево с числами и список (после изменений в каталоге)."""
         current = self.selected_process()
         entries = self.catalog.entries()
+        for combo, title, values in (
+                (self.source_filter, "Все площадки", {e.result.source for e in entries}),
+                (self.license_filter, "Все лицензии", {e.result.license.name for e in entries})):
+            value = combo.currentData()
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItem(title, None)
+            for name in sorted(values):
+                combo.addItem(name or "Не указана", name)
+            combo.setCurrentIndex(max(0, combo.findData(value)))
+            combo.blockSignals(False)
         coverage = self.catalog.coverage()
         totals: dict[str, int] = {}
         for e in entries:
@@ -411,6 +482,7 @@ class CatalogView(QWidget):
         self.refresh_list()
 
     def refresh_list(self):
+        selected_ids = {e.id for e in self.selected_entries()} if hasattr(self, "entries") else set()
         selected_id = self.card.entry.id if self.card.entry else None
         pid = self.selected_process()
         if pid is None:  # выбрана категория — все её услуги
@@ -423,6 +495,15 @@ class CatalogView(QWidget):
                                            status=self.status_filter.currentData(), text=self.search.text())
             if pid == NO_SERVICE:
                 entries = [e for e in entries if not e.links]
+        since = self.since_date.date().startOfDay().toSecsSinceEpoch() if self.since_filter.isChecked() else None
+        source, license_name, match = (c.currentData() for c in
+                                       (self.source_filter, self.license_filter, self.match_filter))
+        scope = ids if pid is None else {pid} if pid not in (ALL, NO_SERVICE) else None
+        entries = [e for e in entries if (source is None or e.result.source == source)
+                   and (license_name is None or e.result.license.name == license_name)
+                   and (match is None or any(m == match and (scope is None or p in scope) for p, m in e.links.items()))
+                   and (not self.downloaded_filter.isChecked() or e.has_file)
+                   and (since is None or e.added_at >= since)]
         self.entries = entries
         self.table.blockSignals(True)
         self.table.setRowCount(0)
@@ -443,17 +524,23 @@ class CatalogView(QWidget):
                 self.table.setItem(row, col, item)
             if e.id == selected_id:
                 restore = row
+        self.table.clearSelection()
+        for row, entry in enumerate(entries):
+            if entry.id in selected_ids:
+                self.table.selectionModel().select(self.table.model().index(row, 0),
+                    QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
         self.table.blockSignals(False)
         if restore >= 0:
-            self.table.selectRow(restore)
             self.card.show_entry(entries[restore])
         else:
             self.card.show_entry(None)
+        self._selection_changed()
 
     def select_entry(self, video_id: int):
         """Показать ролик: сбросить фильтры, выбрать «Все ролики» и строку ролика."""
         self.search.clear()
         self.status_filter.setCurrentIndex(0)
+        self.reset_filters()
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
         self.refresh_list()
         for row, e in enumerate(self.entries):
@@ -464,3 +551,33 @@ class CatalogView(QWidget):
 
     def _show_row(self, row: int):
         self.card.show_entry(self.entries[row] if 0 <= row < len(self.entries) else None)
+
+    def selected_entries(self) -> list[cat.Entry]:
+        if not hasattr(self, "entries"):
+            return []
+        return [self.entries[index.row()] for index in sorted(self.table.selectionModel().selectedRows(),
+                                                              key=lambda i: i.row())
+                if index.row() < len(self.entries)]
+
+    def _selection_changed(self):
+        self.bulk.setText(f"Выбранные: {len(self.selected_entries())}")
+
+    def _bulk_status(self, status):
+        entries = self.selected_entries()
+        if not entries:
+            return
+        for entry in entries:
+            self.catalog.set_status(entry.id, status)
+        self.refresh()
+
+    def _copy_links(self):
+        entries = self.selected_entries()
+        if entries:
+            QApplication.clipboard().setText("\n".join(dict.fromkeys(e.result.page_url for e in entries)))
+
+    def reset_filters(self):
+        for combo in (self.source_filter, self.license_filter, self.match_filter):
+            combo.setCurrentIndex(0)
+        self.downloaded_filter.setChecked(False)
+        self.since_filter.setChecked(False)
+        self.refresh_list()

@@ -32,7 +32,7 @@ from app import __version__, backup, licenses, maintenance, paths, processes, qu
 from app import catalog as cat
 from app.batch import BatchWorker
 from app.cache import Cache
-from app.downloader import DownloadJob, DownloadQueue, safe_name
+from app.downloader import DownloadJob, DownloadQueue, choose_file, safe_name
 from app.export import html_catalog, playlist, registry, report, showreel, summary
 from app.search import SearchWorker, print_stems
 from app.settings import Settings
@@ -209,6 +209,8 @@ class MainWindow(QMainWindow):
         search_tab.setLayout(layout)
         self.catalog_view = CatalogView(self.catalog, categories)
         self.catalog_view.add_link_requested.connect(self.add_by_link)
+        self.catalog_view.download_requested.connect(self.download_entries)
+        self.catalog_view.check_links_requested.connect(self.check_selected_links)
         # Три раздела: поиск, пакетный поиск по всем услугам, каталог сохранённых роликов.
         self.batch_view = BatchView(self.catalog, categories)
         self.batch_view.open_service.connect(self.open_service)
@@ -389,12 +391,16 @@ class MainWindow(QMainWindow):
             self.dictionary = query.Dictionary.load()
             self.statusBar().showMessage("Словарь перевода обновлён.")
 
-    def check_links(self, manual: bool):
+    def check_selected_links(self, entries):
+        if entries:
+            self.check_links(manual=True, entries=entries)
+
+    def check_links(self, manual: bool, entries=None):
         """Проверить, не удалены ли ролики каталога с площадок (раз в N дней при запуске или по команде)."""
         if self.link_check and self.link_check.isRunning():
             return
         sources, _ = make_sources(self.settings, self.cache)
-        self.link_check = maintenance.LinkCheckWorker(self.catalog, sources, self)
+        self.link_check = maintenance.LinkCheckWorker(self.catalog, sources, self, entries=entries)
         self.link_check.progress.connect(
             lambda i, n: self.statusBar().showMessage(f"Проверка ссылок каталога: {i} из {n}"))
         self.link_check.done.connect(lambda counts: self._links_checked(counts, manual))
@@ -878,17 +884,39 @@ class MainWindow(QMainWindow):
     def download(self, result: VideoResult, file):
         plan = self.plan
         process = plan.process if plan else None
+        self._queue_download(result, file, process, self.plan_text)
+
+    def download_entries(self, entries):
+        queued, skipped = 0, 0
+        selected = self.catalog_view.selected_process()
+        for entry in entries:
+            result = entry.result
+            file = choose_file(result, self.settings.allow_4k)
+            if not file or self.download_state.get(result.key, ("", "", False))[2]:
+                skipped += 1
+                continue
+            pid = selected if selected in entry.links else next(iter(entry.links), None)
+            process = next((p for p in self.processes if p.id == pid), None)
+            self._queue_download(result, file, process, "Из каталога", preserve_status=True)
+            queued += 1
+        self.statusBar().showMessage(f"В очереди на скачивание: {queued}. Без файла или уже в очереди: {skipped}.")
+
+    def _queue_download(self, result: VideoResult, file, process, query_text, preserve_status=False):
+        if self.download_state.get(result.key, ("", "", False))[2]:
+            return
         # Скачанный ролик попадает в каталог; номер в каталоге — в имени файла.
         # Лицензию это не подтверждает: для этого кнопка «В каталог — лицензию проверил».
         entry = self.catalog.find(result.key)
         # Степень соответствия: уже выбранную в каталоге не перезаписываем, иначе — подсказка уровня поиска.
         match = (entry.links.get(process.id) if entry and process else None) or result.match_hint or cat.EXACT
-        video_id = self.catalog.select(result, process.id if process else None, match,
-                                       license_confirmed=bool(entry and entry.license_confirmed))
-        self.player.set_catalog_state(cat.SELECTED, video_id)
+        video_id = (entry.id if preserve_status and entry else
+                    self.catalog.select(result, process.id if process else None, match,
+                                        license_confirmed=bool(entry and entry.license_confirmed)))
+        if self.player.result and self.player.result.key == result.key:
+            self.player.set_catalog_state(cat.SELECTED, video_id)
         source = next((s for s in all_sources(self.settings, self.cache) if s.name == result.source), None)
         job = DownloadJob(result=result, file=file, process=process,
-                          query_text=self.plan_text, base_dir=self.download_dir(),
+                          query_text=query_text, base_dir=self.download_dir(),
                           convert=self.settings.convert_to_mp4, catalog_id=video_id,
                           trim=self.settings.trim_seconds, mute=self.settings.mute_audio,
                           resolver=getattr(source, "resolve_download", None))
@@ -922,6 +950,7 @@ class MainWindow(QMainWindow):
                 self.catalog.set_loop_hint(job.catalog_id, job.loop_hint)
         self._set_download_state(self._job_key(job_id), text, path, False)
         self.statusBar().showMessage(f"Скачано: {Path(path).name}")
+        self.catalog_view.refresh()
 
     def _on_download_failed(self, job_id: int, message: str):
         self._set_download_state(self._job_key(job_id), f"Не скачано: {message}", "", False)

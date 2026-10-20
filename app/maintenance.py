@@ -24,14 +24,14 @@ def link_check_due(store: cat.Catalog, every_days: int, now=time.time) -> bool:
     return now() - last >= every_days * 86400
 
 
-def check_links(store: cat.Catalog, sources: list[Source], cancel=None, progress=None) -> dict:
+def check_links(store: cat.Catalog, sources: list[Source], cancel=None, progress=None, entries=None) -> dict:
     """Проверить, есть ли ролики каталога на площадках.
 
     «Удалён» — только по явному ответу площадки «не найдено». Сбой сети или лимит —
     ролик не трогаем (проверим в следующий раз). Площадки без ключа пропускаются.
     """
     by_name = {s.name: s for s in sources if s.is_configured()}
-    entries = [e for e in store.entries() if e.status != cat.REJECTED]
+    entries = entries if entries is not None else [e for e in store.entries() if e.status != cat.REJECTED]
     counts = {"checked": 0, "removed": 0, "skipped": 0, "restored": 0}
     for i, e in enumerate(entries, 1):
         if cancel and cancel.is_set():
@@ -84,15 +84,16 @@ class LinkCheckWorker(QThread):
     progress = pyqtSignal(int, int)
     done = pyqtSignal(dict)
 
-    def __init__(self, store: cat.Catalog, sources: list[Source], parent=None):
+    def __init__(self, store: cat.Catalog, sources: list[Source], parent=None, entries=None):
         super().__init__(parent)
         self.store = store
         self.sources = sources
+        self.entries = entries
         self.cancel = threading.Event()
 
     def run(self):
-        counts = check_links(self.store, self.sources, self.cancel, lambda i, n: self.progress.emit(i, n))
-        if not self.cancel.is_set():
+        counts = check_links(self.store, self.sources, self.cancel, lambda i, n: self.progress.emit(i, n), self.entries)
+        if not self.cancel.is_set() and self.entries is None:
             self.store.set_meta(LAST_LINK_CHECK, str(time.time()))
         self.done.emit(counts)
 
