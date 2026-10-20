@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import __version__, licenses, maintenance, paths, processes, query, updater
+from app import __version__, backup, licenses, maintenance, paths, processes, query, updater
 from app import catalog as cat
 from app.batch import BatchWorker
 from app.cache import Cache
@@ -123,6 +123,8 @@ class MainWindow(QMainWindow):
         self.dictionary = query.Dictionary.load()
         self.cache = cache or Cache()
         self.worker: SearchWorker | None = None
+        self.backup_worker: backup.BackupWorker | None = None
+        self._closing = False
         self.sources: list[Source] = []
         self.problems: list[str] = []
         self.plan: query.SearchPlan | None = None
@@ -269,7 +271,8 @@ class MainWindow(QMainWindow):
         tools = menu.addMenu("Сервис")
         for title, handler in (("История поиска…", self.show_history), ("Словарь перевода…", self.edit_dictionary),
                                ("Проверить ссылки каталога", lambda: self.check_links(manual=True)),
-                               ("Найти похожие дубли…", self.find_duplicates), ("Очистить кэш", self._clear_cache)):
+                               ("Найти похожие дубли…", self.find_duplicates), ("Очистить кэш", self._clear_cache),
+                               ("Резервная копия данных…", self.backup_data)):
             add(tools, title, handler)
         menu.addSeparator()
         add(menu, "Выход", self.close)
@@ -291,6 +294,62 @@ class MainWindow(QMainWindow):
             self.check_links(manual=False)
 
     # --- история, словарь, обслуживание каталога ---
+
+    def backup_data(self):
+        """Архив «Данных» вне исходной папки, без остановки интерфейса."""
+        if self.backup_worker and self.backup_worker.isRunning():
+            return
+        if any(active for _, _, active in self.download_state.values()) or any(
+                worker and worker.isRunning() for worker in (self.showreel_worker, self.report_worker)):
+            QMessageBox.information(self, "Резервная копия", "Дождитесь окончания скачивания и экспорта.")
+            return
+        source = paths.data_dir()
+        stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        dialog = QFileDialog(self, "Резервная копия данных", str(source.parent / f"Данные_{stamp}.zip"),
+                             "Архив ZIP (*.zip)")
+        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        dialog.setDefaultSuffix("zip")
+        if not dialog.exec():
+            return
+        path = Path(dialog.selectedFiles()[0])
+        if path.resolve().is_relative_to(source.resolve()):
+            QMessageBox.warning(self, "Резервная копия", "Сохраните резервную копию вне папки «Данные».")
+            return
+        progress = QProgressDialog("Копируются каталог, настройки и файлы из «Данных».\n"
+                                   "Архив содержит ключи из настроек — храните его в надёжном месте.\n"
+                                   "Ролики из внешней папки в архив не входят.", "Отмена", 0, 0, self)
+        progress.setWindowTitle("Резервная копия")
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+        worker = backup.BackupWorker(source, path, self)
+
+        def advance(done, total):
+            if not worker.cancel.is_set():
+                progress.setRange(0, total)
+                progress.setValue(done)
+
+        worker.progress.connect(advance)
+        progress.canceled.connect(worker.cancel.set)
+        worker.finished.connect(lambda: self._backup_done(progress, path, worker))
+        self.backup_worker = worker
+        progress.show()
+        worker.start()
+
+    def _backup_done(self, progress: QProgressDialog, path: Path, worker: backup.BackupWorker):
+        progress.close()
+        if self._closing:
+            return
+        if worker.cancelled:
+            self.statusBar().showMessage("Резервное копирование отменено.")
+        elif worker.error:
+            QMessageBox.warning(self, "Резервная копия", worker.error)
+        else:
+            QMessageBox.information(self, "Резервная копия", f"Резервная копия сохранена:\n{path}\n\n"
+                                    "Архив содержит ключи из настроек — храните его в надёжном месте.\n"
+                                    "Для восстановления закройте программу, переименуйте прежнюю папку «Данные» "
+                                    "и распакуйте архив рядом с программой.")
 
     def show_history(self):
         dialog = HistoryDialog(self.catalog.search_history(), self)
@@ -941,9 +1000,11 @@ class MainWindow(QMainWindow):
         # Все фоновые потоки отменяются и дожидаются полностью: поток, живой после удаления окна-родителя,
         # роняет программу («QThread: Destroyed while thread is still running»). Окно прячем сразу.
         self.hide()
+        self._closing = True
         self.stop_search()
         self.stop_batch()
-        workers = [w for w in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker)
+        workers = [w for w in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker,
+                              self.backup_worker)
                    if w and w.isRunning()]
         for worker in workers:
             worker.cancel.set()
