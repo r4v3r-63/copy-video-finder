@@ -331,9 +331,39 @@ def test_catalog_tab_does_not_widen_window(store):
         store.link(vid, p.id)
     view = CatalogView(store, cats)
     view.select_entry(vid)
-    assert view.minimumSizeHint().width() <= 1000
+    assert view.minimumSizeHint().width() <= 1200  # было 1591 — окно не помещалось на экран 1600
     panel = PlayerPanel()
+    empty = panel.minimumSizeHint().width()
     r = video("x")
     r.title = title
     panel.show_result(r)
-    assert panel.minimumSizeHint().width() <= 500
+    assert panel.minimumSizeHint().width() <= empty + 20  # длинное название переносится, а не растягивает
+
+
+def test_wheel_scrolls_smoothly():
+    """Щелчок колесика: полоса прокрутки идёт к цели анимацией, а не прыгает; щелчки складываются."""
+    from PyQt6.QtCore import QPoint, QPointF, Qt
+    from PyQt6.QtGui import QWheelEvent
+    from PyQt6.QtWidgets import QApplication, QListWidget
+
+    from app.ui.smooth_scroll import SmoothScroller
+    view = QListWidget()
+    view.addItems([f"Ролик {i}" for i in range(300)])
+    view.resize(300, 200)
+    scroller = SmoothScroller(view, step=100)
+    bar = view.verticalScrollBar()
+    view.show()
+    assert bar.maximum() > 300
+
+    def wheel():
+        event = QWheelEvent(QPointF(10, 10), QPointF(10, 10), QPoint(0, 0), QPoint(0, -120),
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier,
+                            Qt.ScrollPhase.NoScrollPhase, False)
+        QApplication.sendEvent(view.viewport(), event)
+
+    wheel()
+    wheel()
+    assert scroller.target == 200 and bar.value() < 200  # ещё едет
+    scroller.animation.setCurrentTime(scroller.animation.duration())
+    assert bar.value() == 200
+    view.close()

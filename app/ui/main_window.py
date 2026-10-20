@@ -53,6 +53,7 @@ from app.ui.player import PlayerPanel, format_duration
 from app.ui.services_dialog import ServicesDialog
 from app.ui.settings_dialog import SettingsDialog
 from app.ui.showreel_dialog import ShowreelDialog
+from app.ui.smooth_scroll import smooth
 from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
@@ -167,6 +168,7 @@ class MainWindow(QMainWindow):
         self.results.setMovement(QListView.Movement.Static)
         self.results.setWordWrap(True)
         self.results.setUniformItemSizes(True)
+        self.results_scroll = smooth(self.results, step=THUMB.height())  # колесико — плавно, не рывком
         self.results.currentItemChanged.connect(self._on_current)
 
         self.player = theme.make_card(PlayerPanel())
