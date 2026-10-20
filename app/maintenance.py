@@ -9,7 +9,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import catalog as cat
 from app import similar
-from app.sources.base import NotFoundError, Source, SourceError
+from app.sources.base import NotFoundError, Source, SourceError, VideoResult
 from app.sources.http import USER_AGENT
 
 log = logging.getLogger(__name__)
@@ -43,7 +43,9 @@ def check_links(store: cat.Catalog, sources: list[Source], cancel=None, progress
             counts["skipped"] += 1
             continue
         try:
-            source.get_details(e.result.source_id)
+            result = source.get_details(e.result.source_id)
+            if isinstance(result, VideoResult) and result.key == e.result.key:
+                store.add(result)  # изменившиеся условия требуют нового подтверждения пользователем
             available = True
         except NotFoundError:
             available = False

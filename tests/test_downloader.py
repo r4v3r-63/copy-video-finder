@@ -71,7 +71,9 @@ def test_extension():
 
 def test_fetch_resumes_after_break(tmp_path):
     data = b"0123456789abcdef"
-    session = StreamSession(StreamResponse(data, cut_after=8, headers={"ETag": '"v1"'}), StreamResponse(data[8:], 206))
+    session = StreamSession(StreamResponse(data, cut_after=8, headers={"ETag": '"v1"'}),
+                            StreamResponse(data[8:], 206,
+                                           headers={"Content-Range": f"bytes 8-{len(data)-1}/{len(data)}"}))
     dest = tmp_path / "v.mp4"
     fetch("https://cdn/v.mp4", dest, session, pause=0)
     assert dest.read_bytes() == data

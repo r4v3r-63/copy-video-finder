@@ -66,6 +66,11 @@ def create_backup(source: Path, dest: Path, cancel=None, progress=None) -> None:
             path = root / name
             if path == source / "app.lock":
                 continue
+            if name.startswith(".copyvf-") and name.endswith(".tmp"):
+                continue  # незавершённая атомарная запись — в архиве нужен только готовый JSON
+            if any(name.endswith(suffix) and Path(name[:-len(suffix)]).suffix.lower() in (".sqlite", ".sqlite3")
+                   for suffix in ("-wal", "-shm", "-journal")):
+                continue  # SQLite может удалить журнал во время обхода; данные берутся через backup API
             if not path.is_file():
                 raise ValueError("В папке «Данные» есть файл неподдерживаемого типа. Копирование отменено.")
             files.append(path)

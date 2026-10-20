@@ -3,17 +3,15 @@
 import logging
 import re
 import threading
-from urllib.parse import parse_qs, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from PyQt6.QtCore import QThread
 
 from app import licenses
 from app.sources.base import LicenseInfo, SourceError, VideoResult
-from app.sources.web import STOCK_DOMAINS, WebSource, known_site, parse_page, skipped
+from app.sources.web import KNOWN_DOMAINS, STOCK_DOMAINS, WebSource, known_site, parse_page, skipped, youtube_id
 
 log = logging.getLogger(__name__)
-_DOMAINS = {"Pexels": "pexels.com", "Pixabay": "pixabay.com", "Vimeo": "vimeo.com",
-            "Wikimedia Commons": "commons.wikimedia.org", "Internet Archive": "archive.org", "Videezy": "videezy.com"}
 
 
 def normalize_url(text: str) -> str:
@@ -46,10 +44,8 @@ def resolve_link(web: WebSource, text: str) -> VideoResult:
     if skipped(url):
         raise ValueError("Эта площадка не поддерживается: платные стоки и исключённые сайты не подключаются.")
     if host in ("youtube.com", "youtu.be"):
-        video_id = (parts.path.strip("/") if host == "youtu.be" else
-                    (parse_qs(parts.query).get("v", [""])[0] if parts.path == "/watch" else
-                     parts.path.rsplit("/", 1)[-1] if parts.path.startswith(("/embed/", "/live/")) else ""))
-        if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        video_id = youtube_id(url)
+        if not video_id:
             raise ValueError("Нужна ссылка на отдельный ролик YouTube, а не канал, плейлист или Shorts.")
         result = web.youtube(video_id)
     elif host in ("vk.com", "vkvideo.ru") and re.fullmatch(r"/video-?\d+_\d+/?", parts.path):
@@ -57,9 +53,18 @@ def resolve_link(web: WebSource, text: str) -> VideoResult:
         source = web.delegates.get("VK Видео")
         result = (source.get_details(url) if source and source.is_configured()
                   else _link_only("VK Видео", url, url))
+    elif host == "coverr.co" and re.fullmatch(r"/videos/[a-zA-Z0-9-]+/?", parts.path):
+        result = parse_page(web.pages.read(url), url) or _link_only("coverr.co", url, url)
+        if result.license and licenses.is_paid(result.license.name):
+            raise ValueError("Платные и редакционные ролики не добавляются.")
+        # На странице может быть только preview: скачивание Coverr учитывается лишь через mp4_download из API.
+        result.files, result.preview_video = [], None
+        result.license = LicenseInfo("Условия Coverr", "https://coverr.co/license", status=licenses.REVIEW,
+                                    note="По этой ссылке доступен просмотр на сайте. Проверьте условия ролика; "
+                                         "скачивание Coverr через программу доступно для результатов его API.")
     else:
         known = known_site(url)
-        if known and host == _DOMAINS.get(known[0]):
+        if known and host == KNOWN_DOMAINS.get(known[0]):
             name, source_id = known
             source = web.delegates.get(name)
             if name == "Wikimedia Commons":

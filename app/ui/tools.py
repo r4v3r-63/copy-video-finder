@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app import paths
+from app.query import dictionary_data
 from app.ui import theme
 
 
@@ -117,9 +118,7 @@ class DictionaryDialog(QDialog):
 
     @staticmethod
     def _load() -> dict:
-        user = paths.terms_file()
-        source = user if user.exists() else paths.resources_dir() / "terms_ru_en.json"
-        return json.loads(source.read_text(encoding="utf-8"))
+        return dictionary_data()
 
     def _add_row(self, ru: str, en: str):
         row = self.table.rowCount()
@@ -144,7 +143,7 @@ class DictionaryDialog(QDialog):
 
     def _save(self):
         self.data["terms"] = self.terms()
-        paths.terms_file().write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
+        paths.atomic_write_text(paths.terms_file(), json.dumps(self.data, ensure_ascii=False, indent=2))
         self.accept()
 
     def _reset(self):

@@ -32,7 +32,7 @@ def main() -> int:
     setup_logging()
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
-    app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.png")))
+    app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.svg")))
     settings = Settings.load()
     theme.load_fonts()
     theme.apply(app, settings.theme)
@@ -51,7 +51,7 @@ def main() -> int:
 
     try:
         catalog = processes.load_catalog()
-    except (OSError, ValueError, KeyError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
         logging.getLogger("app").exception("Не удалось загрузить справочник услуг")
         QMessageBox.critical(None, "Поиск видео Copy.ru", f"Не удалось загрузить справочник услуг:\n{exc}")
         return 1

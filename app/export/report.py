@@ -159,7 +159,7 @@ def write_pdf(path: Path, html: str, thumbs: dict[int, bytes]) -> Path:
     writer.setTitle("Видеоролики для копицентров Copy.ru — отчёт о покрытии")
     writer.setCreator(f"Поиск видео Copy.ru {__version__}")
     doc = QTextDocument()
-    logo = QImage(str(paths.resources_dir() / "logo.png"))
+    logo = QImage(str(paths.resources_dir() / "logo.svg"))
     doc.addResource(QTextDocument.ResourceType.ImageResource.value, QUrl("logo"), logo)
     for vid, data in thumbs.items():
         image = QImage()

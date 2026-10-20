@@ -6,6 +6,7 @@ CSV — UTF-8 с меткой BOM и разделителем «;»: так ег
 
 import csv
 import json
+import math
 from datetime import datetime
 from pathlib import Path
 
@@ -210,7 +211,8 @@ def _delimiter(header: str) -> str:
 
 def _float(text) -> float | None:
     try:
-        return float(str(text).replace(",", ".")) if str(text).strip() else None
+        value = float(str(text).replace(",", ".")) if str(text).strip() else None
+        return value if value is not None and math.isfinite(value) else None
     except ValueError:
         return None
 

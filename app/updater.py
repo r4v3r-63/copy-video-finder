@@ -16,6 +16,7 @@ import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from app import __version__, paths
 from app.downloader import fetch
@@ -103,20 +104,25 @@ def sha256_of(path: Path) -> str:
 
 
 def download(release: Release, session, progress=None, cancel=None) -> Path:
-    """Скачать ZIP выпуска и сверить контрольную сумму, если она опубликована."""
+    """Скачать ZIP выпуска только с опубликованной контрольной суммой и проверить её."""
+    if not release.sha256_url:
+        raise UpdateError("У выпуска нет контрольной суммы. Откройте страницу выпуска для ручного скачивания.")
+    if release.zip_name != f"CopyVideoFinder-v{release.version}-windows.zip":
+        raise UpdateError("Недопустимое имя файла обновления.")
+    if any(urlsplit(url).scheme != "https" for url in (release.zip_url, release.sha256_url)):
+        raise UpdateError("Ссылки обновления должны использовать HTTPS.")
+    resp = session.get(release.sha256_url, timeout=15)
+    expected = (resp.text.split() or [""])[0].lower() if resp.status_code == 200 else ""
+    if not re.fullmatch(r"[0-9a-f]{64}", expected):
+        raise UpdateError("Не удалось получить контрольную сумму обновления.")
     target = update_dir()
     target.mkdir(parents=True, exist_ok=True)
     zip_path = target / release.zip_name
     zip_path.unlink(missing_ok=True)
     fetch(release.zip_url, zip_path, session, progress, cancel)
-    if release.sha256_url:
-        resp = session.get(release.sha256_url, timeout=15)
-        expected = (resp.text.split() or [""])[0].lower() if resp.status_code == 200 else ""
-        if not re.fullmatch(r"[0-9a-f]{64}", expected):
-            raise UpdateError("Не удалось получить контрольную сумму обновления.")
-        if sha256_of(zip_path) != expected:
-            zip_path.unlink(missing_ok=True)
-            raise UpdateError("Контрольная сумма обновления не совпала — файл повреждён при скачивании.")
+    if sha256_of(zip_path) != expected:
+        zip_path.unlink(missing_ok=True)
+        raise UpdateError("Контрольная сумма обновления не совпала — файл повреждён при скачивании.")
     return zip_path
 
 

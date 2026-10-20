@@ -8,9 +8,27 @@
 import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path, PureWindowsPath
 
 DATA_DIR_NAME = "Данные"
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """Запись через уникальный временный файл: сбой не оставляет половину настроек или справочника."""
+    path = Path(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=".copyvf-", suffix=".tmp", delete=False) as output:
+            temporary = Path(output.name)
+            output.write(text)
+            output.flush()
+            os.fsync(output.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)
 
 
 def is_frozen() -> bool:

@@ -44,7 +44,7 @@ from app.sources.pexels import PexelsSource
 from app.sources.pixabay import PixabaySource
 from app.sources.videezy import VideezySource
 from app.sources.vimeo import VimeoSource
-from app.sources.vk import VkSource
+from app.sources.vk import Tokens, VkSource
 from app.sources.web import WebSource
 from app.sources.yandex_video import YandexVideoSource
 from app.ui import theme
@@ -93,7 +93,9 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         YandexVideoSource(cache),  # Rutube, VK Видео, Дзен, Одноклассники, YouTube — одной выдачей
         VkSource(settings.vk_token, cache, app_id=settings.vk_app_id, refresh_token=settings.vk_refresh_token,
                  device_id=settings.vk_device_id, expires_at=settings.vk_token_expires,
-                 on_tokens=lambda t: _save_vk_tokens(settings, t)),  # после входа в VK в настройках
+                 on_tokens=lambda t: _save_vk_tokens(settings, t),
+                 token_supplier=lambda: Tokens(settings.vk_token, settings.vk_refresh_token,
+                                                settings.vk_device_id, settings.vk_token_expires)),
     ]
     # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
     return sources + [WebSource(cache, delegates=sources, tavily_key=settings.key("tavily_api_key"),
@@ -513,7 +515,7 @@ class MainWindow(QMainWindow):
     def _about(self):
         box = QMessageBox(self)
         box.setWindowTitle("О программе")
-        box.setIconPixmap(QPixmap(str(paths.resources_dir() / "logo.png")).scaled(
+        box.setIconPixmap(QPixmap(str(paths.resources_dir() / "logo.svg")).scaled(
             64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         box.setText(f"<b>Поиск видео для копицентров Copy.ru</b><br>Версия {__version__}")
         box.setInformativeText(f'Новые версии: <a href="{updater.RELEASES_PAGE}">{updater.RELEASES_PAGE}</a>')
@@ -651,6 +653,7 @@ class MainWindow(QMainWindow):
             if off_topic or view_only:
                 item.setForeground(self.palette().placeholderText())
             item.setData(Qt.ItemDataRole.UserRole, r)
+            item.setData(Qt.ItemDataRole.UserRole + 1, off_topic or view_only)
             item.setToolTip(r.title or r.page_url)
             item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 76))
             # Ближе к теме и к полиграфии — выше в выдаче.
@@ -679,7 +682,8 @@ class MainWindow(QMainWindow):
         current = self.results.currentItem()
         items = [self.results.item(i) for i in range(self.results.count())]
         real = [item for item in items if item.data(Qt.ItemDataRole.UserRole) is not None]
-        ordered = sorted(real, key=lambda item: self.result_filters.sort_key(item.data(Qt.ItemDataRole.UserRole)))
+        ordered = sorted(real, key=lambda item: (bool(item.data(Qt.ItemDataRole.UserRole + 1)),
+                                                 self.result_filters.sort_key(item.data(Qt.ItemDataRole.UserRole))))
         # Переставляем те же карточки: загруженные превью и ссылки фоновых запросов сохраняются.
         if real != ordered:
             self.results.blockSignals(True)
@@ -956,11 +960,15 @@ class MainWindow(QMainWindow):
         entry = self.catalog.find(result.key)
         # Степень соответствия: уже выбранную в каталоге не перезаписываем, иначе — подсказка уровня поиска.
         match = (entry.links.get(process.id) if entry and process else None) or result.match_hint or cat.EXACT
-        video_id = (entry.id if preserve_status and entry else
-                    self.catalog.select(result, process.id if process else None, match,
-                                        license_confirmed=bool(entry and entry.license_confirmed)))
+        if preserve_status and entry:
+            video_id = entry.id
+        else:
+            video_id = self.catalog.add(result)
+            self.catalog.set_status(video_id, cat.SELECTED)
+            if process:
+                self.catalog.link(video_id, process.id, match)
         if self.player.result and self.player.result.key == result.key:
-            self.player.set_catalog_state(cat.SELECTED, video_id)
+            self.player.set_catalog_state(entry.status if preserve_status and entry else cat.SELECTED, video_id)
         source = next((s for s in all_sources(self.settings, self.cache) if s.name == result.source), None)
         job = DownloadJob(result=result, file=file, process=process,
                           query_text=query_text, base_dir=self.download_dir(),

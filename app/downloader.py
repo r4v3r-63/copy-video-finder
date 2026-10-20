@@ -82,7 +82,10 @@ def choose_file(result: VideoResult, allow_4k: bool = False) -> VideoFile | None
 def safe_name(text: str, limit: int = 80) -> str:
     text = _FORBIDDEN.sub(" ", text)
     text = " ".join(text.split()).strip(" .")
-    return text[:limit].rstrip(" .") or "без названия"
+    text = text[:limit].rstrip(" .") or "без названия"
+    if re.fullmatch(r"CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]", text.split(".", 1)[0], re.I):
+        text = "_" + text
+    return text
 
 
 def target_folder(base: Path, process: Process | None, query_text: str) -> Path:
@@ -157,6 +160,8 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
     validator_file = dest.with_name(dest.name + ".part.json")
     dest.with_name(dest.name + ".part.etag").unlink(missing_ok=True)  # формат 0.18.0 — без ссылки
     for attempt in range(1, retries + 1):
+        if cancel and cancel.is_set():
+            raise Cancelled()
         have = part.stat().st_size if part.exists() else 0
         headers = {"User-Agent": USER_AGENT}
         validator = _saved_validator(validator_file, url) if have else ""
@@ -183,21 +188,28 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
                 if resp.status_code == 429:
                     wait = _retry_after(resp.headers)
                     if wait <= MAX_WAIT and attempt < retries:
-                        time.sleep(wait)
+                        _pause(wait, cancel)
                         continue
                     raise DownloadError("Площадка временно ограничила скачивание. "
                                         f"Повторите через {max(round(wait / 60), 1)} мин.")
                 if resp.status_code not in (200, 206):
                     raise DownloadError(f"Площадка вернула ошибку {resp.status_code}.")
+                if resp.status_code == 206:
+                    content_range = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+|\*)",
+                                                 resp.headers.get("Content-Range", ""))
+                    if not content_range or int(content_range[1]) != have or int(content_range[2]) < have:
+                        raise DownloadError("Площадка вернула неверный диапазон файла. Повторите скачивание позже.")
                 if resp.status_code == 200:
                     have = 0  # сервер не умеет докачку или файл изменился — начинаем заново
+                if resp.status_code == 200 or not have:
                     new_validator = resp.headers.get("ETag") or resp.headers.get("Last-Modified") or ""
                     if new_validator:
                         validator_file.write_text(json.dumps({"url": url, "validator": new_validator}),
                                                   encoding="utf-8")
                     else:
                         validator_file.unlink(missing_ok=True)
-                total = have + int(resp.headers.get("Content-Length") or 0)
+                total = (_range_total(resp.headers) if resp.status_code == 206 else None) or \
+                    have + int(resp.headers.get("Content-Length") or 0)
                 with open(part, "ab" if have else "wb") as out:
                     for chunk in resp.iter_content(CHUNK):
                         if cancel and cancel.is_set():
@@ -206,6 +218,10 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
                         have += len(chunk)
                         if progress:
                             progress(have, total)
+                if resp.status_code == 206 and have != int(content_range[2]) + 1:
+                    raise DownloadError("Размер ответа не совпал с диапазоном файла.")
+                if total and have > total:
+                    raise DownloadError("Размер ответа превысил размер файла.")
                 if total and have < total:
                     raise requests.ConnectionError("соединение оборвалось")
                 break
@@ -213,11 +229,20 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
             log.warning("Скачивание %s, попытка %d: %s", url, attempt, exc)
             if attempt == retries:
                 raise DownloadError(f"Нет связи: {exc}") from exc
-            time.sleep(pause * attempt)
+            _pause(pause * attempt, cancel)
+    if cancel and cancel.is_set():
+        raise Cancelled()
     if not part.exists() or part.stat().st_size == 0:
         raise DownloadError("Скачан пустой файл.")
     part.replace(dest)
     validator_file.unlink(missing_ok=True)
+
+
+def _pause(seconds, cancel):
+    if cancel is None:
+        time.sleep(seconds)
+    elif cancel.wait(seconds):
+        raise Cancelled()
 
 
 def _saved_validator(validator_file: Path, url: str) -> str:
@@ -315,6 +340,9 @@ def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event 
     if proc.returncode != 0 or not tmp.exists():
         tmp.unlink(missing_ok=True)
         raise DownloadError(f"Не удалось конвертировать в MP4: {err.strip()[-300:]}")
+    if cancel and cancel.is_set():
+        tmp.unlink(missing_ok=True)
+        raise Cancelled()
     tmp.replace(dest)
 
 

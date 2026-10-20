@@ -11,6 +11,7 @@
 """
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,28 @@ MAX_GROUP = 4  # больше услуг на один запрос — слиш
 
 _CYRILLIC = re.compile(r"[а-яё]", re.IGNORECASE)
 _TOKEN = re.compile(r"[a-zа-яё0-9äöüßàâæçéèêëîïôœùûÿ]+", re.IGNORECASE)
+log = logging.getLogger(__name__)
+
+
+def dictionary_data(path: Path | None = None) -> dict:
+    builtin = paths.resources_dir() / "terms_ru_en.json"
+    user = paths.terms_file()
+    source = path if path is not None else user if user.exists() else builtin
+    try:
+        raw = json.loads(source.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict) or not isinstance(raw.get("terms"), dict):
+            raise ValueError("Неверная структура словаря")
+        if not all(isinstance(k, str) and isinstance(v, str) for k, v in raw["terms"].items()):
+            raise ValueError("Переводы должны быть строками")
+        stopwords = raw.get("stopwords", [])
+        if not isinstance(stopwords, list) or not all(isinstance(word, str) for word in stopwords):
+            raise ValueError("Неверный список стоп-слов")
+        return raw
+    except (OSError, ValueError):
+        if path is None and source == user:
+            log.warning("Пользовательский словарь повреждён; используется встроенный, исходный файл сохранён")
+            return dictionary_data(builtin)
+        raise
 
 
 @dataclass(frozen=True)
@@ -73,10 +96,7 @@ class Dictionary:
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Dictionary":
-        if path is None:
-            user_copy = paths.terms_file()
-            path = user_copy if user_copy.exists() else paths.resources_dir() / "terms_ru_en.json"
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = dictionary_data(path)
         return cls(raw["terms"], raw.get("stopwords", []))
 
     def translate(self, text: str) -> str:

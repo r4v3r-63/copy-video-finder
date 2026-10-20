@@ -74,12 +74,18 @@ def migrated_ids() -> dict[str, str]:
 def _retire_old_copy(path: Path) -> bool:
     """Пользовательская копия справочника старше версии 5 — по 43 техпроцессам: откладывается."""
     try:
-        version = json.loads(path.read_text(encoding="utf-8")).get("version", 1)
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        version = raw.get("version", 1) if isinstance(raw, dict) else VERSION
     except (OSError, ValueError):
         return False
-    if version >= VERSION:
+    if not isinstance(version, int) or version >= VERSION:
         return False
-    path.replace(path.with_name(f"processes.v{version}.json"))
+    backup = path.with_name(f"processes.v{version}.json")
+    index = 1
+    while backup.exists():
+        backup = path.with_name(f"processes.v{version}.{index}.json")
+        index += 1
+    path.replace(backup)
     return True
 
 
@@ -95,6 +101,8 @@ def load_catalog(path: Path | None = None) -> list[Category]:
             _retire_old_copy(user_copy)
         path = user_copy if user_copy.exists() else builtin_file()
     raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict) or not isinstance(raw.get("categories"), list):
+        raise ValueError("Неверная структура справочника услуг. Восстановите его из резервной копии.")
     if path != builtin_file() and builtin_file().exists():
         builtin = {p["id"]: p for c in json.loads(builtin_file().read_text(encoding="utf-8"))["categories"]
                    for p in c["processes"]}
@@ -180,7 +188,7 @@ def save_catalog(categories: list[Category], path: Path | None = None) -> Path:
     lines += ["}"]
     text = "\n".join(lines) + "\n"
     json.loads(text)  # проверка: файл должен читаться
-    path.write_text(text, encoding="utf-8")
+    paths.atomic_write_text(path, text)
     return path
 
 

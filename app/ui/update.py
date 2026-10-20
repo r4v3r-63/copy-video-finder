@@ -91,7 +91,8 @@ class UpdateController:
         box.setWindowTitle("Доступно обновление")
         box.setIcon(QMessageBox.Icon.Information)
         box.setText(f"Доступна новая версия {escape(release.version)} (у вас {__version__}).")
-        if updater.can_self_update():
+        can_install = updater.can_self_update() and bool(release.sha256_url)
+        if can_install:
             box.setInformativeText("Обновить сейчас? Программа скачает новую версию, закроется и запустится "
                                    "снова. Настройки, ключи и скачанные ролики сохранятся.")
             update = box.addButton("Обновить", QMessageBox.ButtonRole.AcceptRole)
@@ -108,7 +109,7 @@ class UpdateController:
             self.settings.skipped_version = release.version
             self.settings.save()
         elif clicked is update:
-            if updater.can_self_update():
+            if can_install:
                 self.install(release)
             else:
                 QDesktopServices.openUrl(QUrl(release.page_url))

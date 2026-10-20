@@ -19,7 +19,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 422 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 458 passed, 1 skipped
 ruff check app tests
 python -m app.main                                   # запуск
 ```
@@ -48,6 +48,7 @@ python -m app.main                                   # запуск
 - Фоновые потоки при закрытии окна отменяются и дожидаются (`closeEvent`); FFmpeg — через Popen с опросом отмены.
 - Цвета/размеры — только `app/design.py` (тест `test_no_colors_outside_tokens`).
 - Добавление по ссылке — `app/manual.py`, `ui/add_link_dialog.py`, кнопка в каталоге. Повторная ссылка открывает прежнюю запись без изменения пользовательских отметок; без ключа известной площадки сохраняется только ссылка, без утверждения о свободной лицензии.
+- Ревью 0.24.0 и внешние ограничения — `docs/CODE_REVIEW.md`; подготовленные примечания выпуска — `docs/RELEASE_NOTES_0.24.0.md`. Не путать подготовленную версию с опубликованным выпуском.
 - Тесты окон: одно `QApplication` из `tests/conftest.py`; не вызывать `processEvents`/`show` без нужды — роняло полный прогон.
 
 ## Работа

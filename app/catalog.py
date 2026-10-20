@@ -183,12 +183,15 @@ class Catalog:
             license_status=lic.status, license_note=lic.note, files=_files_to_json(r.files), updated_at=now,
         )
         with self._lock, self._db:
-            row = self._db.execute("SELECT id FROM videos WHERE source = ? AND source_id = ?",
+            row = self._db.execute("SELECT id, license_name, license_url, license_status FROM videos "
+                                   "WHERE source = ? AND source_id = ?",
                                    (r.source, r.source_id)).fetchone()
             if row:
                 sets = ", ".join(f"{k} = :{k}" for k in values if k not in ("source", "source_id"))
                 # Пользователь мог поправить название — его не перезаписываем.
                 sets = sets.replace("title = :title, ", "")
+                if (row["license_name"], row["license_url"], row["license_status"]) != (lic.name, lic.url, lic.status):
+                    sets += ", license_confirmed = 0, checked_at = NULL"
                 self._db.execute(f"UPDATE videos SET {sets} WHERE id = :id", {**values, "id": row["id"]})
                 return row["id"]
             cols = ", ".join(values) + ", added_at"

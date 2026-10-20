@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -87,6 +88,8 @@ def make_showreel(entries: list[cat.Entry], dest: Path, ffmpeg: Path, ffprobe: P
                   seconds: float = CLIP_SECONDS, fade: float = FADE, progress=None,
                   cancel: threading.Event | None = None) -> list[cat.Entry]:
     """Собрать шоурил; вернуть ролики, которые в него вошли. progress(доля 0..1)."""
+    if cancel and cancel.is_set():
+        raise Cancelled()
     lengths = clip_lengths(entries, seconds, ffprobe)
     used = [(e, n) for e, n in zip(entries, lengths, strict=True) if n >= MIN_CLIP]
     if not used:
@@ -96,26 +99,47 @@ def make_showreel(entries: list[cat.Entry], dest: Path, ffmpeg: Path, ffprobe: P
     dest = Path(dest)
     tmp = dest.with_name(dest.stem + ".making.mp4")
     cmd = build_command([Path(e.downloaded_path) for e, _ in used], [n for _, n in used], tmp, ffmpeg, fade)
-    # Ошибки FFmpeg — во временный файл, ход работы — построчно из stdout (-progress).
-    with tempfile.TemporaryFile() as log_file:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log_file, text=True, creationflags=_NO_WINDOW)
-        for line in proc.stdout:
-            if cancel and cancel.is_set():
-                proc.kill()
+    # У stdout отдельные дескрипторы записи и чтения: чтение файла не блокируется при молчании FFmpeg.
+    with tempfile.TemporaryDirectory(prefix="copyvf-showreel-") as logs:
+        progress_path = Path(logs) / "progress.txt"
+        with progress_path.open("w") as output, progress_path.open("r") as reader, \
+                tempfile.TemporaryFile() as log_file:
+            proc = subprocess.Popen(cmd, stdout=output, stderr=log_file, creationflags=_NO_WINDOW)
+            pending = ""
+            try:
+                while True:
+                    if cancel and cancel.is_set():
+                        raise Cancelled()
+                    pending += reader.read()
+                    lines = pending.split("\n")
+                    pending = lines.pop()
+                    for line in lines:
+                        if line.startswith("out_time_us=") and progress:
+                            try:
+                                progress(min(int(line.split("=", 1)[1]) / 1e6 / total, 1.0))
+                            except ValueError:
+                                pass
+                    if proc.poll() is not None:
+                        break
+                    time.sleep(0.05)
+            except Cancelled:
+                if proc.poll() is None:
+                    proc.kill()
                 proc.wait()
                 tmp.unlink(missing_ok=True)
-                raise Cancelled()
-            if line.startswith("out_time_us=") and progress:
-                try:
-                    progress(min(int(line.split("=", 1)[1]) / 1e6 / total, 1.0))
-                except ValueError:
-                    pass
-        proc.wait()
-        log_file.seek(0)
-        err = log_file.read().decode("utf-8", "replace")
+                raise
+            finally:
+                if proc.poll() is None:
+                    proc.kill()
+                proc.wait()
+            log_file.seek(0)
+            err = log_file.read().decode("utf-8", "replace")
     if proc.returncode != 0 or not tmp.exists():
         tmp.unlink(missing_ok=True)
         raise ShowreelError(f"FFmpeg не смог собрать шоурил: {err.strip()[-300:]}")
+    if cancel and cancel.is_set():
+        tmp.unlink(missing_ok=True)
+        raise Cancelled()
     tmp.replace(dest)
     return [e for e, _ in used]
 

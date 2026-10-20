@@ -37,6 +37,9 @@ from app.sources.base import (
 )
 from app.sources.http import HttpSource
 
+_REFRESH_LOCKS: dict[tuple[str, str], threading.Lock] = {}
+_REFRESH_GUARD = threading.Lock()
+
 API = "https://api.vk.com/method"
 VERSION = "5.199"
 VKID_AUTH = "https://id.vk.com/authorize"
@@ -198,13 +201,16 @@ class VkSource(HttpSource):
     limits = [(3, 1.0, "в секунду"), (5000, 86400, "в сутки")]  # лимиты VK API для пользовательского ключа
 
     def __init__(self, token: str, cache: Cache, session=None, now=time.time, app_id: str = "",
-                 refresh_token: str = "", device_id: str = "", expires_at: float = 0.0, on_tokens=None):
+                 refresh_token: str = "", device_id: str = "", expires_at: float = 0.0, on_tokens=None,
+                 token_supplier=None):
         super().__init__(cache, session, now=now)
         self.token = token or ""
         self.app_id = app_id
         self.tokens = Tokens(self.token, refresh_token or "", device_id or "", expires_at or 0.0)
         self.on_tokens = on_tokens  # сохранить продлённые ключи в настройках
-        self._refresh_lock = threading.Lock()
+        self.token_supplier = token_supplier
+        with _REFRESH_GUARD:
+            self._refresh_lock = _REFRESH_LOCKS.setdefault((app_id, device_id), threading.Lock())
 
     def is_configured(self) -> bool:
         return bool(self.token)
@@ -212,8 +218,16 @@ class VkSource(HttpSource):
     def _can_refresh(self) -> bool:
         return bool(self.app_id and self.tokens.refresh and self.tokens.device_id)
 
-    def _renew(self) -> None:
+    def _renew(self, force=False) -> None:
         with self._refresh_lock:
+            if self.token_supplier:
+                latest = self.token_supplier()
+                if latest.access and (latest.access, latest.refresh) != (self.tokens.access, self.tokens.refresh):
+                    self.tokens, self.token = latest, latest.access
+                    if not latest.expires_at or latest.expires_at - self._now() >= REFRESH_BEFORE:
+                        return  # другой экземпляр площадки уже обновил одноразовый ключ
+            if not force and self.tokens.expires_at - self._now() >= REFRESH_BEFORE:
+                return
             try:
                 self.tokens = refresh(self.app_id, self.tokens, self.session, self._now)
             except VkLoginError as exc:
@@ -233,7 +247,7 @@ class VkSource(HttpSource):
         except AuthError:
             if not self._can_refresh():
                 raise
-            self._renew()  # ключ отозван или истёк раньше срока — один раз продлеваем и повторяем
+            self._renew(force=True)  # ключ отозван или истёк раньше срока — один раз продлеваем и повторяем
             return self._call_once(method, params)
 
     def _call_once(self, method: str, params: dict) -> dict:

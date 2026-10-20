@@ -7,12 +7,15 @@
 
 import json
 import logging
+import math
+import threading
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
 from app import paths
 
 log = logging.getLogger(__name__)
+_SAVE_LOCK = threading.Lock()
 
 SETTINGS_VERSION = 2  # 2 — предел длительности по умолчанию 180 с
 
@@ -54,11 +57,32 @@ class Settings:
         except (OSError, json.JSONDecodeError) as exc:
             log.error("Не удалось прочитать настройки %s: %s", path, exc)
             return cls()
+        if not isinstance(raw, dict):
+            log.error("Настройки должны содержать объект JSON")
+            return cls()
         known = {f.name for f in fields(cls)}
         # Старый предел по умолчанию (45 с) поднимается до нового; своё значение пользователя не трогаем.
-        if raw.get("max_duration") == 45 and raw.get("settings_version", 0) < SETTINGS_VERSION:
+        version = raw.get("settings_version", 0)
+        if not isinstance(version, int):
+            version = 0
+        if raw.get("max_duration") == 45 and version < SETTINGS_VERSION:
             raw["max_duration"] = cls.max_duration
-        return cls(**{k: v for k, v in raw.items() if k in known})
+        defaults = cls()
+        values = {}
+        for key, value in raw.items():
+            if key not in known:
+                continue
+            default = getattr(defaults, key)
+            valid = type(value) is type(default)
+            if isinstance(default, float):
+                valid = type(value) in (int, float) and math.isfinite(value) and value >= 0
+            elif type(default) is int:
+                valid = type(value) is int and value >= 0
+            if valid:
+                values[key] = value
+        settings = cls(**values)
+        settings.max_duration = max(settings.min_duration, settings.max_duration)
+        return settings
 
     def key(self, name: str) -> str:
         """Ключ API: введённый пользователем, иначе встроенный в сборку."""
@@ -66,10 +90,9 @@ class Settings:
 
     def save(self, path: Path | None = None) -> None:
         path = path or paths.settings_file()
-        tmp = path.with_suffix(".tmp")
-        data = {**asdict(self), "settings_version": SETTINGS_VERSION}
-        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(path)
+        with _SAVE_LOCK:
+            data = {**asdict(self), "settings_version": SETTINGS_VERSION}
+            paths.atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2))
 
 
 KEY_FIELDS = ("pexels_api_key", "pixabay_api_key", "coverr_api_key", "vimeo_token", "europeana_api_key",
@@ -85,4 +108,6 @@ def built_in_keys(path: Path | None = None) -> dict[str, str]:
     except (OSError, json.JSONDecodeError) as exc:
         log.error("Не удалось прочитать встроенные ключи %s: %s", path, exc)
         return {}
-    return {k: str(v).strip() for k, v in raw.items() if k in KEY_FIELDS and str(v).strip()}
+    if not isinstance(raw, dict):
+        return {}
+    return {k: v.strip() for k, v in raw.items() if k in KEY_FIELDS and isinstance(v, str) and v.strip()}

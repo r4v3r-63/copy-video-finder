@@ -81,6 +81,9 @@ _KNOWN = (
     ("Internet Archive", re.compile(r"archive\.org/details/([^/?#]+)")),
     ("Videezy", re.compile(r"videezy\.com/([a-z0-9-]+/\d+-[a-z0-9-]+)")),
 )
+KNOWN_DOMAINS = {"Pexels": "pexels.com", "Pixabay": "pixabay.com", "Vimeo": "vimeo.com",
+                 "Wikimedia Commons": "commons.wikimedia.org", "Internet Archive": "archive.org",
+                 "Videezy": "videezy.com"}
 # Ролики YouTube (не Shorts — они вертикальные): watch?v=…, youtu.be/…, /embed/…
 _YOUTUBE = re.compile(r"(?:youtube\.com/(?:watch\?(?:[^#]*&)?v=|embed/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})")
 YOUTUBE_OEMBED = "https://www.youtube.com/oembed"
@@ -126,11 +129,29 @@ def skipped(url: str) -> bool:
 
 
 def known_site(url: str) -> tuple[str, str] | None:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower().removeprefix("www.")
     for name, pattern in _KNOWN:
-        m = pattern.search(url)
+        if host != KNOWN_DOMAINS[name]:
+            continue
+        m = pattern.match(host + parsed.path)
         if m:
             return name, unquote(m.group(1))
     return None
+
+
+def youtube_id(url: str) -> str | None:
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower().removeprefix("www.").removeprefix("m.")
+    if host == "youtu.be":
+        candidate = parsed.path.strip("/")
+    elif host == "youtube.com" and parsed.path == "/watch":
+        candidate = parse_qs(parsed.query).get("v", [""])[0]
+    elif host == "youtube.com" and parsed.path.startswith(("/embed/", "/live/")):
+        candidate = parsed.path.rsplit("/", 1)[-1]
+    else:
+        return None
+    return candidate if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else None
 
 
 def _meta(page: str) -> dict[str, str]:
@@ -418,10 +439,10 @@ class WebSource(HttpSource):
     def open(self, url: str) -> VideoResult | None:
         """Ролик по ссылке со страницы: известная площадка — через её модуль, YouTube — по oEmbed,
         иначе разбор страницы."""
-        youtube = _YOUTUBE.search(url)
+        youtube = youtube_id(url)
         if youtube:
-            return self.youtube(youtube.group(1))
-        if "youtube.com" in url or "youtu.be" in url:
+            return self.youtube(youtube)
+        if (urlparse(url).hostname or "").removeprefix("www.").removeprefix("m.") in ("youtube.com", "youtu.be"):
             return None  # каналы, плейлисты, Shorts — не отдельный горизонтальный ролик
         known = known_site(url)
         if known:
