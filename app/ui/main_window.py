@@ -48,6 +48,7 @@ from app.sources.vk import VkSource
 from app.sources.web import WebSource
 from app.sources.yandex_video import YandexVideoSource
 from app.ui import theme
+from app.ui.add_link_dialog import AddLinkDialog
 from app.ui.batch_view import BatchView
 from app.ui.catalog_view import CatalogView
 from app.ui.player import PlayerPanel, format_duration
@@ -124,6 +125,7 @@ class MainWindow(QMainWindow):
         self.cache = cache or Cache()
         self.worker: SearchWorker | None = None
         self.backup_worker: backup.BackupWorker | None = None
+        self.link_dialog: AddLinkDialog | None = None
         self._closing = False
         self.sources: list[Source] = []
         self.problems: list[str] = []
@@ -206,6 +208,7 @@ class MainWindow(QMainWindow):
         search_tab = QWidget()
         search_tab.setLayout(layout)
         self.catalog_view = CatalogView(self.catalog, categories)
+        self.catalog_view.add_link_requested.connect(self.add_by_link)
         # Три раздела: поиск, пакетный поиск по всем услугам, каталог сохранённых роликов.
         self.batch_view = BatchView(self.catalog, categories)
         self.batch_view.open_service.connect(self.open_service)
@@ -827,6 +830,19 @@ class MainWindow(QMainWindow):
         self.batch_view.progress.setText(text)
         self.batch_view.refresh()
 
+    def add_by_link(self):
+        sources = all_sources(self.settings, self.cache)
+        web = next(source for source in sources if isinstance(source, WebSource))
+        dialog = AddLinkDialog(self.catalog, self.categories, web, self.catalog_view.selected_process(), self)
+        self.link_dialog = dialog
+        if dialog.exec() and dialog.video_id is not None:
+            self.catalog_view.refresh()
+            self.catalog_view.select_entry(dialog.video_id)
+            self.batch_view.refresh()
+            self.statusBar().showMessage(f"Открыт ролик № {dialog.video_id} в каталоге.")
+        self.link_dialog = None
+        dialog.deleteLater()
+
     def add_to_catalog(self, result: VideoResult):
         """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""
         process = self.plan.process if self.plan else None
@@ -1001,6 +1017,8 @@ class MainWindow(QMainWindow):
         # роняет программу («QThread: Destroyed while thread is still running»). Окно прячем сразу.
         self.hide()
         self._closing = True
+        if self.link_dialog:
+            self.link_dialog.stop()
         self.stop_search()
         self.stop_batch()
         workers = [w for w in (self.link_check, self.duplicates, self.report_worker, self.showreel_worker,

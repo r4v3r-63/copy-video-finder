@@ -26,6 +26,7 @@ RADIUS_CARD = 14  # 12–16
 SPACE_XS, SPACE_S, SPACE_M, SPACE_L = 4, 8, 12, 16
 CONTROL_HEIGHT = 34
 CONTROL_HEIGHT_LARGE = 44  # главное поле поиска и кнопка «Найти»
+LINK_DIALOG_WIDTH = 560  # диалог добавления ролика по ссылке
 
 # --- типографика: Inter, единая шкала (px) ---
 FONT_FAMILY = "Inter"

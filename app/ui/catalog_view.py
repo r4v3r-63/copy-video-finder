@@ -289,6 +289,8 @@ class VideoCard(QWidget):
 
 
 class CatalogView(QWidget):
+    add_link_requested = pyqtSignal()
+
     def __init__(self, catalog: cat.Catalog, categories: list[Category], parent=None):
         super().__init__(parent)
         self.catalog = catalog
@@ -314,6 +316,10 @@ class CatalogView(QWidget):
             self.status_filter.addItem(name, value)
         self.status_filter.activated.connect(lambda _i: self.refresh_list())
         filters = QHBoxLayout()
+        self.add_link = QPushButton("Добавить по ссылке…")
+        theme.set_role(self.add_link, theme.SECONDARY)
+        self.add_link.clicked.connect(self.add_link_requested.emit)
+        filters.addWidget(self.add_link)
         filters.addWidget(self.search, 1)
         filters.addWidget(self.status_filter)
 
