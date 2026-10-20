@@ -146,7 +146,13 @@ class MainWindow(QMainWindow):
         self.network = QNetworkAccessManager(self)
         self.network.finished.connect(self._on_thumbnail)
         self.setWindowTitle("Поиск видео для копицентров Copy.ru")
-        self.resize(design.WINDOW_WIDTH, design.WINDOW_HEIGHT)
+        screen = self.screen()
+        if screen:
+            available = screen.availableGeometry()
+            self.resize(min(design.WINDOW_WIDTH, available.width() - design.WINDOW_SCREEN_MARGIN),
+                        min(design.WINDOW_HEIGHT, available.height() - design.WINDOW_SCREEN_MARGIN))
+        else:
+            self.resize(design.WINDOW_WIDTH, design.WINDOW_HEIGHT)
 
         self._build_menu()
 

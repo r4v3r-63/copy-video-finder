@@ -8,13 +8,13 @@
 и ведёт каталог роликов по услугам сайта Copy.ru.
 
 [![Последняя версия](https://img.shields.io/github/v/release/r4v3r-63/copy-video-finder?label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&color=632EE6)](https://github.com/r4v3r-63/copy-video-finder/releases/latest)
-[![Сборка](https://img.shields.io/github/actions/workflow/status/r4v3r-63/copy-video-finder/build.yml?label=%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0)](https://github.com/r4v3r-63/copy-video-finder/actions/workflows/build.yml)
+[![Проверки и сборка](https://img.shields.io/github/actions/workflow/status/r4v3r-63/copy-video-finder/check.yml?label=%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B8)](https://github.com/r4v3r-63/copy-video-finder/actions/workflows/check.yml)
 ![Windows 10 и 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
 ![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB)
 
 **[Скачать для Windows](https://github.com/r4v3r-63/copy-video-finder/releases/latest)** · без установки, работает с флешки
 
-<img src="docs/screenshots/search.png" alt="Поиск роликов по услуге «Цифровая цветная лазерная печать»" width="100%">
+<img src="docs/screenshots/search.png" alt="Поиск роликов о цифровой печати — светлая тема" width="100%">
 
 </div>
 
