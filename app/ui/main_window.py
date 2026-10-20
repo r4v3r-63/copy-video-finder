@@ -51,6 +51,7 @@ from app.ui import theme
 from app.ui.add_link_dialog import AddLinkDialog
 from app.ui.batch_view import BatchView
 from app.ui.catalog_view import CatalogView
+from app.ui.guide import GuideDialog
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.result_filters import ResultFilters
 from app.ui.services_dialog import ServicesDialog
@@ -292,6 +293,7 @@ class MainWindow(QMainWindow):
         add(menu, "Выход", self.close)
 
         help_menu = self.menuBar().addMenu("Справка")
+        add(help_menu, "Руководство пользователя…", lambda: GuideDialog(self).exec())
         add(help_menu, "Проверить обновления…", lambda: self.updates.check(manual=True))
         add(help_menu, "О программе", self._about)
 
