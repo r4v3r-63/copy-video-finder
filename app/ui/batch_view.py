@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app import catalog as cat
+from app import design
 from app.ui import theme
 
 START_TEXT = "Искать по всем услугам"
@@ -43,6 +44,7 @@ class BatchView(QWidget):
         self.batch_button.setToolTip("Сначала услуги, где роликов меньше всего. Ролики только находятся — "
                                      "посмотреть, сохранить в каталог и скачать можно, открыв услугу.")
         theme.set_role(self.batch_button, theme.PRIMARY)
+        theme.set_icon(self.batch_button, "search")
         self.batch_button.clicked.connect(lambda: self.stop_requested.emit() if self.running
                                           else self.batch_requested.emit())
         self.progress = QLabel()
@@ -59,6 +61,8 @@ class BatchView(QWidget):
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().hide()
+        self.table.verticalHeader().setDefaultSectionSize(design.TABLE_ROW_HEIGHT)
+        self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.cellDoubleClicked.connect(lambda row, _c: self.open_service.emit(
@@ -95,7 +99,8 @@ class BatchView(QWidget):
                          f"{n} из {p.target}"]
                 for col, text in enumerate(cells):
                     item = QTableWidgetItem(text)
-                    item.setBackground(level_brush(n, p.target))
+                    if col == 3:
+                        item.setBackground(level_brush(n, p.target))
                     self.table.setItem(row, col, item)
                 self.table.item(row, 1).setData(Qt.ItemDataRole.UserRole, p.id)
 

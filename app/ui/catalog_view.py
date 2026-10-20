@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -21,6 +22,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -32,7 +34,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app import catalog as cat
-from app import licenses, similar
+from app import design, licenses, similar
 from app.processes import Category, Process
 from app.search import preview_file
 from app.ui import theme
@@ -67,6 +69,11 @@ class VideoCard(QWidget):
         self.header.setWordWrap(True)
         self.header.setOpenExternalLinks(True)
         self.header.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        self.header.setProperty("muted", True)
+        self.license_badge = theme.LicenseBadge()
+        badge_row = QHBoxLayout()
+        badge_row.addWidget(self.license_badge)
+        badge_row.addStretch()
 
         self.title = QLineEdit()
         self.title.editingFinished.connect(self._save_title)
@@ -95,40 +102,48 @@ class VideoCard(QWidget):
             self.links.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Fixed)
             self.links.setColumnWidth(col, width)
         self.links.verticalHeader().hide()
+        self.links.setShowGrid(False)
         self.links.verticalHeader().setDefaultSectionSize(theme.CONTROL_HEIGHT + theme.SPACE_S)
         self.links.setMaximumHeight(150)
         self.add_process = theme.compact_combo(QComboBox())
         for p in processes:
             self.add_process.addItem(p.display, p.id)
-        self.add_match = theme.compact_combo(QComboBox())
+        self.add_match = theme.compact_combo(QComboBox(), 12)
         self.add_match.addItems(cat.MATCHES)
         self.link_button = QPushButton("Привязать")
         theme.set_role(self.link_button, theme.SECONDARY)
         self.link_button.clicked.connect(self._add_link)
-        add_row = QHBoxLayout()
-        add_row.addWidget(self.add_process, 1)
-        add_row.addWidget(self.add_match)
-        add_row.addWidget(self.link_button)
+        add_row = QVBoxLayout()
+        add_row.addWidget(self.add_process)
+        add_actions = QHBoxLayout()
+        add_actions.addWidget(self.add_match, 1)
+        add_actions.addWidget(self.link_button)
+        add_row.addLayout(add_actions)
 
         self.open_page = QPushButton("Открыть страницу ролика")
+        theme.set_icon(self.open_page, "external")
         self.open_page.clicked.connect(
             lambda: self.entry and QDesktopServices.openUrl(QUrl(self.entry.result.page_url)))
         self.open_file = QPushButton("Показать файл")
+        theme.set_icon(self.open_file, "folder")
         self.open_file.clicked.connect(self._show_file)
         self.delete = QPushButton("Удалить из каталога")
         self.delete.clicked.connect(self._delete)
-        buttons = QHBoxLayout()
+        buttons = QVBoxLayout()
         buttons.addWidget(self.open_page)
         buttons.addWidget(self.open_file)
         buttons.addWidget(self.delete)
 
         form = QFormLayout()
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         form.addRow("Название:", self.title)
         form.addRow("Отметка:", self.status)
         form.addRow("", self.confirmed)
         form.addRow("Для зацикливания:", self.loop)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
+        layout.setSpacing(theme.SPACE_M)
+        layout.addLayout(badge_row)
         layout.addWidget(self.header)
         layout.addLayout(form)
         layout.addWidget(QLabel("Услуги и степень соответствия:"))
@@ -152,6 +167,9 @@ class VideoCard(QWidget):
 
     def show_entry(self, entry: cat.Entry | None):
         self.entry = entry
+        self.license_badge.setVisible(entry is not None)
+        if entry:
+            self.license_badge.set_license(entry.result.license)
         for w in (self.title, self.status, self.confirmed, self.loop, self.comment, self.links, self.add_process,
                   self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
             w.setEnabled(entry is not None)
@@ -324,6 +342,7 @@ class CatalogView(QWidget):
         filters = QHBoxLayout()
         self.add_link = QPushButton("Добавить по ссылке…")
         theme.set_role(self.add_link, theme.SECONDARY)
+        theme.set_icon(self.add_link, "link")
         self.add_link.clicked.connect(self.add_link_requested.emit)
         filters.addWidget(self.add_link)
         filters.addWidget(self.search, 1)
@@ -338,6 +357,8 @@ class CatalogView(QWidget):
         columns.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.table.setMinimumWidth(420)
         self.table.verticalHeader().hide()
+        self.table.verticalHeader().setDefaultSectionSize(design.TABLE_ROW_HEIGHT)
+        self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -363,6 +384,7 @@ class CatalogView(QWidget):
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self._selection_changed()
         self.filter_button = QPushButton("Фильтры…")
+        theme.set_icon(self.filter_button, "filters")
         self.filter_button.setCheckable(True)
         options = QHBoxLayout()
         options.addWidget(self.bulk)
@@ -407,16 +429,21 @@ class CatalogView(QWidget):
         middle_layout.addWidget(self.table)
 
         splitter = QSplitter()
+        card_scroll = QScrollArea()
+        card_scroll.setWidget(self.card)
+        card_scroll.setWidgetResizable(True)
+        card_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        card_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         splitter.addWidget(self.tree)
         splitter.addWidget(middle)
-        splitter.addWidget(self.card)
+        splitter.addWidget(card_scroll)
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 4)
         splitter.setStretchFactor(2, 3)
         splitter.setSizes([420, 520, 520])
         # Скрытая вкладка тоже задаёт минимальную ширину окна: панели не должны раздуваться
         # от длинных названий и подписей, иначе окно уезжает за экран.
-        for pane, width in ((self.tree, 180), (middle, 220), (self.card, 300)):
+        for pane, width in ((self.tree, 180), (middle, 220), (card_scroll, 300)):
             pane.setMinimumWidth(width)
         layout = QVBoxLayout(self)
         layout.addWidget(splitter)
@@ -468,8 +495,7 @@ class CatalogView(QWidget):
                 item = QTreeWidgetItem([p.name, str(totals.get(p.id, 0)), f"{coverage.get(p.id, 0)} из {p.target}"])
                 item.setData(0, Qt.ItemDataRole.UserRole, p.id)
                 item.setToolTip(0, p.name + ("\n\nУслуги на сайте:\n" + "\n".join(p.variants) if p.variants else ""))
-                for col in range(3):
-                    item.setBackground(col, level_brush(coverage.get(p.id, 0), p.target))
+                item.setBackground(2, level_brush(coverage.get(p.id, 0), p.target))
                 cat_item.addChild(item)
                 if p.id == current:
                     restore = item

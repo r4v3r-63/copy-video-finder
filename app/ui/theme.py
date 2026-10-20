@@ -5,11 +5,12 @@
 Состояния hover, focus, pressed и disabled описаны в стиле для каждого элемента.
 """
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPalette
-from PyQt6.QtWidgets import QApplication, QComboBox, QWidget
+from PyQt6.QtCore import QByteArray, QSize, Qt
+from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QIcon, QPainter, QPalette, QPixmap
+from PyQt6.QtSvg import QSvgRenderer
+from PyQt6.QtWidgets import QApplication, QComboBox, QLabel, QWidget
 
-from app import paths
+from app import design, licenses, paths
 
 # Токены, которые виджеты берут как theme.PRIMARY, theme.SPACE_L и т. п., — тоже отсюда.
 from app.design import (  # noqa: F401 — часть импортов только для виджетов
@@ -97,6 +98,67 @@ def make_card(widget: QWidget) -> QWidget:
     return widget
 
 
+def license_label(license_info) -> tuple[str, int]:
+    """Подпись статуса для компактной метки; оценка лицензии остаётся прежней."""
+    status = license_info.status if license_info else licenses.REVIEW
+    if status == licenses.ALLOWED:
+        return "Разрешено", 0
+    if status == licenses.ATTRIBUTION:
+        return "С атрибуцией", 1
+    if status == licenses.REVIEW:
+        return "Проверить", 1
+    return "Нет свободной", 2
+
+
+class LicenseBadge(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("licenseBadge")
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def set_license(self, license_info):
+        text, tone = license_label(license_info)
+        self.setText(text)
+        self.setProperty("tone", str(tone))
+        self.setToolTip(license_info.status if license_info else licenses.REVIEW)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+
+_ICON_PATHS = {
+    "search": '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+    "filters": '<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/>'
+               '<circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>',
+    "download": '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+    "folder": '<path d="M3 6h7l2 3h9v12H3z"/>',
+    "external": '<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',
+    "play": '<path d="m8 4 12 8-12 8z"/>',
+    "pause": '<path d="M8 4v16M16 4v16"/>',
+    "link": '<path d="m9 15 6-6m-8 3-2 2a4 4 0 0 0 6 6l2-2m-2-12 2-2a4 4 0 0 1 6 6l-2 2"/>',
+}
+
+
+def icon(name: str, inverse: bool = False) -> QIcon:
+    """Единый набор контурных значков, цвет берётся из текущей темы."""
+    color = palette().text_inverse if inverse else palette().text_secondary
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" '
+           f'stroke="{color}" stroke-width="{design.ICON_STROKE}" stroke-linecap="round" '
+           f'stroke-linejoin="round">{_ICON_PATHS[name]}</svg>')
+    pixmap = QPixmap(design.ICON_SIZE * 2, design.ICON_SIZE * 2)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    QSvgRenderer(QByteArray(svg.encode())).render(painter)
+    painter.end()
+    pixmap.setDevicePixelRatio(2)
+    return QIcon(pixmap)
+
+
+def set_icon(button, name: str):
+    button.setProperty("icon_name", name)
+    button.setIcon(icon(name, inverse=button.property("role") == PRIMARY or bool(button.property("icon_inverse"))))
+    button.setIconSize(QSize(design.ICON_SIZE, design.ICON_SIZE))
+
+
 def stylesheet(p: Palette) -> str:
     """Стиль Qt из токенов. Состояния: hover, focus, pressed, disabled."""
     return f"""
@@ -108,15 +170,28 @@ QWidget#card QLabel, QWidget#card QCheckBox {{ background: transparent; }}
 QLabel {{ background: transparent; }}
 QLabel[muted="true"] {{ color: {p.text_secondary}; font-size: {FONT_CAPTION}px; }}
 QLabel[heading="true"] {{ font-size: {FONT_SUBTITLE}px; font-weight: 600; }}
+QLabel[title="true"] {{ font-size: {FONT_TITLE}px; font-weight: 600; }}
+QLabel#licenseBadge {{ border-radius: {SPACE_XS}px; padding: {SPACE_XS}px {SPACE_S}px;
+                      font-size: {FONT_CAPTION}px; font-weight: 600; }}
+QLabel#licenseBadge[tone="0"] {{ background: {p.badge_bg[0]}; color: {p.badge_text[0]}; }}
+QLabel#licenseBadge[tone="1"] {{ background: {p.badge_bg[1]}; color: {p.badge_text[1]}; }}
+QLabel#licenseBadge[tone="2"] {{ background: {p.badge_bg[2]}; color: {p.badge_text[2]}; }}
+QWidget#playerControls {{ background: {p.video_bg}; border-bottom-left-radius: {RADIUS_INPUT}px;
+                         border-bottom-right-radius: {RADIUS_INPUT}px; }}
+QWidget#playerControls QLabel {{ color: {design.WHITE}; font-size: {FONT_CAPTION}px; }}
+QWidget#playerControls QPushButton {{ color: {design.WHITE}; border: none; padding: 0 {SPACE_S}px; }}
 QToolTip {{ background: {p.bg_surface}; color: {p.text_primary}; border: 1px solid {p.border};
             border-radius: 6px; padding: 6px 8px; }}
 
 /* --- кнопки: по умолчанию tertiary --- */
-QPushButton {{
+QPushButton, QToolButton {{
     background: transparent; color: {p.text_primary}; border: 1px solid {p.border};
     border-radius: {RADIUS_BUTTON}px; padding: 0 {SPACE_L}px; min-height: {CONTROL_HEIGHT}px; font-weight: 500;
 }}
 QPushButton:hover {{ background: {p.bg_secondary}; border-color: {p.border_strong}; }}
+QToolButton:hover {{ background: {p.selection_hover}; border-color: {p.border_strong}; }}
+QToolButton::menu-indicator {{ image: none; }}
+QPushButton:checked {{ background: {p.selection_bg}; border-color: {p.accent_primary}; }}
 QPushButton:pressed {{ background: {p.border}; }}
 QPushButton:focus {{ border: 2px solid {p.accent_primary}; }}
 QPushButton:disabled {{ color: {p.disabled_text}; border-color: {p.border}; background: transparent; }}
@@ -144,11 +219,11 @@ QPushButton:default:hover {{ background: {p.accent_hover}; border-color: {p.acce
 QPushButton:default:pressed {{ background: {p.accent_pressed}; }}
 QPushButton:default:focus {{ border: 2px solid {p.accent_secondary}; }}
 
-QPushButton[size="large"] {{ min-height: {CONTROL_HEIGHT_LARGE}px; padding: 0 {SPACE_L + 8}px;
+QPushButton[large="true"] {{ min-height: {CONTROL_HEIGHT_LARGE}px; padding: 0 {SPACE_L + 8}px;
                              font-size: {FONT_SUBTITLE}px; font-weight: 600; }}
 
 /* --- поля ввода --- */
-QLineEdit, QPlainTextEdit, QTextEdit, QComboBox, QSpinBox {{
+QLineEdit, QPlainTextEdit, QTextEdit, QComboBox, QSpinBox, QDateEdit {{
     background: {p.bg_surface}; color: {p.text_primary}; border: 1px solid {p.border};
     border-radius: {RADIUS_INPUT}px; padding: 4px {SPACE_S + 2}px; min-height: {CONTROL_HEIGHT - 10}px;
     selection-background-color: {p.accent_primary}; selection-color: {p.selection_text};
@@ -187,7 +262,9 @@ QTabBar::tab {{
     border: none; border-bottom: 2px solid transparent; font-weight: 500; margin-right: {SPACE_XS}px;
 }}
 QTabBar::tab:hover {{ color: {p.text_primary}; }}
-QTabBar::tab:selected {{ color: {p.accent_text}; border-bottom: 2px solid {p.accent_primary}; }}
+QTabBar::tab:selected {{ color: {p.accent_text}; background: {p.selection_bg};
+                        border-top-left-radius: {RADIUS_INPUT}px; border-top-right-radius: {RADIUS_INPUT}px;
+                        border-bottom: 2px solid {p.accent_primary}; }}
 QTabBar::tab:focus {{ color: {p.accent_text}; }}
 
 QMenuBar {{ background: {p.bg_primary}; border-bottom: 1px solid {p.border}; padding: 2px {SPACE_XS}px; }}
@@ -205,19 +282,21 @@ QStatusBar QLabel {{ color: {p.text_secondary}; }}
 
 /* --- списки, таблицы, деревья --- */
 QAbstractItemView {{ background: {p.bg_surface}; color: {p.text_primary};
-                     selection-background-color: {p.accent_primary}; selection-color: {p.selection_text}; }}
+                     selection-background-color: {p.selection_bg}; selection-color: {p.text_primary}; }}
 QListWidget, QTableWidget, QTreeWidget {{
     background: {p.bg_surface}; border: 1px solid {p.border}; border-radius: {RADIUS_CARD}px;
     alternate-background-color: {p.bg_secondary}; outline: none; padding: 4px;
-    selection-background-color: {p.accent_primary}; selection-color: {p.selection_text};
+    selection-background-color: {p.selection_bg}; selection-color: {p.text_primary};
 }}
+QListWidget#results {{ background: transparent; border: none; padding: 0; }}
 QListWidget::item {{ border-radius: {RADIUS_BUTTON}px; padding: 4px; color: {p.text_primary}; }}
 QListWidget::item:hover {{ background: {p.bg_secondary}; }}
-QListWidget::item:selected {{ background: {p.accent_primary}; color: {p.selection_text}; }}
+QListWidget::item:selected {{ background: {p.selection_bg}; color: {p.text_primary}; }}
 QTableWidget {{ gridline-color: {p.border}; }}
 QTableWidget::item, QTreeWidget::item {{ padding: 4px; }}
-QTableWidget::item:selected, QTreeWidget::item:selected {{ background: {p.accent_primary};
-                                                          color: {p.selection_text}; }}
+QTableWidget::item:selected, QTreeWidget::item:selected {{ background: {p.selection_bg};
+                                                          color: {p.text_primary}; }}
+QTreeWidget::item {{ min-height: {design.TREE_ROW_HEIGHT}px; }}
 QTreeWidget::item:hover {{ background: {p.bg_secondary}; }}
 QHeaderView::section {{
     background: {p.bg_surface}; color: {p.text_secondary}; border: none; border-bottom: 1px solid {p.border};
@@ -247,6 +326,7 @@ QProgressBar::chunk {{ background: {p.accent_primary}; border-radius: 4px; }}
 
 QDialogButtonBox QPushButton {{ min-width: 96px; }}
 QMessageBox QLabel {{ font-size: {FONT_BODY}px; }}
+QWidget#playerDetails, QWidget#detailsViewport {{ background: {p.bg_surface}; }}
 """
 
 
@@ -262,8 +342,8 @@ def qt_palette(p: Palette) -> QPalette:
     for role, color in (
         (roles.Window, p.bg_secondary), (roles.WindowText, p.text_primary), (roles.Base, p.bg_surface),
         (roles.AlternateBase, p.bg_secondary), (roles.Text, p.text_primary), (roles.Button, p.bg_surface),
-        (roles.ButtonText, p.text_primary), (roles.Highlight, p.accent_primary),
-        (roles.HighlightedText, p.selection_text), (roles.Link, p.accent_text), (roles.LinkVisited, p.accent_secondary),
+        (roles.ButtonText, p.text_primary), (roles.Highlight, p.selection_bg),
+        (roles.HighlightedText, p.text_primary), (roles.Link, p.accent_text), (roles.LinkVisited, p.accent_secondary),
         (roles.ToolTipBase, p.bg_surface), (roles.ToolTipText, p.text_primary),
         (roles.PlaceholderText, p.text_secondary),
         (roles.BrightText, p.text_inverse),
@@ -285,4 +365,7 @@ def apply(app: QApplication, choice: str = SYSTEM) -> str:
     font.setPixelSize(FONT_BODY)
     app.setFont(font)
     app.setStyleSheet(stylesheet(p))
+    for widget in app.allWidgets():
+        if name := widget.property("icon_name"):
+            set_icon(widget, name)
     return _current

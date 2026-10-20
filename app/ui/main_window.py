@@ -22,13 +22,14 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QProgressDialog,
     QPushButton,
+    QSizePolicy,
     QSplitter,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
-from app import __version__, backup, licenses, maintenance, paths, processes, query, updater
+from app import __version__, backup, design, licenses, maintenance, paths, processes, query, updater
 from app import catalog as cat
 from app.batch import BatchWorker
 from app.cache import Cache
@@ -53,6 +54,7 @@ from app.ui.batch_view import BatchView
 from app.ui.catalog_view import CatalogView
 from app.ui.guide import GuideDialog
 from app.ui.player import PlayerPanel, format_duration
+from app.ui.result_cards import ResultCardDelegate, card_notes
 from app.ui.result_filters import ResultFilters
 from app.ui.services_dialog import ServicesDialog
 from app.ui.settings_dialog import SettingsDialog
@@ -61,7 +63,7 @@ from app.ui.smooth_scroll import smooth
 from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
 from app.ui.update import UpdateController
 
-THUMB = QSize(256, 144)
+THUMB = QSize(design.THUMB_WIDTH, design.THUMB_HEIGHT)
 
 
 def load_image(data: bytes) -> QImage:
@@ -144,7 +146,7 @@ class MainWindow(QMainWindow):
         self.network = QNetworkAccessManager(self)
         self.network.finished.connect(self._on_thumbnail)
         self.setWindowTitle("Поиск видео для копицентров Copy.ru")
-        self.resize(1200, 760)
+        self.resize(design.WINDOW_WIDTH, design.WINDOW_HEIGHT)
 
         self._build_menu()
 
@@ -165,31 +167,43 @@ class MainWindow(QMainWindow):
 
         self.search_button = QPushButton("Найти")
         theme.set_role(self.search_button, theme.PRIMARY)
-        self.search_button.setProperty("size", "large")
+        self.search_button.setProperty("large", True)
+        theme.set_icon(self.search_button, "search")
         self.search_button.clicked.connect(self._search_or_stop)
 
         search_row = QHBoxLayout()
         search_row.addWidget(self.query, 1)
         search_row.addWidget(self.search_button)
-        filter_button = QPushButton("Фильтры…")
+        filter_button = QPushButton("Фильтры")
         filter_button.setCheckable(True)
-        search_row.addWidget(filter_button)
+        theme.set_icon(filter_button, "filters")
         self.result_filters = ResultFilters()
         self.result_filters.hide()
         filter_button.toggled.connect(self.result_filters.setVisible)
 
         self.query_info = QLabel()
-        self.query_info.setWordWrap(True)
+        self.query_info.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.query_info.setProperty("muted", True)
         self.query_info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        toolbar = QHBoxLayout()
+        toolbar.addWidget(self.query_info, 1)
+        toolbar.addWidget(filter_button)
+        toolbar.addWidget(self.result_filters.order)
 
         self.source_links = QLabel()
         self.source_links.setOpenExternalLinks(True)
+        self.source_links.setWordWrap(True)
+        self.source_links.setProperty("muted", True)
+        self.source_links.hide()
 
         self.results = QListWidget()
+        self.results.setObjectName("results")
+        self.results.setItemDelegate(ResultCardDelegate(self.results))
+        self.results.setMouseTracking(True)
         self.results.setViewMode(QListView.ViewMode.IconMode)
         self.results.setIconSize(THUMB)
-        self.results.setGridSize(QSize(THUMB.width() + 16, THUMB.height() + 76))
+        self.results.setGridSize(QSize(design.RESULT_WIDTH + design.RESULT_GAP,
+                                       design.RESULT_HEIGHT + design.RESULT_GAP))
         self.results.setResizeMode(QListView.ResizeMode.Adjust)
         self.results.setMovement(QListView.Movement.Static)
         self.results.setWordWrap(True)
@@ -211,9 +225,11 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(1, 2)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
+        layout.setSpacing(theme.SPACE_M)
         layout.addLayout(search_row)
+        layout.addLayout(toolbar)
         layout.addWidget(self.result_filters)
-        layout.addWidget(self.query_info)
         layout.addWidget(self.source_links)
         layout.addWidget(splitter, 1)
         search_tab = QWidget()
@@ -527,10 +543,12 @@ class MainWindow(QMainWindow):
     def _show_hint(self):
         _, skipped = make_sources(self.settings, self.cache)
         if skipped:
-            self.query_info.setText(
+            hint = (
                 f"Без ключа API пропускаются: {', '.join(skipped)}. Ключи вводятся в меню «Файл → Настройки». "
                 "Internet Archive, Videezy, Яндекс Видео и поиск по интернету работают без ключа."
             )
+            self.query_info.setText("Введите услугу для поиска · часть площадок требует ключ API")
+            self.query_info.setToolTip(hint)
         else:
             self.query_info.setText("")
 
@@ -580,6 +598,7 @@ class MainWindow(QMainWindow):
         self.sources_seen = {}
         self.result_filters.set_sources([])
         self.source_links.setText("")
+        self.source_links.hide()
 
         self._thumb_items = {}
         hidden = {key for key, status in self.catalog.statuses().items() if status == cat.REJECTED}
@@ -649,13 +668,14 @@ class MainWindow(QMainWindow):
             if view_only:
                 r.relevance = -2  # после всех свободных
                 text = f"Только посмотреть · {r.source}\n{r.license.name}"
-            item = QListWidgetItem(text)
+            item = QListWidgetItem((r.title + "\n" if r.title else "") + text)
             if off_topic or view_only:
                 item.setForeground(self.palette().placeholderText())
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setData(Qt.ItemDataRole.UserRole + 1, off_topic or view_only)
+            item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(r, statuses.get(r.key), off_topic))
             item.setToolTip(r.title or r.page_url)
-            item.setSizeHint(QSize(THUMB.width() + 16, THUMB.height() + 76))
+            item.setSizeHint(QSize(design.RESULT_WIDTH, design.RESULT_HEIGHT))
             # Ближе к теме и к полиграфии — выше в выдаче.
             row = next((i for i in range(self.results.count())
                         if self.results.item(i).data(Qt.ItemDataRole.UserRole) is not None
@@ -674,6 +694,7 @@ class MainWindow(QMainWindow):
         links = [f'<a href="{escape(url)}">{escape(name)}</a>' if url else escape(name)
                  for name, url in self.sources_seen.items()]
         self.source_links.setText("Видео предоставлены: " + ", ".join(links))
+        self.source_links.setVisible(bool(links))
         self.result_filters.set_sources(self.sources_seen)
         self._filter_results()
 
@@ -695,7 +716,10 @@ class MainWindow(QMainWindow):
                 self.results.setCurrentItem(current)
             self.results.blockSignals(False)
         for item in ordered:
-            item.setHidden(not self.result_filters.allows(item.data(Qt.ItemDataRole.UserRole), statuses))
+            result = item.data(Qt.ItemDataRole.UserRole)
+            item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(result, statuses.get(result.key),
+                                                               result.relevance == -1))
+            item.setHidden(not self.result_filters.allows(result, statuses))
         for item in items:
             if item.data(Qt.ItemDataRole.UserRole) is None:
                 item.setHidden(any(not card.isHidden() for card in ordered))
@@ -716,11 +740,15 @@ class MainWindow(QMainWindow):
                     icon = QIcon(thumb)
                     icon.addPixmap(thumb, QIcon.Mode.Selected)  # без синей подкраски у выбранного ролика
                     item.setIcon(icon)
+                    if self.player.result and item.data(Qt.ItemDataRole.UserRole).key == self.player.result.key:
+                        self.player.set_poster(pixmap)
         reply.deleteLater()
 
     def _on_current(self, item: QListWidgetItem | None, _previous):
         result = item.data(Qt.ItemDataRole.UserRole) if item else None
         self.player.show_result(result)
+        if result and not item.icon().isNull():
+            self.player.set_poster(item.icon().pixmap(THUMB))
         if result:
             entry = self.catalog.find(result.key)
             if entry:

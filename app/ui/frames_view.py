@@ -4,13 +4,27 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QImage, QPixmap
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
-from app import paths
+from app import design, paths
 from app.frames import FramesWorker
 from app.ui import theme
 
-THUMB_WIDTH = 160
+
+class FramePreview(QLabel):
+    """Кадр сохраняет пропорции и помещается в узкую панель без обрезания."""
+    def __init__(self, image: QPixmap):
+        super().__init__()
+        self.original = image
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.setPixmap(image.scaled(design.FRAME_THUMB_WIDTH, design.FRAME_THUMB_HEIGHT,
+                                    Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+
+    def resizeEvent(self, event):
+        self.setPixmap(self.original.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                                            Qt.TransformationMode.SmoothTransformation))
+        super().resizeEvent(event)
 
 
 class FramesStrip(QWidget):
@@ -73,9 +87,7 @@ class FramesStrip(QWidget):
             if not image.loadFromData(png):
                 continue
             cell = QVBoxLayout()
-            picture = QLabel()
-            picture.setPixmap(QPixmap.fromImage(image).scaledToWidth(
-                THUMB_WIDTH, Qt.TransformationMode.SmoothTransformation))
+            picture = FramePreview(QPixmap.fromImage(image))
             caption = QLabel(f"{int(at) // 60}:{int(at) % 60:02d}")
             caption.setProperty("muted", True)
             caption.setAlignment(Qt.AlignmentFlag.AlignCenter)

@@ -14,7 +14,7 @@ class ResultFilters(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.order = theme.compact_combo(QComboBox())
-        for title, value in (("По близости к запросу", "relevance"), ("Сначала короткие", "short"),
+        for title, value in (("По релевантности", "relevance"), ("Сначала короткие", "short"),
                              ("Сначала длинные", "long"), ("По разрешению", "size"), ("По площадке", "source")):
             self.order.addItem(title, value)
         self.source = theme.compact_combo(QComboBox())
@@ -31,7 +31,7 @@ class ResultFilters(QWidget):
         self.hide_catalog = QCheckBox("Скрыть уже добавленные в каталог")
         self.show_rejected = QCheckBox("Показать ранее отклонённые")
         form = QFormLayout(self)
-        form.addRow("Порядок:", self.order)
+        self.order.setToolTip("Порядок роликов в выдаче")
         form.addRow("Площадка:", self.source)
         form.addRow("Лицензия:", self.license)
         form.addRow("Разрешение:", self.resolution)
