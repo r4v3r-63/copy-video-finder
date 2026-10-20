@@ -102,7 +102,7 @@ def portable_path(path: str | Path) -> str:
     try:
         return p.resolve().relative_to(_portable_base().resolve()).as_posix()
     except (ValueError, OSError):
-        return str(p)
+        return str(path)  # вне папки программы — как есть, без перестановки слешей
 
 
 def resolve_path(stored: str) -> str:
