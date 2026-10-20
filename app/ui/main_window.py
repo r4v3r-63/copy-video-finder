@@ -48,8 +48,8 @@ from app.sources.web import WebSource
 from app.sources.wikimedia import WikimediaSource
 from app.sources.yandex_video import YandexVideoSource
 from app.ui import theme
+from app.ui.batch_view import BatchView
 from app.ui.catalog_view import CatalogView
-from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
 from app.ui.services_dialog import ServicesDialog
 from app.ui.settings_dialog import SettingsDialog
@@ -194,14 +194,15 @@ class MainWindow(QMainWindow):
         search_tab = QWidget()
         search_tab.setLayout(layout)
         self.catalog_view = CatalogView(self.catalog, categories)
+        # Три раздела: поиск, пакетный поиск по всем услугам, каталог сохранённых роликов.
+        self.batch_view = BatchView(self.catalog, categories)
+        self.batch_view.open_service.connect(self.open_service)
+        self.batch_view.batch_requested.connect(self.start_batch)
+        self.batch_view.stop_requested.connect(self.stop_batch)
         self.tabs = QTabWidget()
         self.tabs.addTab(search_tab, "Поиск")
+        self.tabs.addTab(self.batch_view, "Пакетный поиск")
         self.tabs.addTab(self.catalog_view, "Каталог")
-        self.coverage_view = CoverageView(self.catalog, categories)
-        self.coverage_view.open_service.connect(self.open_service)
-        self.coverage_view.batch_requested.connect(self.start_batch)
-        self.coverage_view.stop_requested.connect(self.stop_batch)
-        self.tabs.addTab(self.coverage_view, "Покрытие")
         self.tabs.currentChanged.connect(self._on_tab)
         self.batch: BatchWorker | None = None
         self.link_check: maintenance.LinkCheckWorker | None = None
@@ -236,65 +237,41 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(4000, self._startup_update_check)
 
     def _build_menu(self):
+        """Меню — только «Файл» и «Справка»: всё основное — на трёх вкладках."""
+        def add(menu, title, handler):
+            action = QAction(title, self)
+            action.triggered.connect(handler)
+            menu.addAction(action)
+
         menu = self.menuBar().addMenu("Файл")
-        settings_action = QAction("Настройки…", self)
-        settings_action.triggered.connect(self.open_settings)
-        menu.addAction(settings_action)
-        clear_cache = QAction("Очистить кэш", self)
-        clear_cache.triggered.connect(self._clear_cache)
-        menu.addAction(clear_cache)
+        add(menu, "Настройки…", self.open_settings)
+        add(menu, "Справочник услуг…", self.edit_services)
         menu.addSeparator()
-        quit_action = QAction("Выход", self)
-        quit_action.triggered.connect(self.close)
-        menu.addAction(quit_action)
-
-        search_menu = self.menuBar().addMenu("Поиск")
-        for title, handler in (("История поиска…", self.show_history),
-                               ("Справочник услуг…", self.edit_services),
-                               ("Словарь перевода…", self.edit_dictionary)):
-            action = QAction(title, self)
-            action.triggered.connect(handler)
-            search_menu.addAction(action)
-
-        catalog_menu = self.menuBar().addMenu("Каталог")
-        for title, handler in (("Экспорт реестра в Excel…", self.export_xlsx),
-                               ("Экспорт реестра в CSV…", self.export_csv),
+        export = menu.addMenu("Экспорт каталога")
+        for title, handler in (("Реестр в Excel…", self.export_xlsx), ("Реестр в CSV…", self.export_csv),
                                ("HTML-каталог…", self.export_html),
+                               ("Отчёт для руководства (PDF)…", self.export_report),
                                ("Сводка покрытия…", self.export_summary),
-                               ("Отчёт для руководства (PDF)…", self.export_report)):
-            action = QAction(title, self)
-            action.triggered.connect(handler)
-            catalog_menu.addAction(action)
-        playlist_action = QAction("Плейлист M3U из скачанных…", self)
-        playlist_action.triggered.connect(self.export_playlist)
-        catalog_menu.addAction(playlist_action)
-        showreel_action = QAction("Шоурил для экрана…", self)
-        showreel_action.triggered.connect(self.export_showreel)
-        catalog_menu.addAction(showreel_action)
-        catalog_menu.addSeparator()
-        import_action = QAction("Импорт реестра CSV…", self)
-        import_action.triggered.connect(self.import_csv)
-        catalog_menu.addAction(import_action)
-        catalog_menu.addSeparator()
-        links_action = QAction("Проверить ссылки сейчас", self)
-        links_action.triggered.connect(lambda: self.check_links(manual=True))
-        catalog_menu.addAction(links_action)
-        duplicates_action = QAction("Найти похожие дубли…", self)
-        duplicates_action.triggered.connect(self.find_duplicates)
-        catalog_menu.addAction(duplicates_action)
+                               ("Плейлист M3U из скачанных…", self.export_playlist),
+                               ("Шоурил для экрана…", self.export_showreel)):
+            add(export, title, handler)
+        add(menu, "Импорт реестра CSV…", self.import_csv)
+        tools = menu.addMenu("Сервис")
+        for title, handler in (("История поиска…", self.show_history), ("Словарь перевода…", self.edit_dictionary),
+                               ("Проверить ссылки каталога", lambda: self.check_links(manual=True)),
+                               ("Найти похожие дубли…", self.find_duplicates), ("Очистить кэш", self._clear_cache)):
+            add(tools, title, handler)
+        menu.addSeparator()
+        add(menu, "Выход", self.close)
 
         help_menu = self.menuBar().addMenu("Справка")
-        check = QAction("Проверить обновления…", self)
-        check.triggered.connect(lambda: self.updates.check(manual=True))
-        help_menu.addAction(check)
-        about = QAction("О программе", self)
-        about.triggered.connect(self._about)
-        help_menu.addAction(about)
+        add(help_menu, "Проверить обновления…", lambda: self.updates.check(manual=True))
+        add(help_menu, "О программе", self._about)
 
     def apply_theme(self):
         theme.apply(QApplication.instance(), self.settings.theme)
         self.catalog_view.refresh()
-        self.coverage_view.refresh()
+        self.batch_view.refresh()
 
     def _startup_update_check(self):
         updater.cleanup()
@@ -333,7 +310,7 @@ class MainWindow(QMainWindow):
         self.processes = processes.all_processes(categories)
         self.printing = print_stems(self.processes)
         self.catalog_view.set_categories(categories)
-        self.coverage_view.set_categories(categories)
+        self.batch_view.set_categories(categories)
 
     def edit_dictionary(self):
         if DictionaryDialog(self).exec():
@@ -361,7 +338,7 @@ class MainWindow(QMainWindow):
             text += f", не удалось проверить — {counts['skipped']}"
         self.statusBar().showMessage(text)
         self.catalog_view.refresh()
-        self.coverage_view.refresh()
+        self.batch_view.refresh()
         if manual or counts["removed"]:
             note = ("\n\nУдалённые ролики помечены в каталоге; нескачанные не засчитываются в покрытие."
                     if counts["removed"] else "")
@@ -382,7 +359,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _open_entry(self, video_id: int):
-        self.tabs.setCurrentIndex(1)
+        self.tabs.setCurrentWidget(self.catalog_view)
         self.catalog_view.select_entry(video_id)
 
     def export_playlist(self):
@@ -499,7 +476,9 @@ class MainWindow(QMainWindow):
         info += "\nПлощадки: " + ", ".join(src.name for src in self.sources)
         if skipped:
             info += f" (без ключа пропущены: {', '.join(skipped)})"
-        self.query_info.setText(info)
+        # На экране — одна строка, подробности (фразы, уровни, площадки) — во всплывающей подсказке.
+        self.query_info.setText(info.splitlines()[0])
+        self.query_info.setToolTip(info)
         self.show_rejected.hide()
         self.show_unlicensed.hide()
         self.plan = plan
@@ -721,15 +700,16 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Импорт", f"Не удалось прочитать файл: {exc}")
             return
         self.catalog_view.refresh()
-        self.coverage_view.refresh()
+        self.batch_view.refresh()
         QMessageBox.information(self, "Импорт", f"Загружено роликов: {videos}, привязок к услугам: {links}.\n"
                                 "Дубли не создаются: ролики, которые уже были в каталоге, обновлены.")
 
     def _on_tab(self, index: int):
-        if index == 1:
+        page = self.tabs.widget(index)
+        if page is self.catalog_view:
             self.catalog_view.refresh()
-        elif index == 2:
-            self.coverage_view.refresh()
+        elif page is self.batch_view:
+            self.batch_view.refresh()
 
     def open_service(self, process_id: str):
         """Открыть ролики услуги на вкладке «Поиск» (после пакетного поиска — из кэша)."""
@@ -742,28 +722,26 @@ class MainWindow(QMainWindow):
     def start_batch(self):
         if self.batch and self.batch.isRunning():
             return
-        order = cat.batch_order(self.processes, self.catalog.coverage())
-        if not order:
-            QMessageBox.information(self, "Пакетный поиск", "Цель выполнена по всем услугам.")
-            return
+        coverage = self.catalog.coverage()
+        short = cat.batch_order(self.processes, coverage)  # сначала услуги, где роликов меньше всего
+        order = short + [p for p in self.processes if p not in short]
         sources, _ = make_sources(self.settings, self.cache)
         answer = QMessageBox.question(
             self, "Пакетный поиск",
-            f"Искать ролики для {len(order)} услуг с недостатком роликов? Это займёт несколько минут.\n\n"
-            "Ролики только находятся, ничего не скачивается. Лимиты площадок соблюдаются: поминутные "
-            "программа пережидает сама, а если исчерпается часовой лимит Coverr (50 запросов в час), "
-            "Coverr пропустит оставшиеся услуги.")
+            f"Искать ролики по всем услугам ({len(order)})? Это займёт несколько минут.\n\n"
+            "Ролики только находятся, ничего не скачивается — открыть услугу и сохранить ролики в каталог "
+            "можно двойным щелчком. Лимиты площадок программа соблюдает сама.")
         if answer != QMessageBox.StandardButton.Yes:
             return
-        self.coverage_view.candidates = {}
+        self.batch_view.candidates = {}
         self.batch = BatchWorker(self.processes, order, sources, self.filters(), self.dictionary, self.catalog,
                                  self.printing, self.settings.only_without_attribution, self)
         names = {p.id: p.name for p in self.processes}
-        self.batch.started_service.connect(lambda pid, i, n: self.coverage_view.progress.setText(
+        self.batch.started_service.connect(lambda pid, i, n: self.batch_view.progress.setText(
             f"Ищем: {names[pid]} ({i} из {n})…"))
-        self.batch.done_service.connect(self.coverage_view.service_done)
+        self.batch.done_service.connect(self.batch_view.service_done)
         self.batch.finished.connect(self._batch_finished)
-        self.coverage_view.set_running(True)
+        self.batch_view.set_running(True)
         self.batch.start()
 
     def stop_batch(self):
@@ -772,13 +750,13 @@ class MainWindow(QMainWindow):
             self.batch.wait()
 
     def _batch_finished(self):
-        self.coverage_view.set_running(False)
-        done = len(self.coverage_view.candidates)
+        self.batch_view.set_running(False)
+        done = len(self.batch_view.candidates)
         text = f"Пакетный поиск завершён: просмотрено услуг — {done}."
         if self.batch and self.batch.problems:
             text += " " + " ".join(self.batch.problems)
-        self.coverage_view.progress.setText(text)
-        self.coverage_view.refresh()
+        self.batch_view.progress.setText(text)
+        self.batch_view.refresh()
 
     def add_to_catalog(self, result: VideoResult):
         """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""

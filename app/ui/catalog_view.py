@@ -32,7 +32,7 @@ from app import licenses, similar
 from app.processes import Category, Process
 from app.search import preview_file
 from app.ui import theme
-from app.ui.coverage_view import level_brush
+from app.ui.batch_view import level_brush
 from app.ui.frames_view import FramesStrip
 from app.ui.player import format_duration, video_facts
 

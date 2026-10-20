@@ -1,6 +1,4 @@
-"""Вкладка «Покрытие»: статистика каталога и пакетный поиск по незаполненным услугам."""
-
-from html import escape
+"""Вкладка «Пакетный поиск»: поиск роликов по всем услугам справочника одной кнопкой."""
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QBrush
@@ -19,7 +17,7 @@ from PyQt6.QtWidgets import (
 from app import catalog as cat
 from app.ui import theme
 
-LEVEL_NAMES = {0: "нет роликов", 1: "1 ролик", 2: "2 ролика", 3: "цель выполнена"}
+START_TEXT = "Искать по всем услугам"
 
 
 def level_brush(count: int, target: int) -> QBrush:
@@ -27,8 +25,9 @@ def level_brush(count: int, target: int) -> QBrush:
     return QBrush(theme.coverage_color(cat.coverage_level(count, target)))
 
 
-class CoverageView(QWidget):
-    open_service = pyqtSignal(str)  # услуга — открыть её поиск на главном экране
+class BatchView(QWidget):
+    """Вкладка «Пакетный поиск»: одна кнопка — поиск по всем услугам, таблица — что нашлось по каждой."""
+    open_service = pyqtSignal(str)  # услуга — открыть её ролики на вкладке «Поиск»
     batch_requested = pyqtSignal()
     stop_requested = pyqtSignal()
 
@@ -40,13 +39,9 @@ class CoverageView(QWidget):
         self.candidates: dict[str, tuple[int, int]] = {}  # услуга → (найдено, новых) в пакетном поиске
         self.running = False
 
-        self.stats = QLabel()
-        self.stats.setWordWrap(True)
-        self.stats.setTextFormat(Qt.TextFormat.RichText)
-
-        self.batch_button = QPushButton("Искать по незаполненным услугам")
-        self.batch_button.setToolTip("Сначала услуги без роликов, затем с одним, затем остальные с недостатком. "
-                                     "Ролики только находятся — решаете и скачиваете вы.")
+        self.batch_button = QPushButton(START_TEXT)
+        self.batch_button.setToolTip("Сначала услуги, где роликов меньше всего. Ролики только находятся — "
+                                     "посмотреть, сохранить в каталог и скачать можно, открыв услугу.")
         theme.set_role(self.batch_button, theme.PRIMARY)
         self.batch_button.clicked.connect(lambda: self.stop_requested.emit() if self.running
                                           else self.batch_requested.emit())
@@ -55,10 +50,11 @@ class CoverageView(QWidget):
         top = QHBoxLayout()
         top.addWidget(self.batch_button)
         top.addWidget(self.progress, 1)
+        self.summary = QLabel()
+        self.summary.setProperty("muted", True)
 
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Категория", "Услуга", "В покрытии", "Найдено в пакетном поиске",
-                                              "Состояние"])
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels(["Категория", "Услуга", "Найдено", "В каталоге"])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
@@ -67,14 +63,14 @@ class CoverageView(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.cellDoubleClicked.connect(lambda row, _c: self.open_service.emit(
             self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)))
-        hint = QLabel("Двойной щелчок по услуге — открыть её ролики на вкладке «Поиск» "
-                      "(после пакетного поиска — из кэша, без новых запросов).")
+        hint = QLabel("Двойной щелчок по услуге — её ролики на вкладке «Поиск»: там их можно посмотреть, "
+                      "сохранить в каталог и скачать.")
         hint.setWordWrap(True)
         hint.setProperty("muted", True)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.stats)
         layout.addLayout(top)
+        layout.addWidget(self.summary)
         layout.addWidget(self.table, 1)
         layout.addWidget(hint)
         self.refresh()
@@ -85,19 +81,9 @@ class CoverageView(QWidget):
         self.refresh()
 
     def refresh(self):
-        st = cat.statistics(self.catalog, self.categories)
-        levels = " · ".join(f"{name}: {st['services_by_count'][key]}" for key, name in
-                            (("0", "без роликов"), ("1", "с 1"), ("2", "с 2"), ("3 и более", "с 3 и более")))
-        sources = ", ".join(f"{escape(k)} — {v}" for k, v in st["by_source"].items()) or "—"
-        self.stats.setText(
-            f"<b>Категорий:</b> {st['categories']} · <b>услуг:</b> {st['services']} · "
-            f"<b>цель выполнена:</b> {st['services_done']} из {st['services']}<br>"
-            f"<b>Роликов в каталоге:</b> {st['videos']} (засчитано в покрытие: {st['counted']}, "
-            f"с точным соответствием: {st['exact']})<br>"
-            f"<b>Услуг по числу засчитанных роликов:</b> {levels}<br>"
-            f"<b>По площадкам:</b> {sources}<br>"
-            f"<b>Новых роликов с предыдущего поиска:</b> {st['new_since_previous_search']}")
         coverage = self.catalog.coverage()
+        done = sum(1 for p in self.processes if coverage.get(p.id, 0) >= p.target)
+        self.summary.setText(f"Услуг с достаточным числом роликов в каталоге: {done} из {len(self.processes)}")
         self.table.setRowCount(0)
         for c in self.categories:
             for p in c.processes:
@@ -105,9 +91,8 @@ class CoverageView(QWidget):
                 self.table.insertRow(row)
                 n = coverage.get(p.id, 0)
                 found = self.candidates.get(p.id)
-                cells = [c.name, p.name, f"{n} из {p.target}",
-                         "" if found is None else f"{found[0]} (новых для каталога: {found[1]})",
-                         LEVEL_NAMES[cat.coverage_level(n, p.target)]]
+                cells = [c.name, p.name, "" if found is None else f"{found[0]} (новых: {found[1]})",
+                         f"{n} из {p.target}"]
                 for col, text in enumerate(cells):
                     item = QTableWidgetItem(text)
                     item.setBackground(level_brush(n, p.target))
@@ -116,7 +101,7 @@ class CoverageView(QWidget):
 
     def set_running(self, running: bool):
         self.running = running
-        self.batch_button.setText("Остановить" if running else "Искать по незаполненным услугам")
+        self.batch_button.setText("Остановить" if running else START_TEXT)
 
     def service_done(self, process_id: str, found: int, fresh: int):
         self.candidates[process_id] = (found, fresh)
