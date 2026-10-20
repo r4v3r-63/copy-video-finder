@@ -181,3 +181,35 @@ def test_file_name_starts_with_catalog_id(tmp_path):
     path, _ = run_job(job, StreamSession(StreamResponse(b"x")))
     assert path.name == "42_lam_roll_pixabay_125.mp4"
     assert "Номер в каталоге: 42" in path.with_suffix(".txt").read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(not (FFMPEG and FFPROBE), reason="нет FFmpeg")
+def test_prepared_for_screens_trimmed_and_muted(tmp_path):
+    """Подготовка к показу: MP4 со звуком 4 с → первые 2 с без звука, пометка в файле лицензии."""
+    from pathlib import Path
+    src = tmp_path / "src.mp4"
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=320x240:rate=10", "-f", "lavfi",
+                    "-i", "sine=frequency=440", "-t", "4", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "-c:a", "aac", "-shortest", str(src)], check=True)
+    f = VideoFile("SD", "https://cdn/x.mp4", 320, 240, "video/mp4")
+    v = video([f])
+    v.has_audio = True
+    job = DownloadJob(result=v, file=f, process=PROC, query_text="", base_dir=tmp_path / "out", trim=2, mute=True)
+    path, note = run_job(job, StreamSession(StreamResponse(src.read_bytes())), ffmpeg=Path(FFMPEG),
+                         ffprobe=Path(FFPROBE))
+    assert path.suffix == ".mp4" and note == "" and job.prepared
+    assert not list(path.parent.glob("*.download*"))  # исходник удалён
+    streams = subprocess.run([FFPROBE, "-v", "error", "-show_entries", "stream=codec_type:format=duration",
+                              "-of", "csv=p=0", str(path)], capture_output=True, text=True).stdout
+    assert "audio" not in streams
+    duration = float([line for line in streams.splitlines() if line.strip() and line[0].isdigit()][-1])
+    assert 1.5 <= duration <= 2.5
+    text = path.with_suffix(".txt").read_text(encoding="utf-8")
+    assert "Подготовлен к показу: обрезан до 2 с, звук убран." in text
+    assert "проверить права на музыку" not in text
+
+
+def test_no_preparation_keeps_mp4_as_is(tmp_path):
+    job = DownloadJob(result=video(FILES), file=FILES[1], process=PROC, query_text="", base_dir=tmp_path)
+    path, _ = run_job(job, StreamSession(StreamResponse(b"videodata")))
+    assert path.read_bytes() == b"videodata" and not job.prepared

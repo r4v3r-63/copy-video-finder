@@ -32,6 +32,8 @@ class Settings:
     download_dir: str = ""  # пусто — «Данные/Видео»
     allow_4k: bool = False  # по умолчанию скачивается максимум Full HD
     convert_to_mp4: bool = True  # WebM/OGV с Wikimedia конвертируются в MP4
+    trim_seconds: int = 0  # подготовка к показу: обрезать скачанный ролик до N секунд (0 — не обрезать)
+    mute_audio: bool = False  # подготовка к показу: убирать звук из скачанного ролика
     check_updates: bool = True  # проверять новую версию на GitHub при запуске
     link_check_days: int = 7  # раз в сколько дней проверять, не удалены ли ролики с площадок (0 — не проверять)
     theme: str = "system"  # оформление: system — как в Windows, light, dark

@@ -57,6 +57,9 @@ class DownloadJob:
     id: int = 0
     cancel: threading.Event = field(default_factory=threading.Event)
     loop_hint: bool | None = None  # подсказка «подходит для зацикливания» после скачивания
+    trim: int = 0  # подготовка к показу: оставить первые N секунд (0 — не обрезать)
+    mute: bool = False  # подготовка к показу: убрать звук
+    prepared: bool = False  # обрезка и снятие звука выполнены
     # Для файла со страницы сайта (VideoFile.page): функция источника (файл, сессия) → ссылка на файл.
     resolver: object = None
 
@@ -121,7 +124,11 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
     if lic and lic.status == licenses.ATTRIBUTION:
         lines.append("Атрибуция (показывать в титре): "
                      + licenses.attribution_text(r.author, r.title, lic.name, r.page_url))
-    if r.has_audio:
+    if job.prepared:
+        changes = ([f"обрезан до {job.trim} с"] if job.trim > 0 else []) + (["звук убран"] if job.mute else [])
+        lines.append("Подготовлен к показу: " + ", ".join(changes) + ". Это изменение ролика — для лицензий с ND "
+                     "оно недопустимо (такие ролики программа не скачивает).")
+    if r.has_audio and not (job.prepared and job.mute):
         lines.append("Есть звуковая дорожка — проверить права на музыку.")
     lines += [
         f"Качество: {job.file.quality}" + (f" ({job.file.width}×{job.file.height})" if job.file.width else ""),
@@ -236,10 +243,14 @@ def loop_hint(path: Path, ffmpeg: Path) -> bool | None:
         return None
 
 
-def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event | None = None) -> None:
+def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event | None = None,
+                   trim: int = 0, mute: bool = False) -> None:
+    """Перекодировать в MP4 (H.264); trim — оставить первые N секунд, mute — без звука."""
     tmp = dest.with_name(dest.stem + ".converting.mp4")
-    cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c:v", "libx264", "-preset", "medium",
-           "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)]
+    audio = ["-an"] if mute else ["-c:a", "aac", "-b:a", "128k"]
+    limit = ["-t", str(trim)] if trim > 0 else []
+    cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), *limit, "-c:v", "libx264", "-preset", "medium",
+           "-crf", "20", "-pix_fmt", "yuv420p", *audio, "-movflags", "+faststart", str(tmp)]
     # Ошибки FFmpeg — во временный файл: из непрочитанного канала (PIPE) при длинном выводе
     # FFmpeg встал бы, а цикл ниже ждал бы его вечно.
     with tempfile.TemporaryFile() as log_file:
@@ -277,22 +288,25 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
             raise DownloadError(f"Не удалось открыть страницу ролика: {exc}") from exc
         file = VideoFile(file.quality, url, file.width, file.height, file.mime)
     ext = extension(file)
-    want_mp4 = job.convert and ext != ".mp4"
+    prepare = job.trim > 0 or job.mute  # подготовка к показу: обрезать, убрать звук
+    want_mp4 = (job.convert and ext != ".mp4") or prepare
     final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))
     if final.exists():
         return final, "уже был скачан"
 
-    raw = folder / (stem + ext)
+    # Исходник — под отдельным именем, если его будут перекодировать в файл с тем же расширением.
+    raw = folder / (stem + (".download" if want_mp4 and ffmpeg else "") + ext)
     fetch(file.url, raw, session, progress, job.cancel)
     note = ""
     if want_mp4:
         if ffmpeg:
             if progress:
                 progress(-1, -1)  # сигнал «конвертация»
-            convert_to_mp4(raw, final, ffmpeg, job.cancel)
+            convert_to_mp4(raw, final, ffmpeg, job.cancel, trim=job.trim, mute=job.mute)
             raw.unlink(missing_ok=True)
+            job.prepared = prepare
         else:
-            note = "FFmpeg не найден — файл сохранён без конвертации"
+            note = "FFmpeg не найден — файл сохранён как есть, без конвертации и подготовки к показу"
     info = probe(final, ffprobe)
     if ffprobe and info is None:
         note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"

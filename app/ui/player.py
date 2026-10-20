@@ -14,6 +14,7 @@ from app.downloader import choose_file
 from app.search import preview_file
 from app.sources.base import VideoResult
 from app.ui import theme
+from app.ui.frames_view import FramesStrip
 
 
 def video_facts(r: VideoResult) -> list[str]:
@@ -105,6 +106,8 @@ class PlayerPanel(QWidget):
         layout.addWidget(self.video, 1)
         layout.addLayout(controls)
         layout.addWidget(self.info)
+        self.frames = FramesStrip()
+        layout.addWidget(self.frames)
         layout.addLayout(catalog_row)
         layout.addWidget(self.catalog_status)
         layout.addLayout(download_row)
@@ -120,6 +123,9 @@ class PlayerPanel(QWidget):
         self._fill_qualities(result)
         self.set_download_state("", "")
         self.set_catalog_state("")
+        preview = preview_file(result) if result else None
+        self.frames.set_video(result.key if result else None, preview.url if preview else "",
+                              result.duration if result else None)
         if result is not None and result.view_only:
             # Лицензия не свободная: только посмотреть; «Не подходит» — можно.
             self.download_button.setEnabled(False)

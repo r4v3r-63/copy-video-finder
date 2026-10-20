@@ -32,6 +32,8 @@ from app import licenses, similar
 from app.processes import Category, Process
 from app.ui import theme
 from app.ui.coverage_view import level_brush
+from app.search import preview_file
+from app.ui.frames_view import FramesStrip
 from app.ui.player import format_duration, video_facts
 
 ALL = "__all__"
@@ -129,6 +131,8 @@ class VideoCard(QWidget):
         layout.addLayout(add_row)
         layout.addWidget(self.comment)
         layout.addWidget(self.save_comment)
+        self.frames = FramesStrip()
+        layout.addWidget(self.frames)
         layout.addLayout(buttons)
         layout.addStretch()
         self.show_entry(None)
@@ -147,6 +151,8 @@ class VideoCard(QWidget):
                   self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
             w.setEnabled(entry is not None)
         self.open_file.setEnabled(bool(entry and entry.downloaded_path))
+        self.frames.set_video(entry.id if entry else None, self._frames_source(entry),
+                              entry.result.duration if entry else None)
         if entry is None:
             self.header.setText("Выберите ролик в списке.")
             self.title.clear()
@@ -213,6 +219,16 @@ class VideoCard(QWidget):
             return []
         return [e.id for e in self.catalog.entries() if e.id != entry.id and e.phash
                 and similar.distance(e.phash, entry.phash) <= similar.DUPLICATE_DISTANCE]
+
+    @staticmethod
+    def _frames_source(entry: cat.Entry | None) -> str:
+        """Кадры — из скачанного файла, если он есть, иначе по ссылке для просмотра."""
+        if entry is None:
+            return ""
+        if entry.downloaded_path and Path(entry.downloaded_path).exists():
+            return entry.downloaded_path
+        preview = preview_file(entry.result)
+        return preview.url if preview else ""
 
     def _reload(self):
         self.show_entry(self.catalog.get(self.entry.id))

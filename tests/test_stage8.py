@@ -235,3 +235,25 @@ def test_avif_thumbnail_loads():
     image = load_image(buf.getvalue())
     assert (image.width(), image.height()) == (64, 36)
     assert load_image(b"not an image").isNull()
+
+
+def test_frame_times():
+    from app.frames import frame_times
+    assert frame_times(100) == [10.0, 50.0, 90.0]
+    assert frame_times(None) == [1.0, 5.0, 10.0]
+
+
+@pytest.mark.skipif(not FFMPEG, reason="нет FFmpeg")
+def test_frames_from_video(tmp_path):
+    """Три кадра из ролика (начало, середина, конец) в PNG; ролик короче — лишний кадр пропускается."""
+    from pathlib import Path
+    from PIL import Image
+    from app.frames import extract_frames
+    src = tmp_path / "v.mp4"
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=640x360:rate=10", "-t", "4",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src)], check=True)
+    frames = extract_frames(str(src), 4.0, Path(FFMPEG))
+    assert [at for at, _ in frames] == [0.4, 2.0, 3.6]
+    with Image.open(io.BytesIO(frames[0][1])) as img:
+        assert img.size == (320, 180)
+    assert len(extract_frames(str(src), None, Path(FFMPEG))) == 1  # 1 с есть, 5 и 10 с — нет

@@ -45,7 +45,7 @@ from app.sources.videezy import VideezySource
 from app.sources.web import WebSource
 from app.sources.wikimedia import WikimediaSource
 from app.batch import BatchWorker
-from app.export import html_catalog, playlist, registry, summary
+from app.export import html_catalog, playlist, registry, report, summary
 from app.ui.catalog_view import CatalogView
 from app.ui.coverage_view import CoverageView
 from app.ui.player import PlayerPanel, format_duration
@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
         self.batch: BatchWorker | None = None
         self.link_check: maintenance.LinkCheckWorker | None = None
         self.duplicates: maintenance.DuplicateWorker | None = None
+        self.report_worker: report.ReportWorker | None = None
         self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
@@ -253,7 +254,8 @@ class MainWindow(QMainWindow):
         for title, handler in (("Экспорт реестра в Excel…", self.export_xlsx),
                                ("Экспорт реестра в CSV…", self.export_csv),
                                ("HTML-каталог…", self.export_html),
-                               ("Сводка покрытия…", self.export_summary)):
+                               ("Сводка покрытия…", self.export_summary),
+                               ("Отчёт для руководства (PDF)…", self.export_report)):
             action = QAction(title, self)
             action.triggered.connect(handler)
             catalog_menu.addAction(action)
@@ -621,6 +623,29 @@ class MainWindow(QMainWindow):
             return self._export_failed(exc)
         self._exported(path, "HTML-каталог сохранён")
 
+    def export_report(self):
+        """PDF для руководства: покрытие услуг и превью роликов (превью скачиваются в фоне)."""
+        if self.report_worker and self.report_worker.isRunning():
+            return
+        path = self._save_path("Отчёт для руководства", "Отчёт о роликах", "PDF (*.pdf)")
+        if not path:
+            return
+        path = path.with_suffix(".pdf")
+        videos = report.service_videos(self.catalog, self.categories)
+        entries = list({e.id: e for items in videos.values() for e in items}.values())
+        self.statusBar().showMessage(f"Отчёт: загружаются превью роликов ({len(entries)})…")
+        self.report_worker = report.ReportWorker(entries, self)
+        self.report_worker.done.connect(lambda thumbs: self._write_report(path, thumbs))
+        self.report_worker.start()
+
+    def _write_report(self, path: Path, thumbs: dict):
+        try:
+            report.write_pdf(path, report.report_html(self.catalog, self.categories, thumbs), thumbs)
+        except OSError as exc:
+            return self._export_failed(exc)
+        self.statusBar().showMessage("Отчёт сохранён.")
+        self._exported(path, "Отчёт сохранён")
+
     def export_summary(self):
         path = self._save_path("Сводка покрытия", "Сводка покрытия", "HTML (*.html)")
         if not path:
@@ -749,6 +774,7 @@ class MainWindow(QMainWindow):
         job = DownloadJob(result=result, file=file, process=process,
                           query_text=self.plan_text, base_dir=self.download_dir(),
                           convert=self.settings.convert_to_mp4, catalog_id=video_id,
+                          trim=self.settings.trim_seconds, mute=self.settings.mute_audio,
                           resolver=getattr(source, "resolve_download", None))
         self.downloads.add(job)
         self._set_download_state(result.key, "В очереди на скачивание…", "", True)
@@ -873,10 +899,12 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.stop_search()
         self.stop_batch()
-        for worker in (self.link_check, self.duplicates):
+        for worker in (self.link_check, self.duplicates, self.report_worker):
             if worker and worker.isRunning():
                 worker.cancel.set()
                 worker.wait(3000)
         self.downloads.stop()
         self.player.player.stop()
+        self.player.frames.stop()
+        self.catalog_view.card.frames.stop()
         super().closeEvent(event)
