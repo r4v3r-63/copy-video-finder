@@ -1,18 +1,28 @@
 """VK Видео через официальный VK API (video.search) — по токену пользователя.
 
 Поиск видео VK отдаёт только с ключом доступа пользователя. Пароль программа не видит:
-пользователь входит на сайте VK в своём браузере (`auth_url`), а в программу вставляет
-адрес страницы, куда VK перенаправил после входа, — из него берётся токен (`token_from_text`).
-Токен хранится только в «Данные/settings.json» (решение пользователя 20.10.2026).
+пользователь входит на сайте VK ID в своём браузере (OAuth 2.1 с PKCE, `Login`), а в программу
+вставляет адрес страницы, куда VK перенаправил после входа, — из него берётся одноразовый код,
+который программа обменивает на ключ (`exchange`). Ключ живёт около часа и продлевается сам
+по ключу обновления (`refresh`). Всё хранится только в «Данные/settings.json»
+(решение пользователя 20.10.2026). Старый вход oauth.vk.com для новых приложений VK ID не работает
+(«Security Error»), поэтому — VK ID.
 
 Файлов роликов VK API для чужих видео не отдаёт — ролики смотрят на сайте. Лицензия —
 условия VK, все права у автора: «Требует проверки».
 """
 
+import base64
+import hashlib
 import json
 import re
+import secrets
+import threading
 import time
+from dataclasses import dataclass
 from urllib.parse import parse_qs, urlencode, urlparse
+
+import requests
 
 from app import licenses
 from app.cache import Cache
@@ -29,25 +39,104 @@ from app.sources.http import HttpSource
 
 API = "https://api.vk.com/method"
 VERSION = "5.199"
-AUTH_URL = "https://oauth.vk.com/authorize"
-REDIRECT = "https://oauth.vk.com/blank.html"
+VKID_AUTH = "https://id.vk.com/authorize"
+VKID_TOKEN = "https://id.vk.com/oauth2/auth"
+REDIRECT = "https://oauth.vk.com/blank.html"  # доверенный Redirect URL в настройках приложения VK ID
 PER_PAGE = 50
 NAME = "VK Видео"  # как у роликов VK из выдачи Яндекс Видео — одна площадка, без дублей
+REFRESH_BEFORE = 120  # секунд до истечения ключа — продлеваем заранее
 
 
-def auth_url(app_id: str) -> str:
-    """Страница входа VK: после входа браузер откроет blank.html с токеном в адресе."""
-    return AUTH_URL + "?" + urlencode({"client_id": app_id.strip(), "display": "page", "redirect_uri": REDIRECT,
-                                       "scope": "video,offline", "response_type": "token", "v": VERSION})
+class VkLoginError(Exception):
+    pass
+
+
+@dataclass
+class Tokens:
+    access: str
+    refresh: str = ""
+    device_id: str = ""
+    expires_at: float = 0.0  # 0 — без срока (старый ключ, вставленный вручную)
+
+
+@dataclass
+class Login:
+    """Один вход: проверочная строка PKCE и state живут, пока открыт диалог настроек."""
+    app_id: str
+    verifier: str
+    state: str
+
+    @classmethod
+    def start(cls, app_id: str) -> "Login":
+        return cls(app_id.strip(), secrets.token_urlsafe(48), secrets.token_urlsafe(24))
+
+    @property
+    def url(self) -> str:
+        challenge = base64.urlsafe_b64encode(hashlib.sha256(self.verifier.encode()).digest()).rstrip(b"=").decode()
+        return VKID_AUTH + "?" + urlencode({"response_type": "code", "client_id": self.app_id, "scope": "video",
+                                            "redirect_uri": REDIRECT, "state": self.state,
+                                            "code_challenge": challenge, "code_challenge_method": "S256"})
+
+
+def parse_redirect(text: str) -> dict[str, str]:
+    """Параметры из вставленного адреса после входа (в query или после #): code, state, device_id…"""
+    text = (text or "").strip()
+    parts = urlparse(text)
+    params = {}
+    for chunk in (parts.query, parts.fragment):
+        params.update({k: v[0] for k, v in parse_qs(chunk).items() if v})
+    return params
 
 
 def token_from_text(text: str) -> str:
-    """Токен из вставленного адреса «…blank.html#access_token=…&expires_in=0…» или сам токен."""
+    """Готовый ключ из адреса «…#access_token=…» или сам ключ (если его вставили вручную)."""
     text = (text or "").strip()
     if "access_token=" in text:
-        fragment = urlparse(text).fragment or urlparse(text).query or text
-        return (parse_qs(fragment).get("access_token") or [""])[0]
+        return parse_redirect(text).get("access_token", "")
     return text if re.fullmatch(r"[A-Za-z0-9._-]{20,}", text) else ""
+
+
+def has_code(text: str) -> bool:
+    params = parse_redirect(text)
+    return bool(params.get("code") and params.get("device_id"))
+
+
+def _tokens(data: dict, device_id: str, now: float) -> Tokens:
+    if not isinstance(data, dict) or not data.get("access_token"):
+        message = (data or {}).get("error_description") or (data or {}).get("error") or "VK не выдал ключ."
+        raise VkLoginError(str(message))
+    expires = data.get("expires_in")
+    return Tokens(access=data["access_token"], refresh=data.get("refresh_token") or "", device_id=device_id,
+                  expires_at=now + float(expires) if expires else 0.0)
+
+
+def exchange(login: Login, pasted: str, session=None, now=time.time) -> Tokens:
+    """Код из адреса после входа → ключи (access и refresh)."""
+    params = parse_redirect(pasted)
+    if not params.get("code") or not params.get("device_id"):
+        raise VkLoginError("В адресе нет кода входа — скопируйте адрес страницы целиком.")
+    if params.get("state") and params["state"] != login.state:
+        raise VkLoginError("Адрес от другого входа — нажмите «Войти в VK» ещё раз.")
+    form = {"grant_type": "authorization_code", "code": params["code"], "code_verifier": login.verifier,
+            "client_id": login.app_id, "device_id": params["device_id"], "redirect_uri": REDIRECT,
+            "state": login.state}
+    try:
+        resp = (session or requests).post(VKID_TOKEN, data=form, timeout=20)
+        data = resp.json()
+    except (requests.RequestException, ValueError) as exc:
+        raise VkLoginError(f"Не удалось связаться с VK: {exc}") from exc
+    return _tokens(data, params["device_id"], now())
+
+
+def refresh(app_id: str, tokens: Tokens, session=None, now=time.time) -> Tokens:
+    """Продлить ключ по ключу обновления (VK выдаёт новый ключ обновления — старый больше не годится)."""
+    form = {"grant_type": "refresh_token", "refresh_token": tokens.refresh, "client_id": app_id,
+            "device_id": tokens.device_id, "state": secrets.token_urlsafe(16)}
+    try:
+        data = (session or requests).post(VKID_TOKEN, data=form, timeout=20).json()
+    except (requests.RequestException, ValueError) as exc:
+        raise VkLoginError(f"Не удалось связаться с VK: {exc}") from exc
+    return _tokens(data, tokens.device_id, now())
 
 
 def page_url(owner_id: int, video_id: int) -> str:
@@ -108,17 +197,46 @@ class VkSource(HttpSource):
     topic_in_description = True
     limits = [(3, 1.0, "в секунду"), (5000, 86400, "в сутки")]  # лимиты VK API для пользовательского ключа
 
-    def __init__(self, token: str, cache: Cache, session=None, now=time.time):
+    def __init__(self, token: str, cache: Cache, session=None, now=time.time, app_id: str = "",
+                 refresh_token: str = "", device_id: str = "", expires_at: float = 0.0, on_tokens=None):
         super().__init__(cache, session, now=now)
         self.token = token or ""
+        self.app_id = app_id
+        self.tokens = Tokens(self.token, refresh_token or "", device_id or "", expires_at or 0.0)
+        self.on_tokens = on_tokens  # сохранить продлённые ключи в настройках
+        self._refresh_lock = threading.Lock()
 
     def is_configured(self) -> bool:
         return bool(self.token)
+
+    def _can_refresh(self) -> bool:
+        return bool(self.app_id and self.tokens.refresh and self.tokens.device_id)
+
+    def _renew(self) -> None:
+        with self._refresh_lock:
+            try:
+                self.tokens = refresh(self.app_id, self.tokens, self.session, self._now)
+            except VkLoginError as exc:
+                raise AuthError(self.name, f"Вход в VK устарел ({exc}) — войдите заново в «Файл → Настройки».") from exc
+            self.token = self.tokens.access
+            if self.on_tokens:
+                self.on_tokens(self.tokens)
 
     def missing_key_message(self) -> str:
         return "Войдите в VK в «Файл → Настройки», чтобы искать в VK Видео."
 
     def _call(self, method: str, params: dict) -> dict:
+        if self._can_refresh() and self.tokens.expires_at and self.tokens.expires_at - self._now() < REFRESH_BEFORE:
+            self._renew()
+        try:
+            return self._call_once(method, params)
+        except AuthError:
+            if not self._can_refresh():
+                raise
+            self._renew()  # ключ отозван или истёк раньше срока — один раз продлеваем и повторяем
+            return self._call_once(method, params)
+
+    def _call_once(self, method: str, params: dict) -> dict:
         # Ошибку VK присылает с кодом 200 — проверяем до кэша, чтобы она не запомнилась на сутки.
         text = self._fetch_text(f"{API}/{method}", {**params, "v": VERSION, "access_token": self.token},
                                 secret_params=("access_token",), check=lambda resp: api_error(self.name, resp.text))

@@ -103,7 +103,7 @@ class SettingsDialog(QDialog):
 
         # VK Видео: вход в браузере, пароль программа не видит; в программу — только токен из адреса.
         self.vk_app_id = QLineEdit(settings.vk_app_id)
-        self.vk_app_id.setPlaceholderText("ID приложения с dev.vk.com")
+        self.vk_app_id.setPlaceholderText("ID приложения с id.vk.com")
         self.vk_login = QPushButton("Войти в VK")
         self.vk_login.clicked.connect(self._vk_open_login)
         vk_row = QHBoxLayout()
@@ -114,8 +114,8 @@ class SettingsDialog(QDialog):
         self.vk_answer.setEchoMode(QLineEdit.EchoMode.Password)
         self.vk_answer.setPlaceholderText("после входа вставьте сюда адрес страницы из браузера")
         self.vk_answer.textChanged.connect(lambda text: self.vk_status.setText(
-            "Вход получен — нажмите «Сохранить»." if vk.token_from_text(text)
-            else "В адресе нет access_token — скопируйте адрес страницы целиком."))
+            "Вход получен — нажмите «Сохранить»." if vk.has_code(text) or vk.token_from_text(text)
+            else "В адресе нет кода входа — скопируйте адрес страницы целиком."))
         self.vk_logout = QPushButton("Выйти")
         self.vk_logout.clicked.connect(self._vk_forget)
         answer_row = QHBoxLayout()
@@ -123,6 +123,9 @@ class SettingsDialog(QDialog):
         answer_row.addWidget(self.vk_logout)
         form.addRow("", answer_row)
         self.vk_token = settings.vk_token
+        self.vk_tokens = vk.Tokens(settings.vk_token, settings.vk_refresh_token, settings.vk_device_id,
+                                   settings.vk_token_expires)
+        self.vk_pending: vk.Login | None = None  # вход начат кнопкой «Войти в VK»
         self.vk_status = _note("")
         form.addRow("", self.vk_status)
         form.addRow("", _link("Как создать приложение VK и войти (инструкция)", VK_HELP))
@@ -231,12 +234,15 @@ class SettingsDialog(QDialog):
         if not self.vk_app_id.text().strip():
             self.vk_status.setText("Сначала впишите ID приложения VK.")
             return
-        QDesktopServices.openUrl(QUrl(vk.auth_url(self.vk_app_id.text())))
+        self.vk_pending = vk.Login.start(self.vk_app_id.text())
+        QDesktopServices.openUrl(QUrl(self.vk_pending.url))
         self.vk_status.setText("Войдите в VK в открывшемся браузере, затем скопируйте адрес страницы "
-                               "(начинается с https://oauth.vk.com/blank.html#access_token=…) и вставьте его выше.")
+                               "(начинается с https://oauth.vk.com/blank.html?code=…) и вставьте его выше. "
+                               "Окно настроек до этого не закрывайте.")
 
     def _vk_forget(self):
         self.vk_token = ""
+        self.vk_tokens = vk.Tokens("")
         self.vk_answer.clear()
         self._vk_update()
 
@@ -261,10 +267,24 @@ class SettingsDialog(QDialog):
         self._settings.brave_api_key = self.brave_key.text().strip()
         self._settings.tavily_api_key = self.tavily_key.text().strip()
         self._settings.vk_app_id = self.vk_app_id.text().strip()
-        pasted = vk.token_from_text(self.vk_answer.text())
-        if pasted:
-            self.vk_token = pasted
+        pasted = self.vk_answer.text()
+        if vk.has_code(pasted):
+            if not self.vk_pending:
+                self.vk_status.setText("Этот адрес от прошлого входа — нажмите «Войти в VK» ещё раз.")
+                return
+            try:
+                self.vk_tokens = vk.exchange(self.vk_pending, pasted)
+            except vk.VkLoginError as exc:
+                self.vk_status.setText(f"VK не принял вход: {exc}")
+                return  # окно остаётся открытым — можно войти ещё раз
+            self.vk_token = self.vk_tokens.access
+        elif vk.token_from_text(pasted):
+            self.vk_token = vk.token_from_text(pasted)
+            self.vk_tokens = vk.Tokens(self.vk_token)
         self._settings.vk_token = self.vk_token
+        self._settings.vk_refresh_token = self.vk_tokens.refresh
+        self._settings.vk_device_id = self.vk_tokens.device_id
+        self._settings.vk_token_expires = self.vk_tokens.expires_at
         self._settings.min_duration = min(low, high)
         self._settings.max_duration = max(low, high)
         self._settings.only_without_attribution = self.no_attribution.isChecked()

@@ -89,11 +89,20 @@ def all_sources(settings: Settings, cache: Cache) -> list[Source]:
         VideezySource(cache),
         PexelsSource(settings.key("pexels_api_key"), cache),
         YandexVideoSource(cache),  # Rutube, VK Видео, Дзен, Одноклассники, YouTube — одной выдачей
-        VkSource(settings.vk_token, cache),  # после входа в VK в настройках
+        VkSource(settings.vk_token, cache, app_id=settings.vk_app_id, refresh_token=settings.vk_refresh_token,
+                 device_id=settings.vk_device_id, expires_at=settings.vk_token_expires,
+                 on_tokens=lambda t: _save_vk_tokens(settings, t)),  # после входа в VK в настройках
     ]
     # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
     return sources + [WebSource(cache, delegates=sources, tavily_key=settings.key("tavily_api_key"),
                                 brave_key=settings.key("brave_api_key"))]
+
+
+def _save_vk_tokens(settings: Settings, tokens) -> None:
+    """VK выдал новые ключи (продление) — сразу в настройки: прежний ключ обновления больше не годится."""
+    settings.vk_token, settings.vk_refresh_token = tokens.access, tokens.refresh
+    settings.vk_device_id, settings.vk_token_expires = tokens.device_id, tokens.expires_at
+    settings.save()
 
 
 def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[str]]:
