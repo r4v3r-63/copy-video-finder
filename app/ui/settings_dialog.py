@@ -186,6 +186,9 @@ class SettingsDialog(QDialog):
         # Длинные подписи переносятся; ширина и высота — не больше экрана (на узком — прокрутка).
         screen = self.screen().availableGeometry() if self.screen() else None
         scrollbar = scroll.verticalScrollBar().sizeHint().width()
+        if screen and body.minimumSizeHint().width() + scrollbar + 24 > screen.width() - 40:
+            form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)  # узкий экран — подписи над полями
+            body.adjustSize()
         width = max(body.sizeHint().width() + scrollbar + 24, 640)
         height = body.heightForWidth(width - 40) if body.hasHeightForWidth() else body.sizeHint().height()
         height += buttons.sizeHint().height() + 48
