@@ -146,18 +146,21 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
           retries: int = RETRIES, pause: float = 2.0) -> None:
     """Скачать в dest.part с докачкой (Range) и повторами, затем переименовать в dest.
 
-    Докачка — только того же файла: с If-Range (ETag или дата изменения от первого ответа);
-    если файл на сервере изменился, сервер отдаёт его целиком (200) и скачивание начинается заново.
+    Докачка — только того же файла по той же ссылке: рядом с .part хранятся ссылка и ETag (или дата
+    изменения) первого ответа, запрос идёт с If-Range; файл изменился — сервер отдаёт его целиком (200).
+    Другая ссылка (выбрано другое качество), нет валидатора или старый формат — скачивание с начала:
+    одинаковый ETag у разных файлов по HTTP допустим, и докачка склеила бы два разных ролика.
     """
     part = dest.with_name(dest.name + ".part")
-    validator_file = dest.with_name(dest.name + ".part.etag")
+    validator_file = dest.with_name(dest.name + ".part.json")
+    dest.with_name(dest.name + ".part.etag").unlink(missing_ok=True)  # формат 0.18.0 — без ссылки
     for attempt in range(1, retries + 1):
         have = part.stat().st_size if part.exists() else 0
         headers = {"User-Agent": USER_AGENT}
-        validator = validator_file.read_text(encoding="utf-8").strip() if have and validator_file.exists() else ""
+        validator = _saved_validator(validator_file, url) if have else ""
         if have and not validator:
-            # Без ETag/даты изменения не проверить, тот ли это файл: докачка могла бы склеить две версии.
             part.unlink()
+            validator_file.unlink(missing_ok=True)
             have = 0
         if have:
             headers["Range"] = f"bytes={have}-"
@@ -188,7 +191,8 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
                     have = 0  # сервер не умеет докачку или файл изменился — начинаем заново
                     new_validator = resp.headers.get("ETag") or resp.headers.get("Last-Modified") or ""
                     if new_validator:
-                        validator_file.write_text(new_validator, encoding="utf-8")
+                        validator_file.write_text(json.dumps({"url": url, "validator": new_validator}),
+                                                  encoding="utf-8")
                     else:
                         validator_file.unlink(missing_ok=True)
                 total = have + int(resp.headers.get("Content-Length") or 0)
@@ -212,6 +216,18 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
         raise DownloadError("Скачан пустой файл.")
     part.replace(dest)
     validator_file.unlink(missing_ok=True)
+
+
+def _saved_validator(validator_file: Path, url: str) -> str:
+    """ETag/дата изменения недокачанного файла — только если он скачивался по этой же ссылке."""
+    try:
+        saved = json.loads(validator_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    if not isinstance(saved, dict) or saved.get("url") != url:
+        return ""
+    value = saved.get("validator")
+    return value.strip() if isinstance(value, str) else ""
 
 
 def _range_total(headers) -> int | None:

@@ -232,13 +232,13 @@ def test_416_with_other_size_restarts(tmp_path):
     """416, но на сервере 3 байта, а у нас 17: частичный файл не принимается за готовый."""
     dest = tmp_path / "a.mp4"
     (tmp_path / "a.mp4.part").write_bytes(b"x" * 17)
-    (tmp_path / "a.mp4.part.etag").write_text('"v1"', encoding="utf-8")
+    (tmp_path / "a.mp4.part.json").write_text('{"url": "u", "validator": "\\"v1\\""}', encoding="utf-8")
     session = StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"}),
                             StreamResponse(b"abc"))
     fetch("u", dest, session, pause=0)
     assert dest.read_bytes() == b"abc" and "Range" not in session.calls[1]["headers"]
     (tmp_path / "b.mp4.part").write_bytes(b"abc")
-    (tmp_path / "b.mp4.part.etag").write_text('"v1"', encoding="utf-8")
+    (tmp_path / "b.mp4.part.json").write_text('{"url": "u", "validator": "\\"v1\\""}', encoding="utf-8")
     fetch("u", tmp_path / "b.mp4", StreamSession(StreamResponse(b"", 416, headers={"Content-Range": "bytes */3"})))
     assert (tmp_path / "b.mp4").read_bytes() == b"abc"  # размер совпал — готово
 
@@ -250,7 +250,7 @@ def test_resume_only_same_file(tmp_path):
                             StreamResponse(b"NEWFILE!", headers={"ETag": '"v2"'}))
     fetch("u", dest, session, pause=0)
     assert session.calls[1]["headers"]["If-Range"] == '"v1"' and session.calls[1]["headers"]["Range"] == "bytes=4-"
-    assert dest.read_bytes() == b"NEWFILE!" and not (tmp_path / "a.mp4.part.etag").exists()
+    assert dest.read_bytes() == b"NEWFILE!" and not (tmp_path / "a.mp4.part.json").exists()
 
 
 def test_part_without_validator_not_resumed(tmp_path):
@@ -276,3 +276,25 @@ def test_legacy_prepared_file_downloaded_again(tmp_path):
     txt.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert downloader._legacy_same(txt, file, downloader.variant(file, 0, False))
     assert run_job(job, StreamSession()) == (path, "уже был скачан")
+
+
+def test_other_url_not_resumed_even_with_same_etag(tmp_path):
+    """Отменили Full HD, выбрали 4K: тот же .part, другая ссылка, тот же ETag — скачивание с начала."""
+    dest = tmp_path / "a.mp4"
+    with pytest.raises(Exception):
+        fetch("https://cdn/fhd.mp4", dest, StreamSession(StreamResponse(b"AAAABBBB", headers={"ETag": '"x"'},
+                                                                          cut_after=4)), retries=1, pause=0)
+    assert (tmp_path / "a.mp4.part").read_bytes() == b"AAAA"
+    session = StreamSession(StreamResponse(b"CCCCDDDD", headers={"ETag": '"x"'}))
+    fetch("https://cdn/4k.mp4", dest, session, pause=0)
+    assert "Range" not in session.calls[0]["headers"] and dest.read_bytes() == b"CCCCDDDD"
+
+
+def test_old_etag_file_format_not_resumed(tmp_path):
+    dest = tmp_path / "a.mp4"
+    (tmp_path / "a.mp4.part").write_bytes(b"OLD!")
+    (tmp_path / "a.mp4.part.etag").write_text('"v1"', encoding="utf-8")
+    session = StreamSession(StreamResponse(b"NEWFILE!"))
+    fetch("u", dest, session)
+    assert dest.read_bytes() == b"NEWFILE!" and "Range" not in session.calls[0]["headers"]
+    assert not (tmp_path / "a.mp4.part.etag").exists()
