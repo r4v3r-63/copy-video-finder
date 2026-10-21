@@ -4,6 +4,7 @@ import logging
 import os
 import queue
 import shutil
+import sys
 import tempfile
 import traceback
 from pathlib import Path
@@ -37,8 +38,16 @@ class WindowsSiteView(QWidget):
         self._start()
 
     def _start(self):
+        logger = logging.getLogger(__name__)
+        if getattr(sys, "frozen", False):
+            python_dll = Path(sys._MEIPASS) / f"python{sys.version_info.major}{sys.version_info.minor}.dll"
+            if python_dll.is_file():
+                os.environ["PYTHONNET_PYDLL"] = str(python_dll)
+        logger.info("WebView2: загрузка CLR")
         import clr
         import webview
+
+        logger.info("WebView2: CLR загружен")
 
         libraries = Path(webview.__file__).parent / "lib"
         native = libraries / "runtimes" / "win-x64" / "native"
@@ -49,6 +58,8 @@ class WindowsSiteView(QWidget):
         clr.AddReference(str(libraries / "Microsoft.Web.WebView2.Core.dll"))
         clr.AddReference(str(libraries / "Microsoft.Web.WebView2.WinForms.dll"))
         from System.Threading import ApartmentState, Thread, ThreadStart
+
+        logger.info("WebView2: SDK подключён, запуск STA")
 
         self._thread = Thread(ThreadStart(self._run))
         self._thread.SetApartmentState(ApartmentState.STA)
@@ -118,6 +129,8 @@ class WindowsSiteView(QWidget):
                     return
                 core = web.CoreWebView2
                 self.private_mode = bool(core.Profile.IsInPrivateModeEnabled)
+                logging.getLogger(__name__).info("WebView2: инициализация завершена, приватный сеанс %s",
+                                                 self.private_mode)
                 core.Settings.IsPasswordAutosaveEnabled = False
                 core.Settings.IsGeneralAutofillEnabled = False
                 core.Settings.IsWebMessageEnabled = False  # нет моста из сайта к Python

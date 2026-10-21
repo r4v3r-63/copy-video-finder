@@ -2,6 +2,7 @@
 
 import functools
 import json
+import logging
 import os
 import sys
 import threading
@@ -19,6 +20,7 @@ from app.ui.widgets.site_player import SitePlayer  # noqa: E402
 
 
 def main(directory: Path) -> int:
+    logging.getLogger(__name__).info("Проверка встроенного просмотра: вход")
     if sys.stdout is not None:
         sys.stdout.reconfigure(encoding="utf-8")
     if sys.stderr is not None:
@@ -87,6 +89,7 @@ def main(directory: Path) -> int:
                     return
                 if sys.stdout is not None:
                     print("Встроенный плеер воспроизводит локальное видео: " + video, flush=True)
+                logging.getLogger(__name__).info("Проверка встроенного просмотра: кадры воспроизводятся")
                 finish(True)
         except (TypeError, ValueError):
             pass
@@ -109,6 +112,7 @@ def main(directory: Path) -> int:
     timer = QTimer()
     timer.timeout.connect(poll)
     timer.start(300)
+    logging.getLogger(__name__).info("Проверка встроенного просмотра: запуск локальной страницы")
     panel.open(f"http://127.0.0.1:{server.server_port}/")
     if sys.platform == "win32" and panel.view is not None:
         panel.view.scriptFinished.connect(report)
@@ -126,6 +130,7 @@ def main(directory: Path) -> int:
                       "private": getattr(panel.view, "private_mode", None)}
         # Только локальные тестовые данные: никаких URL площадок, паролей и ключей.
         message = json.dumps(diagnostic, ensure_ascii=False)
+        logging.getLogger(__name__).error("Проверка встроенного плеера: %s", message)
         if sys.stdout is not None:
             print("::error::Проверка встроенного плеера: " + message, flush=True)
         if summary := os.environ.get("GITHUB_STEP_SUMMARY"):

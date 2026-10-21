@@ -62,6 +62,22 @@ jobs:
         run: ./scripts/prepare_webview2.ps1
       - name: Воспроизведение H.264 внутри окна без сети
         run: python scripts/check_site_player.py
+      - name: Сборка и проверка встроенного плеера в EXE
+        shell: pwsh
+        run: |
+          pyinstaller build.spec --noconfirm
+          if ($LASTEXITCODE -ne 0) { throw "Ошибка сборки программы." }
+          Copy-Item app/webview2 dist/CopyVideoFinder/webview2 -Recurse
+          $fixture = (Resolve-Path tests/fixtures/site_player).Path
+          $p = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-site-player", ('"{0}"' -f $fixture)) -PassThru
+          $done = $p.WaitForExit(90000)
+          if (-not $done) { Stop-Process -Id $p.Id -Force }
+          if (-not $done -or $p.ExitCode -ne 0) {
+            if (Test-Path dist/CopyVideoFinder/Данные/app.log) {
+              Get-Content dist/CopyVideoFinder/Данные/app.log -Tail 20 | ForEach-Object { Write-Host "::error::$_" }
+            }
+            throw "Не подтверждено воспроизведение в оконной сборке."
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: webview2-runtime

@@ -31,6 +31,8 @@ def setup_logging() -> None:
 
 def main() -> int:
     setup_logging()
+    if "--check-site-player" in sys.argv:
+        logging.getLogger("app").info("Проверка встроенного просмотра: аргументов %s", len(sys.argv))
     if len(sys.argv) == 3 and sys.argv[1] == "--check-site-player":
         from pathlib import Path
 
