@@ -680,6 +680,7 @@ class MainWindow(QMainWindow):
             item.setData(Qt.ItemDataRole.UserRole, r)
             item.setData(Qt.ItemDataRole.UserRole + 1, off_topic or view_only)
             item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(r, statuses.get(r.key), off_topic))
+            item.setData(Qt.ItemDataRole.UserRole + 3, off_topic)
             item.setToolTip(r.title or r.page_url)
             item.setSizeHint(QSize(design.RESULT_WIDTH, design.RESULT_HEIGHT))
             # Ближе к теме и к полиграфии — выше в выдаче.
@@ -724,7 +725,7 @@ class MainWindow(QMainWindow):
         for item in ordered:
             result = item.data(Qt.ItemDataRole.UserRole)
             item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(result, statuses.get(result.key),
-                                                               result.relevance == -1))
+                                                               bool(item.data(Qt.ItemDataRole.UserRole + 3))))
             item.setHidden(not self.result_filters.allows(result, statuses))
         for item in items:
             if item.data(Qt.ItemDataRole.UserRole) is None:
