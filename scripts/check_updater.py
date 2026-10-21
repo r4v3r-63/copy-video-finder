@@ -49,6 +49,10 @@ def main(bundle: Path):
             report = data / "update-check.json"
             deadline = time.monotonic() + 90
             while not report.exists() and time.monotonic() < deadline:
+                result_path = data / "update-result.json"
+                if result_path.is_file():
+                    state = json.loads(result_path.read_text(encoding="utf-8-sig"))
+                    assert state["state"] != "failed", state.get("message")
                 time.sleep(0.2)
             assert report.is_file(), (data / "update.log").read_text(encoding="utf-8-sig", errors="replace")
             result = json.loads(report.read_text())

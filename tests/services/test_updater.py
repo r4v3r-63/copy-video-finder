@@ -119,7 +119,7 @@ def test_update_script(data_dir, tmp_path):
     config = json.loads(base64.b64decode(encoded))
     assert config["new"] == str(new) and config["app"] == str(tmp_path / "Программа")
     assert config["pid"] == 4242 and config["sha256"] == hashlib.sha256(b"new-exe").hexdigest()
-    assert "WaitForExit" in text and "Get-FileHash" in text
+    assert "WaitForExit" in text and "ComputeHash" in text
     assert "tasklist" not in text.replace("локализованного tasklist", "")
     assert "/MIR" not in text and "/PURGE" not in text
 

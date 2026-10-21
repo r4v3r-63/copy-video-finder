@@ -18,6 +18,7 @@ import sys
 import time
 import uuid
 import zipfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -222,18 +223,45 @@ def write_script(new_dir: Path, app_dir: Path, pid: int, log_path: Path,
     return script
 
 
+@contextmanager
+def system_dll_search():
+    """Системный установщик не должен наследовать каталог DLL замороженной программы."""
+    if sys.platform != "win32" or not paths.is_frozen():
+        yield
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetDllDirectoryW.argtypes = [wintypes.DWORD, wintypes.LPWSTR]
+    kernel.GetDllDirectoryW.restype = wintypes.DWORD
+    kernel.SetDllDirectoryW.argtypes = [wintypes.LPCWSTR]
+    kernel.SetDllDirectoryW.restype = wintypes.BOOL
+    previous = ctypes.create_unicode_buffer(32768)
+    kernel.GetDllDirectoryW(len(previous), previous)
+    if not kernel.SetDllDirectoryW(None):
+        raise UpdateError("Не удалось подготовить запуск системного установщика.")
+    try:
+        yield
+    finally:
+        kernel.SetDllDirectoryW(previous.value or None)
+
+
 def launch(script: Path) -> None:
     """Закрывать приложение можно лишь после подтверждения запуска отдельного установщика."""
     encoded = base64.b64encode(script.read_text(encoding="utf-8-sig").encode("utf-16-le")).decode("ascii")
     powershell = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
     bootstrap = script.parent / "installer-start.log"
     flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
-    with bootstrap.open("ab") as output:
+    environment = {**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1",
+                   "PSModulePath": str(powershell.parent / "Modules")}
+    with bootstrap.open("ab") as output, system_dll_search():
         process = subprocess.Popen(
             [str(powershell), "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
             creationflags=flags,
             stdin=subprocess.DEVNULL, stdout=output, stderr=output, close_fds=True,
             cwd=str(script.parent),
+            env=environment,
         )
     deadline = time.monotonic() + 15
     ready = script.with_suffix(".ready")

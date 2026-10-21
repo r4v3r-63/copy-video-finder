@@ -84,6 +84,8 @@ def test_encoded_launch_requires_ready_marker(tmp_path, monkeypatch):
             return None
 
     def start(command, **kwargs):
+        assert kwargs["env"]["PYINSTALLER_RESET_ENVIRONMENT"] == "1"
+        assert kwargs["env"]["PSModulePath"].endswith("Modules")
         calls.append(command)
         script.with_suffix(".ready").write_text("12345", encoding="utf-8-sig")
         return Running()

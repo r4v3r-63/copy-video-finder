@@ -31,7 +31,16 @@ try {
     $code = $LASTEXITCODE
     if ($output) { $output | Out-File -LiteralPath $config.log -Encoding UTF8 -Append }
     if ($code -ge 8) { throw "Не удалось скопировать файлы, код robocopy: $code." }
-    $actual = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant()
+    $stream = $null
+    $algorithm = $null
+    try {
+        $stream = [IO.File]::OpenRead($destination)
+        $algorithm = [Security.Cryptography.SHA256]::Create()
+        $actual = [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        if ($stream) { $stream.Dispose() }
+        if ($algorithm) { $algorithm.Dispose() }
+    }
     if ($actual -ne $config.sha256) { throw 'Новый EXE не установлен: контрольная сумма не совпала.' }
     Write-State 'installed'
     Write-Log 'Готово: новый EXE установлен, SHA-256 проверена.'
