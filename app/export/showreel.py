@@ -13,11 +13,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QThread, pyqtSignal
-
-from app import catalog as cat
-from app import licenses
-from app.downloader import probe
+from app.core import licenses
+from app.services.downloader import probe
+from app.storage import catalog as cat
 
 _NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0  # без чёрного окна консоли в Windows
 CLIP_SECONDS = 8
@@ -166,28 +164,3 @@ def credits_text(title: str, entries: list[cat.Entry], now=None) -> str:
         lines.append(licenses.SHARE_ALIKE_NOTE)
     lines.append("Ролики изменены (обрезаны, без звука): лицензии из списка это разрешают.")
     return "\n".join(lines) + "\n"
-
-
-class ShowreelWorker(QThread):
-    """Сборка шоурила в фоне: progress — проценты, done — текст ошибки (пустой — готово)."""
-    progress = pyqtSignal(int)
-    done = pyqtSignal(str, list)
-
-    def __init__(self, title: str, entries: list[cat.Entry], dest: Path, ffmpeg: Path, ffprobe: Path | None,
-                 seconds: float, fade: float, parent=None):
-        super().__init__(parent)
-        self.title, self.entries, self.dest = title, entries, Path(dest)
-        self.ffmpeg, self.ffprobe, self.seconds, self.fade = ffmpeg, ffprobe, seconds, fade
-        self.cancel = threading.Event()
-
-    def run(self):
-        try:
-            used = make_showreel(self.entries, self.dest, self.ffmpeg, self.ffprobe, self.seconds, self.fade,
-                                 lambda share: self.progress.emit(int(share * 100)), self.cancel)
-            self.dest.with_suffix(".txt").write_text(credits_text(self.title, used), encoding="utf-8")
-        except Cancelled:
-            self.done.emit("Сборка отменена.", [])
-        except (ShowreelError, OSError) as exc:
-            self.done.emit(str(exc), [])
-        else:
-            self.done.emit("", used)

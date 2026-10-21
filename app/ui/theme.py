@@ -10,10 +10,11 @@ from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QIcon, QP
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QApplication, QComboBox, QLabel, QWidget
 
-from app import design, licenses, paths
+from app import paths
+from app.core import design, licenses
 
 # Токены, которые виджеты берут как theme.PRIMARY, theme.SPACE_L и т. п., — тоже отсюда.
-from app.design import (  # noqa: F401 — часть импортов только для виджетов
+from app.core.design import (  # noqa: F401 — часть импортов только для виджетов
     CONTROL_HEIGHT,
     CONTROL_HEIGHT_LARGE,
     DARK,

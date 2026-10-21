@@ -13,12 +13,13 @@ from pathlib import Path
 
 import requests
 from PIL import Image, ImageOps
-from PyQt6.QtCore import QMarginsF, QSizeF, QThread, QUrl, pyqtSignal
+from PyQt6.QtCore import QMarginsF, QSizeF, QUrl
 from PyQt6.QtGui import QImage, QPageLayout, QPageSize, QPdfWriter, QTextCursor, QTextDocument
 
-from app import __version__, design, paths
-from app import catalog as cat
+from app import __version__, paths
+from app.core import design
 from app.sources.http import USER_AGENT
+from app.storage import catalog as cat
 
 VIDEOS_PER_SERVICE = 3
 THUMB_SIZE = (340, 192)  # 16:9, в отчёте — 170 точек шириной
@@ -227,16 +228,3 @@ def keep_blocks_together(doc: QTextDocument) -> None:
         fmt.setTopMargin(fmt.topMargin() + page_height - rect.top() % page_height + 2)
         QTextCursor(target).setBlockFormat(fmt)
         _relayout(doc)
-
-
-class ReportWorker(QThread):
-    """Превью для отчёта — в фоне, чтобы окно не замирало."""
-    done = pyqtSignal(dict)
-
-    def __init__(self, entries: list[cat.Entry], parent=None):
-        super().__init__(parent)
-        self.entries = entries
-        self.cancel = threading.Event()
-
-    def run(self):
-        self.done.emit(fetch_thumbs(self.entries, cancel=self.cancel))

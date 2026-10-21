@@ -24,17 +24,10 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import (
-    AuthError,
-    LicenseInfo,
-    NotFoundError,
-    RateLimitError,
-    SearchFilters,
-    SourceError,
-    VideoResult,
-)
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoResult
+from app.sources.base import AuthError, NotFoundError, RateLimitError, SourceError
+from app.sources.cache import Cache
 from app.sources.http import HttpSource
 
 _REFRESH_LOCKS: dict[tuple[str, str], threading.Lock] = {}

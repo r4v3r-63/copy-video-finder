@@ -29,39 +29,40 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import __version__, backup, design, licenses, maintenance, paths, processes, query, updater
-from app import catalog as cat
-from app.batch import BatchWorker
-from app.cache import Cache
-from app.downloader import DownloadJob, DownloadQueue, choose_file, safe_name
-from app.export import html_catalog, playlist, registry, report, showreel, summary
-from app.search import SearchWorker, print_stems
-from app.settings import Settings
-from app.sources.archive import ArchiveSource
-from app.sources.base import SearchFilters, Source, VideoResult
-from app.sources.coverr import CoverrSource
-from app.sources.europeana import EuropeanaSource
-from app.sources.pexels import PexelsSource
-from app.sources.pixabay import PixabaySource
-from app.sources.videezy import VideezySource
-from app.sources.vimeo import VimeoSource
-from app.sources.vk import Tokens, VkSource
+from app import __version__, paths
+from app.core import design, licenses, processes, query
+from app.core.models import SearchFilters, VideoResult
+from app.export import html_catalog, playlist, registry, report, summary
+from app.services import maintenance, updater
+from app.services.downloader import DownloadJob, choose_file, safe_name
+from app.services.search import print_stems
+from app.sources.base import Source
+from app.sources.cache import Cache
+from app.sources.registry import all_sources, make_sources
 from app.sources.web import WebSource
-from app.sources.yandex_video import YandexVideoSource
+from app.storage import catalog as cat
+from app.storage.settings import Settings
 from app.ui import theme
-from app.ui.add_link_dialog import AddLinkDialog
-from app.ui.batch_view import BatchView
-from app.ui.catalog_view import CatalogView
-from app.ui.guide import GuideDialog
-from app.ui.player import PlayerPanel, format_duration
-from app.ui.result_cards import ResultCardDelegate, card_notes
-from app.ui.result_filters import ResultFilters
-from app.ui.services_dialog import ServicesDialog
-from app.ui.settings_dialog import SettingsDialog
-from app.ui.showreel_dialog import ShowreelDialog
-from app.ui.smooth_scroll import smooth
-from app.ui.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
+from app.ui.dialogs.add_link_dialog import AddLinkDialog
+from app.ui.dialogs.guide import GuideDialog
+from app.ui.dialogs.services_dialog import ServicesDialog
+from app.ui.dialogs.settings_dialog import SettingsDialog
+from app.ui.dialogs.showreel_dialog import ShowreelDialog
+from app.ui.dialogs.tools import DictionaryDialog, DuplicatesDialog, HistoryDialog
+from app.ui.tabs.batch_view import BatchView
+from app.ui.tabs.catalog_view import CatalogView
 from app.ui.update import UpdateController
+from app.ui.widgets.player import PlayerPanel, format_duration
+from app.ui.widgets.result_cards import ResultCardDelegate, card_notes
+from app.ui.widgets.result_filters import ResultFilters
+from app.ui.widgets.smooth_scroll import smooth
+from app.workers.backup import BackupWorker
+from app.workers.batch import BatchWorker
+from app.workers.download import DownloadQueue
+from app.workers.maintenance import DuplicateWorker, LinkCheckWorker
+from app.workers.report import ReportWorker
+from app.workers.search import SearchWorker
+from app.workers.showreel import ShowreelWorker
 
 THUMB = QSize(design.THUMB_WIDTH, design.THUMB_HEIGHT)
 
@@ -82,41 +83,6 @@ def load_image(data: bytes) -> QImage:
     return image
 
 
-def all_sources(settings: Settings, cache: Cache) -> list[Source]:
-    sources = [
-        PixabaySource(settings.key("pixabay_api_key"), cache),
-        CoverrSource(settings.key("coverr_api_key"), cache),
-        VimeoSource(settings.key("vimeo_token"), cache),
-        # Wikimedia Commons не ищется (решение пользователя 20.10.2026); его страницы из интернета — тоже.
-        EuropeanaSource(settings.key("europeana_api_key"), cache),
-        ArchiveSource(cache),
-        VideezySource(cache),
-        PexelsSource(settings.key("pexels_api_key"), cache),
-        YandexVideoSource(cache),  # Rutube, VK Видео, Дзен, Одноклассники, YouTube — одной выдачей
-        VkSource(settings.vk_token, cache, app_id=settings.vk_app_id, refresh_token=settings.vk_refresh_token,
-                 device_id=settings.vk_device_id, expires_at=settings.vk_token_expires,
-                 on_tokens=lambda t: _save_vk_tokens(settings, t),
-                 token_supplier=lambda: Tokens(settings.vk_token, settings.vk_refresh_token,
-                                                settings.vk_device_id, settings.vk_token_expires)),
-    ]
-    # Поиск по интернету: найденные страницы известных площадок открываются их модулями.
-    return sources + [WebSource(cache, delegates=sources, tavily_key=settings.key("tavily_api_key"),
-                                brave_key=settings.key("brave_api_key"))]
-
-
-def _save_vk_tokens(settings: Settings, tokens) -> None:
-    """VK выдал новые ключи (продление) — сразу в настройки: прежний ключ обновления больше не годится."""
-    settings.vk_token, settings.vk_refresh_token = tokens.access, tokens.refresh
-    settings.vk_device_id, settings.vk_token_expires = tokens.device_id, tokens.expires_at
-    settings.save()
-
-
-def make_sources(settings: Settings, cache: Cache) -> tuple[list[Source], list[str]]:
-    """Площадки для поиска и названия пропущенных из-за отсутствия ключа."""
-    sources = all_sources(settings, cache)
-    return [s for s in sources if s.is_configured()], [s.name for s in sources if not s.is_configured()]
-
-
 class MainWindow(QMainWindow):
     def __init__(self, settings: Settings, categories: list[processes.Category], cache: Cache | None = None,
                  store: cat.Catalog | None = None):
@@ -130,7 +96,7 @@ class MainWindow(QMainWindow):
         self.dictionary = query.Dictionary.load()
         self.cache = cache or Cache()
         self.worker: SearchWorker | None = None
-        self.backup_worker: backup.BackupWorker | None = None
+        self.backup_worker: BackupWorker | None = None
         self.link_dialog: AddLinkDialog | None = None
         self._closing = False
         self.sources: list[Source] = []
@@ -255,10 +221,10 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.catalog_view, "Каталог")
         self.tabs.currentChanged.connect(self._on_tab)
         self.batch: BatchWorker | None = None
-        self.link_check: maintenance.LinkCheckWorker | None = None
-        self.duplicates: maintenance.DuplicateWorker | None = None
-        self.report_worker: report.ReportWorker | None = None
-        self.showreel_worker: showreel.ShowreelWorker | None = None
+        self.link_check: LinkCheckWorker | None = None
+        self.duplicates: DuplicateWorker | None = None
+        self.report_worker: ReportWorker | None = None
+        self.showreel_worker: ShowreelWorker | None = None
         self.setCentralWidget(self.tabs)
 
         self.show_rejected = QPushButton()
@@ -363,7 +329,7 @@ class MainWindow(QMainWindow):
         progress.setMinimumDuration(0)
         progress.setAutoClose(False)
         progress.setAutoReset(False)
-        worker = backup.BackupWorker(source, path, self)
+        worker = BackupWorker(source, path, self)
 
         def advance(done, total):
             if not worker.cancel.is_set():
@@ -377,7 +343,7 @@ class MainWindow(QMainWindow):
         progress.show()
         worker.start()
 
-    def _backup_done(self, progress: QProgressDialog, path: Path, worker: backup.BackupWorker):
+    def _backup_done(self, progress: QProgressDialog, path: Path, worker: BackupWorker):
         progress.close()
         if self._closing:
             return
@@ -435,7 +401,7 @@ class MainWindow(QMainWindow):
         if self.link_check and self.link_check.isRunning():
             return
         sources, _ = make_sources(self.settings, self.cache)
-        self.link_check = maintenance.LinkCheckWorker(self.catalog, sources, self, entries=entries)
+        self.link_check = LinkCheckWorker(self.catalog, sources, self, entries=entries)
         self.link_check.progress.connect(
             lambda i, n: self.statusBar().showMessage(f"Проверка ссылок каталога: {i} из {n}"))
         self.link_check.done.connect(lambda counts: self._links_checked(counts, manual))
@@ -461,7 +427,7 @@ class MainWindow(QMainWindow):
         if self.duplicates and self.duplicates.isRunning():
             return
         self.statusBar().showMessage("Поиск похожих роликов: загружаются превью…")
-        self.duplicates = maintenance.DuplicateWorker(self.catalog, self)
+        self.duplicates = DuplicateWorker(self.catalog, self)
         self.duplicates.done.connect(self._show_duplicates)
         self.duplicates.start()
 
@@ -519,7 +485,7 @@ class MainWindow(QMainWindow):
         progress.setWindowTitle("Шоурил")
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(0)
-        worker = showreel.ShowreelWorker(title, entries, path, ffmpeg, paths.ffmpeg_tool("ffprobe"),
+        worker = ShowreelWorker(title, entries, path, ffmpeg, paths.ffmpeg_tool("ffprobe"),
                                          dialog.clip_seconds(), dialog.fade_seconds(), self)
         worker.progress.connect(progress.setValue)
         progress.canceled.connect(worker.cancel.set)
@@ -825,7 +791,7 @@ class MainWindow(QMainWindow):
         videos = report.service_videos(self.catalog, self.categories)
         entries = list({e.id: e for items in videos.values() for e in items}.values())
         self.statusBar().showMessage(f"Отчёт: загружаются превью роликов ({len(entries)})…")
-        self.report_worker = report.ReportWorker(entries, self)
+        self.report_worker = ReportWorker(entries, self)
         self.report_worker.done.connect(lambda thumbs: self._write_report(path, thumbs))
         self.report_worker.start()
 
@@ -1066,7 +1032,7 @@ class MainWindow(QMainWindow):
         self.search_button.setText("Найти")
         count = self.results.count()
         shown = [self.results.item(i).data(Qt.ItemDataRole.UserRole) for i in range(count)]
-        shown = [r for r in shown if r is not None and r.key in self.worker.seen]
+        shown = [r for r in shown if r is not None and r.key in self.worker.search.seen]
         count = len(shown)
         had_history = self.catalog.has_history()
         new = self.catalog.record_search(self.plan_text, [r.key for r in shown])
@@ -1075,22 +1041,22 @@ class MainWindow(QMainWindow):
                 if r.key in new:
                     self._mark_item(r, "новый")
         message = f"Найдено подходящих роликов: {count}"
-        if self.worker.levels_used and self.plan and len(self.plan.levels) > self.worker.levels_used:
-            message += f" (поиск расширен до уровня «{self.plan.levels[self.worker.levels_used]}»)"
+        if self.worker.search.levels_used and self.plan and len(self.plan.levels) > self.worker.search.levels_used:
+            message += f" (поиск расширен до уровня «{self.plan.levels[self.worker.search.levels_used]}»)"
         if had_history and new:
             message += f" (новых с прошлого поиска: {len(new)})"
-        counts = self.worker.rejection_counts()
+        counts = self.worker.search.rejection_counts()
         if counts:
             details = ", ".join(f"{reason} — {n}" for reason, n in counts.most_common())
             message += f". Отсеяно: {details}"
         self.statusBar().showMessage(message)
         if self.problems:
             self.query_info.setText(self.query_info.text() + "\n" + "\n".join(self.problems))
-        rejected = len(self.worker.off_topic_results())
+        rejected = len(self.worker.search.off_topic_results())
         if rejected:
             self.show_rejected.setText(f"Показать отсеянные «не по теме» ({rejected})")
             self.show_rejected.show()
-        unlicensed = len(self.worker.unlicensed_results())
+        unlicensed = len(self.worker.search.unlicensed_results())
         if unlicensed:
             self.show_unlicensed.setText(f"Без свободной лицензии ({unlicensed})")
             self.show_unlicensed.show()
@@ -1114,12 +1080,12 @@ class MainWindow(QMainWindow):
 
     def _show_unlicensed(self):
         if self.worker:
-            self._add_results(self.worker.unlicensed_results(), view_only=True)
+            self._add_results(self.worker.search.unlicensed_results(), view_only=True)
         self.show_unlicensed.hide()
 
     def _show_off_topic(self):
         if self.worker:
-            self._add_results(self.worker.off_topic_results(), off_topic=True)
+            self._add_results(self.worker.search.off_topic_results(), off_topic=True)
         self.show_rejected.hide()
 
     def _clear_cache(self):

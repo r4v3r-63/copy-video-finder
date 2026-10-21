@@ -11,9 +11,10 @@ import time
 
 import requests
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import LicenseInfo, NotFoundError, SearchFilters, SourceError, VideoFile, VideoResult
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.sources.base import NotFoundError, SourceError
+from app.sources.cache import Cache
 from app.sources.http import HttpSource, quality_label
 
 API = "https://commons.wikimedia.org/w/api.php"

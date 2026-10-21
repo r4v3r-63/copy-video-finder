@@ -11,9 +11,10 @@ import time
 
 import requests
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import LicenseInfo, NotFoundError, SearchFilters, VideoResult
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoResult
+from app.sources.base import NotFoundError
+from app.sources.cache import Cache
 from app.sources.http import HttpSource
 
 API = "https://archive.org/advancedsearch.php"

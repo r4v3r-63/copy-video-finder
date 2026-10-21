@@ -10,9 +10,10 @@ import math
 from datetime import datetime
 from pathlib import Path
 
-from app import catalog as cat
-from app import licenses, paths
-from app.sources.base import LicenseInfo, VideoFile, VideoResult
+from app import paths
+from app.core import licenses
+from app.core.models import LicenseInfo, VideoFile, VideoResult
+from app.storage import catalog as cat
 
 # (ключ, заголовок столбца)
 COLUMNS = [

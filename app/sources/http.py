@@ -9,8 +9,8 @@ from urllib.parse import urlencode
 import requests
 
 from app import __version__
-from app.cache import CACHE_TTL, Cache, RateLimiter
 from app.sources.base import AuthError, NetworkError, NotFoundError, RateLimitError, Source, SourceError
+from app.sources.cache import CACHE_TTL, Cache, RateLimiter
 
 log = logging.getLogger(__name__)
 

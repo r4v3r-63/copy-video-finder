@@ -9,8 +9,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from app import __version__, design, licenses
-from app import catalog as cat
+from app import __version__
+from app.core import design, licenses
+from app.storage import catalog as cat
 
 
 def _items(store: cat.Catalog, processes) -> list[dict]:

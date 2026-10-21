@@ -6,8 +6,9 @@ from datetime import datetime
 from html import escape
 from pathlib import Path
 
-from app import __version__, design
-from app import catalog as cat
+from app import __version__
+from app.core import design
+from app.storage import catalog as cat
 
 LAST_SUMMARY = "last_summary_at"
 

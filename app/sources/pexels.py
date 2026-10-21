@@ -10,9 +10,9 @@ import time
 
 import requests
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.sources.cache import Cache
 from app.sources.http import HttpSource, quality_label
 
 log = logging.getLogger(__name__)

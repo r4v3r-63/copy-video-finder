@@ -20,18 +20,10 @@ import re
 import time
 from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import (
-    LicenseInfo,
-    NotFoundError,
-    RateLimitError,
-    SearchFilters,
-    Source,
-    SourceError,
-    VideoFile,
-    VideoResult,
-)
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.sources.base import NotFoundError, RateLimitError, Source, SourceError
+from app.sources.cache import Cache
 from app.sources.http import HttpSource
 from app.sources.videezy import BROWSER_UA
 

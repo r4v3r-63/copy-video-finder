@@ -3,7 +3,8 @@
 import json
 from pathlib import Path
 
-FIXTURES = Path(__file__).parent / "fixtures"
+ROOT = Path(__file__).resolve().parent.parent  # корень репозитория
+FIXTURES = ROOT / "tests" / "fixtures"
 
 
 def fixture_text(name: str) -> str:

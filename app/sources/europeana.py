@@ -12,9 +12,10 @@ from urllib.parse import urlparse
 
 import requests
 
-from app import licenses
-from app.cache import Cache
-from app.sources.base import LicenseInfo, NotFoundError, SearchFilters, VideoFile, VideoResult
+from app.core import licenses
+from app.core.models import LicenseInfo, SearchFilters, VideoFile, VideoResult
+from app.sources.base import NotFoundError
+from app.sources.cache import Cache
 from app.sources.http import HttpSource
 
 API = "https://api.europeana.eu/record/v2/search.json"

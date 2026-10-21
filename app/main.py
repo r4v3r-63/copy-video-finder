@@ -8,8 +8,9 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from app import paths, processes
-from app.settings import Settings
+from app import paths
+from app.core import processes
+from app.storage.settings import Settings
 from app.ui import theme
 
 
