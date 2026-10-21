@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 491 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 492 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -45,7 +45,7 @@ python -m app.main                                   # запуск
 
 - Справочник услуг — `resources/processes.json`, версия 5: 20 разделов (`Category`), 87 групп (`Process`), 375 услуг сайта (`variants`; эталон — `tests/fixtures/site_services.txt`, кроме исключённого «Перевода документов»; каждая ровно в одной группе). Файл нормализован через `processes.save_catalog` — править в том же формате. Старые коды → новые: `"migrated"` в JSON, перенос привязок — `Catalog._migrate_links` (метка `meta.directory_version`). Поле `removed` исключает услуги также из старых пользовательских копий; при открытии каталога их привязки снимаются, ролики сохраняются.
 - Новые фразы поиска проверять тестом `test_level_phrases_pass_own_topic_filter` (фраза одним широким словом тему не подтверждает).
-- Структура: `core/` → `storage/` → `sources/` → `services/` → `export/` → `workers/` → `ui/`, импорты только вниз. Фоновый поток — тонкий `QThread` в `workers/` над синхронной функцией из `services/`; Qt в логике запрещён. Новая площадка подключается в `sources/registry.py`.
+- Структура: `core/` → `storage/` → `sources/` → `services/` → `export/` → `workers/` → `ui/`, импорты только вниз. Фоновый поток — тонкий `QThread` в `workers/` над синхронной функцией из `services/`; Qt в логике запрещён. Новая площадка подключается в `sources/registry.py`. Главное окно только собирает части: вкладка «Поиск» — `ui/tabs/search_tab.py`, скачивание — `ui/downloads.py`, команды меню — `ui/actions/`, общее состояние — `ui/context.AppContext`; связь — сигналами `message`/`catalog_changed`.
 - Площадки — `app/sources/`, общий HTTP-слой с кэшем и лимитами — `sources/http.py`. Wikimedia Commons исключена из поиска (решение пользователя), модуль остаётся.
 - Фоновые потоки при закрытии окна отменяются и дожидаются (`closeEvent`); FFmpeg — через Popen с опросом отмены.
 - Цвета/размеры — только `app/core/design.py` (тест `test_no_colors_outside_tokens`).

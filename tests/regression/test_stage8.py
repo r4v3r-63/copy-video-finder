@@ -237,7 +237,7 @@ def test_avif_thumbnail_loads():
     from PIL import Image, features
     if not features.check("avif"):
         pytest.skip("Pillow без AVIF")
-    from app.ui.main_window import load_image
+    from app.ui.tabs.search_tab import load_image
     buf = io.BytesIO()
     Image.new("RGB", (64, 36), (99, 46, 230)).save(buf, "AVIF")
     image = load_image(buf.getvalue())

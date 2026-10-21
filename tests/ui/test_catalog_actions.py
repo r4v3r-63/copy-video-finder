@@ -96,12 +96,12 @@ def test_bulk_download_uses_catalog_group_and_preserves_rejection(store, monkeyp
     window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog(), store=store)
     queued = []
     marks = []
-    monkeypatch.setattr(window.downloads, "add", queued.append)
+    monkeypatch.setattr(window.downloads.queue, "add", queued.append)
     window.player.result = store.get(first).result
     monkeypatch.setattr(window.player, "set_catalog_state", lambda status, video_id: marks.append(status))
     try:
-        window.download_entries([store.get(first), store.get(second)])
-        window.download_entries([store.get(first)])
+        window.catalog_view.download_requested.emit([store.get(first), store.get(second)])
+        window.catalog_view.download_requested.emit([store.get(first)])
         assert len(queued) == 1
         assert queued[0].catalog_id == first and queued[0].process.id == "lam_pouch"
         assert queued[0].file.url == "https://media.example.org/lamination.mp4"

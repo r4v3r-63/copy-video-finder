@@ -74,8 +74,10 @@ app/
     updater.py         # автообновление: выпуск на GitHub, SHA-256, замена файлов через update.cmd
   export/              # CSV, Excel, HTML-каталог, M3U, сводка покрытия, отчёт PDF, шоурил
   workers/             # фоновые потоки Qt: SearchWorker, BatchWorker, DownloadQueue и др. — без логики
-  ui/                  # окна PyQt: main_window.py, theme.py, update.py
-    tabs/              # вкладки «Пакетный поиск», «Каталог»
+  ui/                  # окна PyQt: main_window.py (только сборка), context.py (AppContext — общее состояние),
+                       # downloads.py (DownloadController), theme.py, update.py
+    tabs/              # вкладки «Поиск» (search_tab), «Пакетный поиск», «Каталог»
+    actions/           # команды меню: экспорт и импорт, «Сервис», запуск пакетного поиска
     dialogs/           # настройки, справочник услуг, ссылка, шоурил, история и словарь, руководство
     widgets/           # плеер, карточки и фильтры выдачи, кадры, плавная прокрутка
 resources/

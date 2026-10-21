@@ -89,17 +89,17 @@ def test_toggling_filters_preserves_items_and_rejection(data_dir):
     window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog())
     try:
         first, second = video(1), video(2, duration=10)
-        window._add_results([first, second])
-        item = next(window.results.item(i) for i in range(window.results.count())
-                    if window.results.item(i).data(256).key == first.key)
-        window.reject_result(first)
+        window.search.add_results([first, second])
+        item = next(window.search.results.item(i) for i in range(window.search.results.count())
+                    if window.search.results.item(i).data(256).key == first.key)
+        window.search.reject_result(first)
         assert item.isHidden()
-        window.result_filters.show_rejected.setChecked(True)
+        window.search.result_filters.show_rejected.setChecked(True)
         assert not item.isHidden()
         assert window.catalog.find(first.key).status == cat.REJECTED
-        window.result_filters.order.setCurrentIndex(window.result_filters.order.findData("short"))
-        assert window.results.item(0).data(256).key == second.key
-        assert window.results.item(1) is item
+        window.search.result_filters.order.setCurrentIndex(window.search.result_filters.order.findData("short"))
+        assert window.search.results.item(0).data(256).key == second.key
+        assert window.search.results.item(1) is item
     finally:
         window.close()
         window.catalog.close()

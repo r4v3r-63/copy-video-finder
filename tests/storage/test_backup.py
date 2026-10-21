@@ -140,7 +140,7 @@ def test_closing_main_window_cancels_and_waits_for_backup(data_dir, tmp_path, mo
     monkeypatch.setattr(backup, "create_backup", slow_backup)
     window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog())
     worker = BackupWorker(data_dir, tmp_path / "backup.zip", window)
-    window.backup_worker = worker
+    window.maintenance.backup_worker = worker
     worker.start()
     try:
         assert started.wait(5)

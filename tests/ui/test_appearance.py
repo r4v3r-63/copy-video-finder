@@ -93,20 +93,20 @@ def test_theme_switch_keeps_selected_result_and_user_marks(data_dir):
     try:
         result = replace(recorded_result(), relevance=-1)
         vid = window.catalog.select(result, "lam_pouch", license_confirmed=False)
-        window._add_results([result])
-        window.results.setCurrentRow(0)
-        item = window.results.currentItem()
+        window.search.add_results([result])
+        window.search.results.setCurrentRow(0)
+        item = window.search.results.currentItem()
         assert "Не по теме" not in item.data(Qt.ItemDataRole.UserRole + 2)
         off_topic = replace(result, source_id="off-topic")
-        window._add_results([off_topic], off_topic=True)
-        hidden_item = next(window.results.item(i) for i in range(window.results.count())
-                           if window.results.item(i).data(Qt.ItemDataRole.UserRole).key == off_topic.key)
+        window.search.add_results([off_topic], off_topic=True)
+        hidden_item = next(window.search.results.item(i) for i in range(window.search.results.count())
+                           if window.search.results.item(i).data(Qt.ItemDataRole.UserRole).key == off_topic.key)
         assert "Не по теме" in hidden_item.data(Qt.ItemDataRole.UserRole + 2)
         before = window.catalog.get(vid)
         for choice in (design.DARK, design.LIGHT):
             window.settings.theme = choice
             window.apply_theme()
-            assert window.results.currentItem() is item
+            assert window.search.results.currentItem() is item
             assert window.player.result is result
             assert "В каталоге" in item.data(Qt.ItemDataRole.UserRole + 2)
             after = window.catalog.get(vid)
@@ -118,3 +118,26 @@ def test_theme_switch_keeps_selected_result_and_user_marks(data_dir):
         window.catalog.close()
         window.cache.close()
         theme.apply(QApplication.instance(), design.LIGHT)
+
+
+def test_main_window_assembles_tabs_menu_and_status_buttons(data_dir):
+    data_dir.mkdir()
+    window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog())
+    try:
+        assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Поиск", "Пакетный поиск", "Каталог"]
+        assert window.tabs.widget(0) is window.search and window.player is window.search.player
+        menus = [action.text() for action in window.menuBar().actions()]
+        assert menus == ["Файл", "Справка"]
+        file_menu = window.menuBar().actions()[0].menu()
+        titles = [a.text() for a in file_menu.actions()]
+        assert "Импорт реестра CSV…" in titles and "Настройки…" in titles
+        export = next(a.menu() for a in file_menu.actions() if a.text() == "Экспорт каталога")
+        assert len(export.actions()) == len(window.exports.menu())
+        window.search.message.emit("проверка")
+        assert window.statusBar().currentMessage() == "проверка"
+        for button in window.search.status_buttons():
+            assert button.parent() is not None
+    finally:
+        window.close()
+        window.catalog.close()
+        window.cache.close()
