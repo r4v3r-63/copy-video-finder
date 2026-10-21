@@ -11,7 +11,7 @@
 
 ## Коротко о проекте
 
-- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.26.2; состояние выпуска проверять в GitHub Releases).
+- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.26.3; состояние выпуска проверять в GitHub Releases).
 - Пользователь один, общается по-русски. Интерфейс, сообщения, комментарии в коде, коммиты — на русском.
 - Пользователю нужны только бесплатные варианты (поисковики, API).
 
@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 608 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 624 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```

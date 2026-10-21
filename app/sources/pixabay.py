@@ -43,6 +43,7 @@ def parse_hit(hit: dict) -> VideoResult:
         source_id=str(hit["id"]),
         title=hit.get("tags", ""),
         description=hit.get("tags", ""),
+        video_type=hit.get("type", ""),
         preview_url=thumbnail,
         duration=hit.get("duration"),
         width=biggest.width if biggest else None,

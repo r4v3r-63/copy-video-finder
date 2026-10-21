@@ -56,6 +56,7 @@ class VideoResult:
     view_only: bool = False
 
     content_orientation: str = ""  # проверка кадров или явное подтверждение пользователя
+    video_type: str = ""  # тип съёмки из API, если источник его сообщает
 
     @property
     def key(self) -> tuple[str, str]:

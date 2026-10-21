@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass, field
 from urllib.parse import parse_qs, unquote, urlsplit
 
+from app.core.content import is_drawn
 from app.core.models import VideoFile, VideoResult
 
 
@@ -43,7 +44,7 @@ def parse_link(url: str) -> ListingLink:
         text = query.get("q", [unquote(parts[2]) if len(parts) == 3 else ""])[0]
         if len(text) > 100:
             raise ValueError("Pixabay API поддерживает запрос не длиннее 100 символов.")
-        params = {"q": text, "lang": lang, "video_type": "all", "safesearch": "true", "order": "popular"}
+        params = {"q": text, "lang": lang, "video_type": "film", "safesearch": "true", "order": "popular"}
         warnings = []
         for key, allowed in {"video_type": {"all", "film", "animation"}, "order": {"popular", "latest"},
                              "safesearch": {"true", "false"}, "editors_choice": {"true", "false"}}.items():
@@ -52,6 +53,11 @@ def parse_link(url: str) -> ListingLink:
                 if value not in allowed:
                     raise ValueError(f"Pixabay: некорректный параметр {key}.")
                 params[key] = value
+        if params["video_type"] != "film":
+            warnings.append("Тип видео из URL заменён на film: аниме и мультяшная анимация исключены.")
+            params["video_type"] = "film"
+        warnings.append("Аниме и мультяшная анимация исключаются по типу, названию и тегам. "
+                        "Ролики без таких меток требуют просмотра.")
         for key in ("min_width", "min_height"):
             if key in query:
                 try:
@@ -110,6 +116,8 @@ class ListingFilters:
             raise ValueError("Некорректная ориентация или качество.")
 
     def allows(self, result: VideoResult) -> bool:
+        if is_drawn(result):
+            return False
         if self.minimum is not None or self.maximum is not None:
             duration = result.duration
             if duration is None or not math.isfinite(duration):

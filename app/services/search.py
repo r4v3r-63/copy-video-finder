@@ -10,6 +10,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.core import licenses, orientation
+from app.core.content import is_drawn
 from app.core.models import SearchFilters, VideoFile, VideoResult
 from app.core.query import SearchPlan
 from app.core.topic import AMBIGUOUS, NOT_PRINT, domain_words, in_print_domain, phrase_stems, topic_stems
@@ -32,6 +33,8 @@ NOT_FREE_PENALTY = 50  # без свободной лицензии — посл
 
 def rejection_reason(result: VideoResult, filters: SearchFilters, only_without_attribution: bool = False) -> str | None:
     """Почему ролик не показывается; None — ролик подходит."""
+    if is_drawn(result):
+        return "аниме или анимация"
     if result.duration is not None and not (filters.min_duration <= result.duration <= filters.max_duration):
         return DURATION
     if filters.orientation == "landscape" and result.content_orientation == orientation.PORTRAIT:

@@ -1,0 +1,14 @@
+[
+  {"id": 301, "type": "film", "tags": "lofi, girl, study, anime, rain", "excluded": true},
+  {"id": 302, "type": "animation", "tags": "nature, rain, cozy, window", "excluded": true},
+  {"id": 303, "type": "film", "tags": "Аниме, дождь, уют", "excluded": true},
+  {"id": 304, "type": "film", "tags": "manga, city", "excluded": true},
+  {"id": 305, "type": "film", "tags": "cartoon, rain", "excluded": true},
+  {"id": 306, "type": "film", "tags": "animated background", "excluded": true},
+  {"id": 307, "type": "film", "tags": "Мультяшный город", "excluded": true},
+  {"id": 308, "type": "film", "tags": "Анимация дождя", "excluded": true},
+  {"id": 309, "type": "film", "tags": "Animation, nature", "excluded": true},
+  {"id": 310, "type": "film", "tags": "lofi, girl, study, rain, window", "excluded": false},
+  {"id": 311, "type": "film", "tags": "animal, wildlife, rain", "excluded": false},
+  {"id": 312, "type": "film", "tags": "printing, lamination, office", "excluded": false}
+]
