@@ -209,6 +209,11 @@ jobs:
             CopyVideoFinder-*.zip
             CopyVideoFinder-*.zip.sha256
 
+      - name: Примечания выпуска на русском
+        if: env.RELEASE_TAG != ''
+        shell: pwsh
+        run: python scripts/maintain_releases.py --notes-for $env:RELEASE_TAG --output release-body.md
+
       - name: Публикация в Releases
         if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v2
@@ -216,7 +221,7 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           target_commitish: ${{ inputs.ref || github.sha }}
           name: Поиск видео Copy.ru ${{ env.RELEASE_TAG }}
-          generate_release_notes: true
+          body_path: release-body.md
           make_latest: legacy
           fail_on_unmatched_files: true
           files: |

@@ -4,6 +4,10 @@ name: Проверка кода
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - docs/screenshots/**
+      - docs/mockups/**
   pull_request:
   workflow_dispatch:
 

@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 624 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 636 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -33,7 +33,8 @@ python -m app.main                                   # запуск
 2. После успешного задания `check` workflow `check.yml` сравнит версии до и после всего пуша (`scripts/release_version.py`). Только повышение версии на `main` вызывает `build.yml` с точным SHA проверенного коммита. PR, ручная проверка, обычные правки, понижение версии, перезапись истории и уже существующий или более новый тег выпуск не запускают.
 3. Дождаться зелёной цепочки в «Проверка кода»: Windows-тесты, сборка, проверка запуска и публикация выполняются автоматически. Дополнительный токен и доступ облачной среды к GitHub API не нужны: используются `GITHUB_TOKEN` и прежние секреты сборки внутри Actions.
 4. Workflow сам создаст тег `vX.Y.Z` и выпуск с `CopyVideoFinder-vX.Y.Z-windows.zip` и `.sha256` — имена не менять (на них завязано автообновление). Выпуски одной версии выполняются последовательно; существующий выпуск не перезаписывается. Неудачная сборка тег не создаёт: повторить неуспешные задания CI либо вручную запустить `gh api -X POST repos/r4v3r-63/copy-video-finder/actions/workflows/build.yml/dispatches -f ref=main -f "inputs[version]=X.Y.Z"` (или Actions → «Сборка для Windows» → Run workflow). Для повторения старого коммита использовать перезапуск исходного CI; ручной запуск с `ref=main` собирает текущий `main`.
-5. Старые выпуски — workflow `cleanup-releases.yml` вручную (`keep`, `dry_run=false`).
+5. Workflow `cleanup-releases.yml` («Порядок в выпусках») автоматически оставляет три последних стабильных выпуска, сохраняя теги и историю, и синхронизирует описания из `docs/release-notes`. Ручной запуск по умолчанию только показывает план (`keep=3`, `dry_run=true`). Удаляются лишь старые выпускные ZIP; черновики, предварительные и неизвестные наборы файлов сохраняются. При неполном сохраняемом выпуске очистка останавливается.
+6. Публикация использует русские примечания `docs/release-notes/X.Y.Z.md`; файл обязателен для новой версии. Markdown/снимки/макеты при обычном пуше не запускают повторную Windows-сборку; проверки PR сохранены.
 
 ## Секреты — строго
 
