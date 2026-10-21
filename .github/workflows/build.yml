@@ -192,6 +192,9 @@ jobs:
           if ($p.ExitCode -ne 0) { Get-Content dist/CopyVideoFinder/Данные/app.log; throw "Ошибка загрузки по ссылке." }
           Remove-Item -Recurse -Force dist/CopyVideoFinder/Данные
 
+      - name: Реальное автообновление и перезапуск EXE
+        run: python scripts/check_updater.py dist/CopyVideoFinder
+
       - name: ZIP
         shell: pwsh
         run: |

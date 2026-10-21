@@ -31,6 +31,14 @@ def setup_logging() -> None:
 
 def main() -> int:
     setup_logging()
+    if len(sys.argv) == 3 and sys.argv[1] == "--check-updater":
+        from pathlib import Path
+
+        from app.services.update_check import install
+        return install(Path(sys.argv[2]))
+    if sys.argv[1:] == ["--check-updater-target"]:
+        from app.services.update_check import target
+        return target()
     if len(sys.argv) == 3 and sys.argv[1] == "--download-site":
         from pathlib import Path
 
@@ -55,6 +63,11 @@ def main() -> int:
         return check_site_player(Path(sys.argv[2]))
     QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
+    from app.services import updater
+
+    if updater.installation_in_progress():
+        QMessageBox.information(None, "Обновление", "Устанавливается обновление. Дождитесь автоматического запуска.")
+        return 0
     app.setApplicationName("Поиск видео Copy.ru")
     app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.svg")))
     settings = Settings.load()

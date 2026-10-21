@@ -5,7 +5,7 @@ from html import escape
 
 from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QApplication, QMessageBox, QProgressDialog
+from PyQt6.QtWidgets import QMessageBox, QProgressDialog
 
 from app import __version__
 from app.services import updater
@@ -112,4 +112,6 @@ class UpdateController:
             self._on_failed(str(exc))
             return
         log.info("Обновление запущено, программа закрывается")
-        QApplication.quit()
+        if self.dialog:
+            self.dialog.close()
+        self.window.close()

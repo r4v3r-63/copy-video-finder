@@ -1,18 +1,22 @@
 """Автообновление: проверка последнего выпуска на GitHub и замена файлов программы.
 
 Запущенный exe в Windows заменить нельзя, поэтому новая версия распаковывается
-в «Данные/update», программа запускает командный файл и закрывается; он ждёт
+в «Данные/update», программа запускает PowerShell и закрывается после подтверждения; он ждёт
 её выхода, копирует новые файлы поверх старых (robocopy) и запускает программу.
 Папка «Данные» с настройками, ключами и роликами не трогается.
 """
 
+import base64
 import hashlib
+import json
 import logging
 import os
 import re
 import shutil
 import subprocess
 import sys
+import time
+import uuid
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -149,66 +153,123 @@ def extract(zip_path: Path, dest: Path) -> Path:
     return found.parent
 
 
-def _cmd_escape(path: Path) -> str:
-    return str(path).replace("%", "%%")
+def result_file() -> Path:
+    return paths.data_dir() / "update-result.json"
 
 
-def write_script(new_dir: Path, app_dir: Path, pid: int, log_path: Path) -> Path:
-    """Командный файл, который заменит файлы после выхода программы и запустит её снова."""
-    new, app, log_file = _cmd_escape(new_dir), _cmd_escape(app_dir), _cmd_escape(log_path)
-    script = f"""@echo off
-chcp 65001 >nul
-set "PID={pid}"
-set "NEW={new}"
-set "APP={app}"
-set "LOG={log_file}"
-echo === Обновление %date% %time% >> "%LOG%"
-:wait
-tasklist /FI "PID eq %PID%" /NH 2>nul | find " %PID% " >nul
-if not errorlevel 1 (
-  timeout /t 1 /nobreak >nul
-  goto wait
-)
-if not exist "%NEW%\\{EXE_NAME}" (
-  echo Нет новой версии в %NEW% >> "%LOG%"
-  goto start
-)
-robocopy "%NEW%" "%APP%" /E /R:10 /W:1 /NP /NFL /NDL >> "%LOG%"
-if errorlevel 8 (
-  echo Ошибка копирования, код %errorlevel% >> "%LOG%"
-) else (
-  echo Готово >> "%LOG%"
-)
-:start
-start "" "%APP%\\{EXE_NAME}"
-"""
-    path = update_dir() / "update.cmd"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(script.replace("\n", "\r\n"), encoding="utf-8")
-    return path
+def read_result() -> dict:
+    try:
+        value = json.loads(result_file().read_text(encoding="utf-8-sig"))
+        return value if isinstance(value, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def process_running(pid: int) -> bool:
+    if sys.platform != "win32" or type(pid) is not int or pid < 1:
+        return False
+    import ctypes
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    kernel.WaitForSingleObject.restype = wintypes.DWORD
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    handle = kernel.OpenProcess(0x00100000, False, pid)
+    if not handle:
+        return False
+    try:
+        return kernel.WaitForSingleObject(handle, 0) == 258
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def installation_in_progress() -> bool:
+    result = read_result()
+    return result.get("state") in ("waiting", "copying") and process_running(result.get("installer_pid"))
+
+
+def previous_failure() -> str:
+    result = read_result()
+    if not result or result.get("acknowledged") or result.get("state") == "installed":
+        return ""
+    if installation_in_progress():
+        return ""
+    result["acknowledged"] = True
+    paths.atomic_write_text(result_file(), json.dumps(result, ensure_ascii=False))
+    return ("Предыдущее обновление не завершилось. " +
+            str(result.get("message") or "Работа установщика была прервана.") +
+            " Подробности: Данные/update.log. При необходимости распакуйте новый ZIP вручную, сохранив папку Данные.")
+
+
+def write_script(new_dir: Path, app_dir: Path, pid: int, log_path: Path,
+                 version: str = "", restart_args=(), show_errors=True) -> Path:
+    """Подготовить установщик без cmd.exe, зависимости от кодовой страницы и подстановок пути."""
+    root = update_dir()
+    root.mkdir(parents=True, exist_ok=True)
+    token = uuid.uuid4().hex
+    script = root / f"install-{token}.ps1"
+    config = {"new": str(new_dir.resolve()), "app": str(app_dir.resolve()), "pid": pid,
+              "log": str(log_path.resolve()), "result": str(result_file().resolve()),
+              "ready": str(script.with_suffix(".ready")), "version": version,
+              "sha256": sha256_of(new_dir / EXE_NAME), "restart_args": list(restart_args),
+              "show_errors": show_errors}
+    encoded = base64.b64encode(json.dumps(config, ensure_ascii=False).encode("utf-8")).decode("ascii")
+    template = (paths.resources_dir() / "update.ps1").read_text(encoding="utf-8-sig")
+    script.write_text(template.replace("__CONFIG_BASE64__", encoded), encoding="utf-8-sig")
+    return script
 
 
 def launch(script: Path) -> None:
-    """Запустить командный файл отдельно от программы и без окна консоли."""
-    flags = 0
-    if sys.platform == "win32":
-        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
-    subprocess.Popen(["cmd.exe", "/c", str(script)], creationflags=flags, close_fds=True,
-                     cwd=str(script.parent.parent))
+    """Закрывать приложение можно лишь после подтверждения запуска отдельного установщика."""
+    encoded = base64.b64encode(script.read_text(encoding="utf-8-sig").encode("utf-16-le")).decode("ascii")
+    powershell = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+    bootstrap = script.parent / "installer-start.log"
+    flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    with bootstrap.open("ab") as output:
+        process = subprocess.Popen(
+            [str(powershell), "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
+            creationflags=flags,
+            stdin=subprocess.DEVNULL, stdout=output, stderr=output, close_fds=True,
+            cwd=str(script.parent),
+        )
+    deadline = time.monotonic() + 15
+    ready = script.with_suffix(".ready")
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            raise UpdateError("Windows не запустила установщик. Программа остаётся открытой. "
+                              "Подробности: Данные/update/installer-start.log.")
+        try:
+            if ready.is_file() and ready.read_text(encoding="utf-8-sig").strip() == str(process.pid):
+                return
+        except OSError:
+            pass  # PowerShell ещё закрывает файл подтверждения.
+        time.sleep(0.1)
+    process.terminate()
+    process.wait(timeout=5)
+    raise UpdateError("Установщик не подтвердил запуск. Программа остаётся открытой; повторите позже.")
 
 
 def prepare_and_launch(zip_path: Path) -> None:
-    """Распаковать обновление и запустить замену файлов; после вызова программа должна закрыться."""
     if not can_self_update():
         raise UpdateError("Обновление на месте работает только в собранной программе для Windows.")
+    if installation_in_progress():
+        raise UpdateError("Предыдущее обновление ещё устанавливается. Дождитесь завершения.")
     new_dir = extract(zip_path, update_dir() / "new")
     app_dir = paths.app_dir()
     if not (app_dir / EXE_NAME).exists():
         raise UpdateError(f"Не найден {EXE_NAME} в папке программы.")
-    script = write_script(new_dir, app_dir, os.getpid(), paths.data_dir() / "update.log")
+    target = parse_version(zip_path.name)
+    version = ".".join(map(str, target)) if target else ""
+    script = write_script(new_dir, app_dir, os.getpid(), paths.data_dir() / "update.log", version)
     launch(script)
 
 
 def cleanup() -> None:
-    """Удалить остатки прошлого обновления (при запуске новой версии)."""
+    """Не удалять распакованную версию во время установки и после ошибки."""
+    result = read_result()
+    if result.get("state") != "installed" or process_running(result.get("installer_pid")):
+        return
     shutil.rmtree(update_dir(), ignore_errors=True)

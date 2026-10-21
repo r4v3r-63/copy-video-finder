@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 649 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 657 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -63,6 +63,7 @@ python -m app.main                                   # запуск
 
 ## Работа
 
+- Автообновление — `services/updater.py` и `resources/update.ps1`. Приложение закрывается только после подтверждения установщика; очистка не удаляет незавершённые/ошибочные установки. Состояние — `Данные/update-result.json`, журнал — `Данные/update.log`, сбой запуска — `Данные/update/installer-start.log`. Сквозная проверка реального EXE: `python scripts/check_updater.py dist/CopyVideoFinder` на Windows, включена в обе сборочные проверки. Имена ZIP/SHA не менять.
 - Коммит после каждого значимого шага, понятное сообщение на русском, пуш.
 - Решения пользователя фиксировать в `CLAUDE.md` с датой; после изменений обновлять `docs/STATUS.md`.
 - README — только общее описание программы, без подробностей работы и источников роликов.

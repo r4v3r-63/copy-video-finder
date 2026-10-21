@@ -107,6 +107,8 @@ jobs:
           $s = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-stock-link", ('"{0}"' -f $downloads)) -PassThru
           if (-not $s.WaitForExit(90000)) { Stop-Process -Id $s.Id -Force; throw "Новая вкладка не завершила проверку." }
           if ($s.ExitCode -ne 0) { throw "Не подтверждена загрузка по ссылке в EXE." }
+      - name: Реальное автообновление и перезапуск EXE
+        run: python scripts/check_updater.py dist/CopyVideoFinder
       - uses: actions/upload-artifact@v4
         with:
           name: webview2-runtime

@@ -135,6 +135,10 @@ class MainWindow(QMainWindow):
         self.batch_view.refresh()
 
     def _startup_update_check(self):
+        failure = updater.previous_failure()
+        if failure:
+            QMessageBox.warning(self, "Обновление не установлено", failure)
+            return
         updater.cleanup()
         if self.settings.check_updates:
             self.updates.check(manual=False)

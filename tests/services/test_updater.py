@@ -1,5 +1,7 @@
+import base64
 import hashlib
 import json
+import re
 import zipfile
 
 import pytest
@@ -108,16 +110,18 @@ def test_extract_rejects_broken_zip(tmp_path):
 
 
 def test_update_script(data_dir, tmp_path):
-    script = updater.write_script(tmp_path / "new 100%", tmp_path / "Программа", 4242, tmp_path / "update.log")
-    raw = script.read_bytes()
-    assert b"\r\n" in raw and not raw.startswith(b"\xef\xbb\xbf")  # CRLF, UTF-8 без BOM
-    text = raw.decode("utf-8")
-    assert 'set "PID=4242"' in text
-    assert "new 100%%" in text  # % в пути экранирован
-    assert str(tmp_path / "Программа") in text
-    assert 'robocopy "%NEW%" "%APP%" /E' in text
-    assert "/MIR" not in text and "/PURGE" not in text  # ничего не удаляется в папке программы
-    assert 'start "" "%APP%\\CopyVideoFinder.exe"' in text
+    new = tmp_path / "Новая 100% ! & (версия)"
+    new.mkdir()
+    (new / updater.EXE_NAME).write_bytes(b"new-exe")
+    script = updater.write_script(new, tmp_path / "Программа", 4242, tmp_path / "update.log")
+    text = script.read_text(encoding="utf-8-sig")
+    encoded = re.search(r"FromBase64String\('([^']+)'\)", text)[1]
+    config = json.loads(base64.b64decode(encoded))
+    assert config["new"] == str(new) and config["app"] == str(tmp_path / "Программа")
+    assert config["pid"] == 4242 and config["sha256"] == hashlib.sha256(b"new-exe").hexdigest()
+    assert "WaitForExit" in text and "Get-FileHash" in text
+    assert "tasklist" not in text.replace("локализованного tasklist", "")
+    assert "/MIR" not in text and "/PURGE" not in text
 
 
 def test_no_self_update_outside_windows_build():
@@ -147,10 +151,15 @@ def test_update_script_on_windows(data_dir, tmp_path):
     # Программа «ещё работает» 3 секунды — файл должен дождаться её выхода.
     running = subprocess.Popen(["ping", "-n", "4", "127.0.0.1"], stdout=subprocess.DEVNULL)
     log = tmp_path / "update.log"
-    script = updater.write_script(new, app, running.pid, log)
+    script = updater.write_script(new, app, running.pid, log, show_errors=False)
     started = time.monotonic()
-    subprocess.run(["cmd.exe", "/c", str(script)], check=True, timeout=120)
+    updater.launch(script)
+    deadline = time.monotonic() + 90
+    while updater.read_result().get("state") not in ("installed", "failed") and time.monotonic() < deadline:
+        time.sleep(0.2)
+    assert updater.read_result().get("state") == "installed", log.read_text(encoding="utf-8-sig")
     running.wait()
+    time.sleep(1)
     assert time.monotonic() - started >= 2
 
     assert (app / "_internal" / "lib.dll").read_text() == "new"
