@@ -1,6 +1,10 @@
-# Загрузка по ссылке — отчёт по ТЗ, 0.26.1
+# Загрузка по ссылке — отчёт по ТЗ, 0.26.2
 
 ## Результат сборки
+
+[Скачать Windows 0.26.2](https://github.com/r4v3r-63/copy-video-finder/releases/download/v0.26.2/CopyVideoFinder-v0.26.2-windows.zip), [выпуск](https://github.com/r4v3r-63/copy-video-finder/releases/tag/v0.26.2), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39612702765). Тег указывает на [655a809](https://github.com/r4v3r-63/copy-video-finder/commit/655a809e211beaf302cca44bf3e6082cf8e86d58). Опубликованный ZIP 478,6 МиБ проверен по SHA-256 и CRC: версия 0.26.2, новые модули, руководство с выбором количества/страницы и переносимые зависимости включены; пользовательских данных нет. Windows-тесты, сборка, запуск EXE, встроенное видео и обе сквозные проверки загрузчиков прошли. Версия 0.26.2 рекомендуется вместо 0.26.1.
+
+История предыдущего выпуска:
 
 [Скачать Windows 0.26.1](https://github.com/r4v3r-63/copy-video-finder/releases/download/v0.26.1/CopyVideoFinder-v0.26.1-windows.zip), [выпуск](https://github.com/r4v3r-63/copy-video-finder/releases/tag/v0.26.1), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39610206532).
 
@@ -93,3 +97,7 @@
 ## Дополнение 0.26.2
 
 Добавлены явный выбор страницы API и объёма запуска. Числовой предел применяется после фильтрации к уникальным незавершённым роликам, включая ручной выбор. «Все на странице» ограничено конкретной страницей, весь набор страниц не включается автоматически. Программная блокировка пакетного выбора Pixabay снята по прямому указанию пользователя; условия и реальные ограничения API остаются ответственностью использования, разрешение площадки не предполагается автоматически.
+
+Проверки 0.26.2: **608 passed, 1 skipped**, `ruff check app tests scripts` без ошибок. Добавлены проверки положительного целого количества, пропуска дублей и завершённых файлов, применения числа после фильтров и ручного выбора, изоляции выбранной страницы API. Сквозной сценарий реальной вкладки и Windows EXE проверяет пакетный выбор Pixabay с числом 1, исходные байты файла и отсутствие записи в каталоге. Обе темы проверены отдельно.
+
+Изменённые файлы 0.26.2: `AGENTS.md`, `CLAUDE.md`, `README.md`, `app/__init__.py`, `app/core/stock_link.py`, `app/ui/stock_link_check.py`, `app/ui/tabs/stock_link_tab.py`, `docs/STATUS.md`, `docs/STOCK_LINK_REPORT.md`, `docs/USER_GUIDE.md`, `docs/release-notes/0.26.2.md`, `tests/services/test_stock_link.py`, `tests/ui/test_stock_link.py`.
