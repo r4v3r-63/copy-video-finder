@@ -1,4 +1,4 @@
-"""Выдача по ссылке, локальные фильтры и индивидуальная/разрешённая пакетная загрузка."""
+"""Выдача по ссылке, локальные фильтры и пользовательский объём пакетной загрузки."""
 
 from pathlib import Path
 
@@ -15,13 +15,14 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QPushButton,
+    QSpinBox,
     QTableView,
     QVBoxLayout,
     QWidget,
 )
 
 from app.core import design
-from app.core.stock_link import ListingFilters, choose_quality, parse_link
+from app.core.stock_link import ListingFilters, choose_quality, limit_downloads, parse_link
 from app.services.downloader import DownloadJob, download_option
 from app.sources.base import SourceError
 from app.sources.listings import make_listing
@@ -38,6 +39,7 @@ class StockLinkTab(QWidget):
         self.ctx = ctx
         self.link = None
         self.items = []
+        self.pages = {}
         self.listing_worker = None
         self.download_worker = None
         self.jobs = []
@@ -99,6 +101,22 @@ class StockLinkTab(QWidget):
         self.folder = QLineEdit(str(ctx.download_dir()))
         browse = QPushButton("Папка…")
         browse.clicked.connect(self._choose_folder)
+        self.quantity_mode = theme.compact_combo(QComboBox())
+        self.quantity_mode.addItem("Указать количество", "number")
+        self.quantity_mode.addItem("Все на странице", "page")
+        self.quantity_count = QSpinBox()
+        self.quantity_count.setRange(1, 2_147_483_647)
+        self.quantity_count.setValue(10)
+        self.quantity_count.setToolTip("Максимальное число новых роликов за один запуск, после фильтрации.")
+        self.source_page = theme.compact_combo(QComboBox())
+        self.source_page.addItem("Все полученные страницы", 0)
+        self.source_page.setToolTip("Страница официального API; разбиение сайта может отличаться.")
+        self.quantity_hint = QLabel()
+        self.quantity_hint.setWordWrap(True)
+        batch_options = QHBoxLayout()
+        for widget in (QLabel("За один запуск:"), self.quantity_mode, self.quantity_count,
+                       QLabel("Страница выдачи:"), self.source_page):
+            batch_options.addWidget(widget)
         destination = QHBoxLayout()
         destination.addWidget(self.folder, 1)
         destination.addWidget(browse)
@@ -125,6 +143,8 @@ class StockLinkTab(QWidget):
             layout.addLayout(row)
         for widget in (self.notice, self.filter_error, self.stats, self.table):
             layout.addWidget(widget, 1 if widget is self.table else 0)
+        layout.addLayout(batch_options)
+        layout.addWidget(self.quantity_hint)
         layout.addLayout(destination)
         layout.addLayout(actions)
         layout.addWidget(self.progress)
@@ -132,8 +152,17 @@ class StockLinkTab(QWidget):
             edit.textChanged.connect(self.apply_filters)
         for combo in (self.orientation, self.quality):
             combo.currentIndexChanged.connect(self.apply_filters)
+        self.quantity_mode.currentIndexChanged.connect(self._quantity_changed)
+        self.quantity_count.valueChanged.connect(self.update_stats)
+        self.source_page.currentIndexChanged.connect(self.apply_filters)
         self._policy()
         self.update_stats()
+
+    def _quantity_changed(self):
+        if self.quantity_mode.currentData() == "page" and self.source_page.currentData() == 0:
+            if self.source_page.count() > 1:
+                self.source_page.setCurrentIndex(1)
+        self.apply_filters()
 
     def filters(self):
         def number(edit):
@@ -167,12 +196,17 @@ class StockLinkTab(QWidget):
             return
         self.link = link
         self.items = []
+        self.pages.clear()
+        self.source_page.blockSignals(True)
+        self.source_page.clear()
+        self.source_page.addItem("Все полученные страницы", 0)
+        self.source_page.blockSignals(False)
         self.total = self.accessible = 0
         self.completed.clear()
         self.errors.clear()
         self.model.checked.clear()
         self.model.states.clear()
-        self.model.individual = not link.bulk_allowed
+        self.model.individual = not link.batch_enabled
         self.orientation.setCurrentIndex(self.orientation.findData(link.orientation))
         self.notice.setText(f"Источник: {link.source}. " + "\n".join(link.warnings))
         self._policy()
@@ -191,7 +225,12 @@ class StockLinkTab(QWidget):
 
     def _page(self, items, total, accessible):
         self.items.extend(items)
+        page = (self.link.page if self.link else 1) + len(self.pages)
+        self.pages[page] = frozenset(item.key for item in items)
+        self.source_page.addItem(f"Страница {page}", page)
         self.total, self.accessible = total, accessible
+        if self.quantity_mode.currentData() == "page" and self.source_page.currentData() == 0:
+            self.source_page.setCurrentIndex(self.source_page.findData(page))
         self.apply_filters()
 
     def _problem(self, text):
@@ -218,11 +257,23 @@ class StockLinkTab(QWidget):
             return
         self.filter_error.clear()
         self.model.quality = filters.quality
-        self.model.set_items([item for item in self.items if filters.allows(item)])
+        page = self.source_page.currentData()
+        keys = self.pages.get(page) if page else None
+        self.model.set_items([item for item in self.items if filters.allows(item)
+                              and (keys is None or item.key in keys)])
         self._policy()
 
     def _policy(self):
-        bulk = bool(self.link and self.link.bulk_allowed)
+        bulk = bool(self.link and self.link.batch_enabled)
+        self.quantity_mode.setEnabled(bulk and not self.busy())
+        if self.link and not bulk:
+            self.quantity_mode.blockSignals(True)
+            self.quantity_mode.setCurrentIndex(0)
+            self.quantity_mode.blockSignals(False)
+            self.quantity_count.setValue(1)
+        self.quantity_count.setEnabled(bulk and self.quantity_mode.currentData() == "number" and not self.busy())
+        self.download_all.setText("Скачать страницу" if self.quantity_mode.currentData() == "page"
+                                  else "Скачать по количеству")
         self.all_select.setEnabled(bulk and not self.busy())
         self.download_all.setEnabled(bulk and bool(self.model.items) and not self.busy())
         self.download.setText("Скачать выбранные" if bulk else "Скачать выбранный")
@@ -235,12 +286,22 @@ class StockLinkTab(QWidget):
                            f"подходит: {len(self.model.items)}; выбрано: {len(self.model.checked)}; "
                            f"скачано: {len(self.completed)}; ошибок: {len(self.errors)}.")
         self.download.setEnabled(bool(self.model.checked) and not self.busy())
+        remaining = sum(item.key not in self.completed for item in self.model.items)
+        if self.link and not self.link.batch_enabled:
+            hint = "Для этого источника доступна только индивидуальная загрузка."
+        elif self.quantity_mode.currentData() == "page":
+            page = self.source_page.currentData()
+            hint = (f"За запуск: все {remaining} новых подходящих видео страницы {page}." if page
+                    else "Для режима «Все на странице» выберите конкретную страницу выдачи.")
+        else:
+            hint = f"За запуск: не более {self.quantity_count.value()} видео; новых в списке: {remaining}."
+        self.quantity_hint.setText(hint)
 
     def start_download(self, all_items=False):
         if self.listing_worker and self.listing_worker.isRunning():
             self.message.emit("Дождитесь получения выдачи или отмените поиск.")
             return
-        if self.busy() or not self.link or (all_items and not self.link.bulk_allowed):
+        if self.busy() or not self.link or (all_items and not self.link.batch_enabled):
             return
         try:
             filters = self.filters()
@@ -249,8 +310,11 @@ class StockLinkTab(QWidget):
                 raise ValueError("Выберите папку сохранения.")
             selected = [item for item in self.model.items if filters.allows(item)
                         and (all_items or item.key in self.model.checked)]
-            if not self.link.bulk_allowed and len(selected) > 1:
-                raise ValueError("Pixabay: выберите один ролик для индивидуальной загрузки.")
+            page_mode = self.quantity_mode.currentData() == "page"
+            if page_mode and not self.source_page.currentData():
+                raise ValueError("Выберите конкретную страницу для режима «Все на странице».")
+            selected = limit_downloads(selected, None if page_mode else self.quantity_count.value(),
+                                       batch_enabled=self.link.batch_enabled, completed=self.completed)
             if not selected:
                 return
             jobs, notes = [], []

@@ -74,9 +74,10 @@ def main(directory: Path) -> int:
                 tab.minimum.setText("10")
                 tab.maximum.setText("30")
                 assert {item.source_id for item in tab.model.items} == {"201", "202"}
-                assert not tab.download_all.isEnabled()
+                assert tab.download_all.isEnabled()
+                tab.quantity_count.setValue(1)
                 tab.model.setData(tab.model.index(0, 0), Qt.CheckState.Checked.value, Qt.ItemDataRole.CheckStateRole)
-                tab.start_download()
+                tab.start_download(True)
                 stage = 1
             elif stage == 1 and tab.completed:
                 assert not tab.errors and not window.catalog.entries()

@@ -26,7 +26,7 @@ def window(data_dir):
 def populate(tab, bulk=False):
     tab.link = parse_link("https://archive.org/search?query=printing" if bulk
                           else "https://pixabay.com/videos/search/?orientation=horizontal&time_lapse=true")
-    tab.model.individual = not bulk
+    tab.model.individual = not tab.link.batch_enabled
     tab.orientation.setCurrentIndex(tab.orientation.findData(tab.link.orientation))
     items = [parse_hit(hit) for hit in json.loads(fixture_text("stock_link/pixabay.json"))["hits"]]
     tab._page(items, 800, 500)
@@ -48,17 +48,20 @@ def test_filters_recalculate_inclusively_and_do_not_touch_catalog(window):
     assert len(tab.model.items) == 7
 
 
-def test_pixabay_has_only_individual_selection_and_no_bulk_download(window, monkeypatch):
+def test_pixabay_supports_batch_selection_and_count(window, tmp_path, monkeypatch):
+    from app.ui.tabs import stock_link_tab
+
+    queued = []
+    monkeypatch.setattr(stock_link_tab.StockDownloadWorker, "start", lambda worker: queued.extend(worker.jobs))
     tab = window.stock_link
     populate(tab)
-    assert not tab.all_select.isEnabled() and not tab.download_all.isEnabled()
+    tab.folder.setText(str(tmp_path))
+    assert tab.all_select.isEnabled() and tab.download_all.isEnabled()
+    tab.quantity_count.setValue(2)
     tab.model.select_all()
-    assert not tab.model.checked
-    tab.model.setData(tab.model.index(0, 0), Qt.CheckState.Checked.value, Qt.ItemDataRole.CheckStateRole)
-    tab.model.setData(tab.model.index(1, 0), Qt.CheckState.Checked.value, Qt.ItemDataRole.CheckStateRole)
-    assert tab.model.checked == {tab.model.items[1].key}
+    assert len(tab.model.checked) > 1
     tab.start_download(True)
-    assert tab.download_worker is None
+    assert len(queued) == 2
     assert window.catalog.entries() == []
 
 
@@ -113,3 +116,55 @@ def test_cancel_button_requests_stop_without_waiting(window):
         assert worker.requested
     finally:
         window.stock_link.download_worker = None
+
+
+def test_all_on_page_does_not_include_other_api_pages(window, tmp_path, monkeypatch):
+    from app.ui.tabs import stock_link_tab
+
+    queued = []
+    monkeypatch.setattr(stock_link_tab.StockDownloadWorker, "start", lambda worker: queued.extend(worker.jobs))
+    tab = window.stock_link
+    populate(tab)
+    second = [parse_hit(hit) for hit in json.loads(fixture_text("stock_link/pixabay.json"))["hits"]]
+    for video in second:
+        video.source_id = "next-" + video.source_id
+    tab._page(second, 800, 500)
+    tab.folder.setText(str(tmp_path))
+    tab.minimum.setText("10")
+    tab.maximum.setText("30")
+    tab.quantity_mode.setCurrentIndex(tab.quantity_mode.findData("page"))
+    assert tab.source_page.currentData() == 1
+    assert {video.source_id for video in tab.model.items} == {"201", "202"}
+    tab.start_download(True)
+    assert [job.result.source_id for job in queued] == ["201", "202"]
+
+
+def test_count_limit_applies_after_filters_and_skips_completed(window, tmp_path, monkeypatch):
+    from app.ui.tabs import stock_link_tab
+
+    queued = []
+    monkeypatch.setattr(stock_link_tab.StockDownloadWorker, "start", lambda worker: queued.extend(worker.jobs))
+    tab = window.stock_link
+    populate(tab, bulk=True)
+    tab.folder.setText(str(tmp_path))
+    tab.minimum.setText("10")
+    tab.maximum.setText("30")
+    tab.orientation.setCurrentIndex(tab.orientation.findData("landscape"))
+    tab.quantity_count.setValue(1)
+    tab.completed.add(tab.model.items[0].key)
+    tab.start_download(True)
+    assert [job.result.source_id for job in queued] == ["202"]
+
+
+def test_selected_download_also_obeys_quantity_limit(window, tmp_path, monkeypatch):
+    from app.ui.tabs import stock_link_tab
+
+    queued = []
+    monkeypatch.setattr(stock_link_tab.StockDownloadWorker, "start", lambda worker: queued.extend(worker.jobs))
+    tab = window.stock_link
+    populate(tab, bulk=True)
+    tab.folder.setText(str(tmp_path))
+    tab.quantity_count.setValue(2)
+    tab.model.select_all()
+    tab.start_download()
+    assert len(queued) == 2

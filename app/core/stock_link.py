@@ -14,7 +14,7 @@ class ListingLink:
     orientation: str = "all"
     page: int = 1
     warnings: list[str] = field(default_factory=list)
-    bulk_allowed: bool = False
+    batch_enabled: bool = False  # возможность ручного запуска очереди, не подтверждение прав источника
 
 
 def parse_link(url: str) -> ListingLink:
@@ -74,9 +74,9 @@ def parse_link(url: str) -> ListingLink:
         ignored = sorted(set(query) - known)
         if ignored:
             warnings.append("Не воспроизведены параметры URL: " + ", ".join(ignored) + ".")
-        warnings.append("Pixabay: только индивидуальный выбор. Систематическая массовая загрузка не разрешена. "
-                        "API предоставляет не более 500 результатов одного запроса; выдача сайта может отличаться.")
-        return ListingLink("Pixabay", params, orientation, page, warnings)
+        warnings.append("Pixabay API предоставляет не более 500 результатов одного запроса; "
+                        "выдача сайта может отличаться.")
+        return ListingLink("Pixabay", params, orientation, page, warnings, True)
     if host == "archive.org" and parsed.path.rstrip("/") in ("/search", "/advancedsearch.php"):
         text = query.get("query", query.get("q", [""]))[0].strip()
         if not text:
@@ -139,3 +139,19 @@ def choose_quality(result: VideoResult, quality: int) -> tuple[VideoFile | None,
     selected = min(files, key=lambda file: (abs(size(file) - quality), size(file) > quality))
     note = "" if size(selected) == quality else f"Качество {quality}p недоступно: выбрано {selected.quality}."
     return selected, note
+
+
+def limit_downloads(results: list[VideoResult], count: int | None, *, batch_enabled: bool,
+                    completed=frozenset()) -> list[VideoResult]:
+    """Ограничить один запуск после фильтров; завершённые ролики повторно не занимают лимит."""
+    if count is not None and (type(count) is not int or count < 1):
+        raise ValueError("Количество видео должно быть положительным целым числом.")
+    unique = {}
+    for result in results:
+        if result.key not in completed:
+            unique.setdefault(result.key, result)
+    candidates = list(unique.values())
+    selected = candidates if count is None else candidates[:count]
+    if not batch_enabled and len(selected) > 1:
+        raise ValueError("Источник разрешает только индивидуальную загрузку выбранного ролика.")
+    return selected

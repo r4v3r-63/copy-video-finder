@@ -34,7 +34,7 @@ def cache(tmp_path):
 
 def test_pixabay_url_reproduces_only_supported_parameters():
     link = parse_link("https://pixabay.com/ru/videos/search/печать/?orientation=horizontal&time_lapse=true&order=latest")
-    assert link.source == "Pixabay" and not link.bulk_allowed
+    assert link.source == "Pixabay" and link.batch_enabled
     assert link.params["q"] == "печать" and link.params["lang"] == "ru" and link.params["order"] == "latest"
     assert link.orientation == "landscape" and "time_lapse" not in link.params and "orientation" not in link.params
     assert any("без подтверждения таймлапса" in message for message in link.warnings)
@@ -100,7 +100,7 @@ def test_archive_bulk_has_no_artificial_result_limit(cache):
     source = ArchiveSource(cache, FakeSession(*pages))
     found = []
     link = parse_link("https://archive.org/search?query=printing&sort[]=date+desc")
-    assert link.bulk_allowed
+    assert link.batch_enabled
     collect_listing(link, ArchiveListing(source), threading.Event(), lambda items, *_args: found.extend(items))
     assert len(found) == 205 and len(source.session.calls) == 3
     assert source.session.calls[0]["params"]["sort[]"] == ["date desc"]
@@ -274,3 +274,21 @@ def test_previous_0260_metadata_is_recognised(videos, tmp_path):
     metadata["filename"] = old_file.name
     (tmp_path / (old_name + ".json")).write_text(json.dumps(metadata), encoding="utf-8")
     assert existing_download(job) == old_file
+
+
+@pytest.mark.parametrize("count", [0, -1, 1.5, True])
+def test_invalid_batch_quantity(videos, count):
+    from app.core.stock_link import limit_downloads
+
+    with pytest.raises(ValueError, match="положительным целым"):
+        limit_downloads(videos, count, batch_enabled=True)
+
+
+def test_batch_quantity_counts_unique_unfinished_results(videos):
+    from app.core.stock_link import limit_downloads
+
+    selected = limit_downloads([videos[0], videos[0], *videos[1:]], 2, batch_enabled=True,
+                               completed={videos[0].key})
+    assert [video.source_id for video in selected] == ["202", "203"]
+    assert len(limit_downloads(videos, None, batch_enabled=True)) == 7
+    assert len(limit_downloads(videos, 1000, batch_enabled=True)) == 7
