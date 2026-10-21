@@ -57,7 +57,7 @@ FONT_DISPLAY = 24
 FONT_FILES = ("Inter-Regular.ttf", "Inter-Medium.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf")
 
 # Роли кнопок
-PRIMARY, SECONDARY, TERTIARY = "primary", "secondary", "tertiary"
+PRIMARY, SECONDARY, TERTIARY, DANGER = "primary", "secondary", "tertiary", "danger"
 
 
 @dataclass(frozen=True)
@@ -74,6 +74,9 @@ class Palette:
     accent_pressed: str
     accent_text: str  # синий для ссылок и текста secondary-кнопок (на тёмном фоне — светлее)
     accent_secondary: str  # фиолетовый: второстепенные акценты
+    danger: str  # кнопка отклонения ролика
+    danger_hover: str
+    danger_pressed: str
     border: str
     border_strong: str  # рамка полей при наведении
     disabled_bg: str
@@ -99,6 +102,7 @@ PALETTES = {
         coverage=("#FBE3E3", "#FCEBD7", "#FBF3CF", "#DDF2E2"),
         selection_bg="#EAF1FF", selection_hover="#F0F4FB",
         badge_bg=("#E0F4E6", "#FFF0D5", "#FBE6E6"),
+        danger="#B42318", danger_hover="#991B1B", danger_pressed="#7F1D1D",
         badge_text=("#1B6838", "#805000", "#9C2929"), video_bg="#111820",
     ),
     DARK: Palette(
@@ -110,6 +114,7 @@ PALETTES = {
         coverage=("#4A2224", "#4A3320", "#46401F", "#1F3F2A"),
         selection_bg="#243853", selection_hover="#29313D",
         badge_bg=("#183D2C", "#45361D", "#49272E"),
+        danger="#B42318", danger_hover="#991B1B", danger_pressed="#7F1D1D",
         badge_text=("#91DDAE", "#F4CE85", "#FFB0BB"), video_bg="#10151D",
     ),
 }

@@ -171,7 +171,7 @@ class PlayerPanel(QWidget):
         self.select_button.clicked.connect(lambda: self.result and self.select_requested.emit(self.result))
         self.reject_button = QPushButton("Не подходит")
         self.reject_button.setToolTip("Больше не показывать этот ролик в поиске")
-        self.reject_button.setFlat(True)
+        theme.set_role(self.reject_button, theme.DANGER)
         self.reject_button.clicked.connect(lambda: self.result and self.reject_requested.emit(self.result))
         self.catalog_status = QLabel()
         self.catalog_status.setProperty("muted", True)

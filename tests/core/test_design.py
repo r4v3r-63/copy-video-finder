@@ -31,6 +31,8 @@ def test_contrast_wcag_aa(name):
         assert contrast(p.accent_text, bg) >= AA_TEXT  # ссылки и текст secondary-кнопок
     assert contrast(p.text_inverse, p.accent_primary) >= AA_TEXT  # текст на primary-кнопке
     assert contrast(p.text_inverse, p.accent_hover) >= AA_TEXT
+    for bg in (p.danger, p.danger_hover, p.danger_pressed):
+        assert contrast(p.text_inverse, bg) >= AA_TEXT
     assert contrast(p.selection_text, p.accent_primary) >= AA_TEXT
     for level in p.coverage:  # строки покрытия: текст поверх цвета
         assert contrast(p.text_primary, level) >= AA_TEXT

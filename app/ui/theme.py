@@ -1,4 +1,4 @@
-"""Оформление программы по дизайн-системе Copy.ru (токены — в `app/design.py`).
+"""Оформление программы по дизайн-системе Copy.ru (токены — в `app/core/design.py`).
 
 Виджеты не задают цвета сами: кнопкам назначается роль (`set_role`), панелям — роль
 карточки (`make_card`), всё остальное оформляется общим стилем `stylesheet()`.
@@ -17,6 +17,7 @@ from app.core import design, licenses
 from app.core.design import (  # noqa: F401 — часть импортов только для виджетов
     CONTROL_HEIGHT,
     CONTROL_HEIGHT_LARGE,
+    DANGER,
     DARK,
     FONT_BODY,
     FONT_CAPTION,
@@ -85,7 +86,7 @@ def compact_combo(combo: QComboBox, chars: int = 16) -> QComboBox:
 
 
 def set_role(button: QWidget, role: str) -> QWidget:
-    """Роль кнопки: primary — главное действие, secondary — второстепенное, tertiary — прочие."""
+    """Роль кнопки: primary — главное действие, secondary — второстепенное, tertiary — прочие, danger — отклонение."""
     button.setProperty("role", role)
     button.style().unpolish(button)
     button.style().polish(button)
@@ -214,6 +215,15 @@ QPushButton[role="secondary"]:hover {{ background: {p.bg_secondary}; }}
 QPushButton[role="secondary"]:pressed {{ background: {p.border}; }}
 QPushButton[role="secondary"]:focus {{ border: 2px solid {p.accent_primary}; }}
 QPushButton[role="secondary"]:disabled {{ color: {p.disabled_text}; border-color: {p.border}; }}
+
+QPushButton[role="danger"] {{
+    background: {p.danger}; color: {p.text_inverse}; border: 1px solid {p.danger};
+}}
+QPushButton[role="danger"]:hover {{ background: {p.danger_hover}; border-color: {p.danger_hover}; }}
+QPushButton[role="danger"]:pressed {{ background: {p.danger_pressed}; border-color: {p.danger_pressed}; }}
+QPushButton[role="danger"]:focus {{ border: 2px solid {p.accent_secondary}; }}
+QPushButton[role="danger"]:disabled {{ background: {p.disabled_bg}; color: {p.disabled_text};
+                                       border-color: {p.disabled_bg}; }}
 
 QPushButton:default {{ background: {p.accent_primary}; color: {p.text_inverse}; border: 1px solid {p.accent_primary}; }}
 QPushButton:default:hover {{ background: {p.accent_hover}; border-color: {p.accent_hover}; }}
