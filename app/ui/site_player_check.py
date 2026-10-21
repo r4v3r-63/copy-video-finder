@@ -45,6 +45,7 @@ def main(directory: Path) -> int:
     worker = threading.Thread(target=server.serve_forever, daemon=True)
     worker.start()
     passed = []
+    reports = []
     closing = False
 
     def finish(ok):
@@ -63,6 +64,7 @@ def main(directory: Path) -> int:
             for _ in range(2):
                 if isinstance(value, str):
                     value = json.loads(value)
+            reports[:] = [value]
             if value and value.get("time", 0) > 0.1 and value.get("frames", 0) > 0:
                 private = panel.view.private_mode if sys.platform == "win32" else panel.view.profile.isOffTheRecord()
                 if not private:
@@ -99,4 +101,16 @@ def main(directory: Path) -> int:
         server.shutdown()
         server.server_close()
         worker.join()
-    return 0 if passed and passed[0] else 1
+    ok = bool(passed and passed[0])
+    if not ok:
+        diagnostic = {"status": panel.status.text(), "failure": panel.failure,
+                      "native": getattr(panel.view, "failure", ""), "video": reports,
+                      "private": getattr(panel.view, "private_mode", None)}
+        # Только локальные тестовые данные: никаких URL площадок, паролей и ключей.
+        message = json.dumps(diagnostic, ensure_ascii=False)
+        if sys.stdout is not None:
+            print("::error::Проверка встроенного плеера: " + message, flush=True)
+        if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+            with open(summary, "a", encoding="utf-8") as report_file:
+                report_file.write("\nПроверка встроенного плеера: `" + message + "`\n")
+    return 0 if ok else 1

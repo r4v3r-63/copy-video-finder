@@ -1,6 +1,7 @@
 """Просмотр страницы видеоплощадки внутри панели, без извлечения ссылок на файлы."""
 
 import sys
+import traceback
 from urllib.parse import urlsplit
 
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
@@ -26,6 +27,7 @@ class SitePlayer(QWidget):
         super().__init__(parent)
         self.view = None
         self.current_url = ""
+        self.failure = ""
         self.status = QLabel()
         self.status.setWordWrap(True)
         self.status.setProperty("muted", True)
@@ -51,7 +53,8 @@ class SitePlayer(QWidget):
         if self.view is None:
             try:
                 self.view = self._create_view()
-            except (ImportError, OSError, RuntimeError):
+            except Exception as exc:  # noqa: BLE001 — native-исключения CLR тоже должны оставаться внутри панели
+                self.failure = f"{type(exc).__name__}, строка {traceback.extract_tb(exc.__traceback__)[-1].lineno}"
                 self.status.setText("Не удалось запустить встроенный просмотр. Попробуйте перезапустить программу.")
                 return False
             self.view.loadFinished.connect(self._loaded)

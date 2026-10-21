@@ -5,6 +5,7 @@ import os
 import queue
 import shutil
 import tempfile
+import traceback
 from pathlib import Path
 
 from PyQt6.QtCore import pyqtSignal
@@ -28,6 +29,7 @@ class WindowsSiteView(QWidget):
         self._url = "about:blank"
         self._closed = False
         self.private_mode = False
+        self.failure = ""
         self._dll_directory = None
         root = paths.data_dir() / "webview"
         root.mkdir(exist_ok=True)
@@ -62,9 +64,10 @@ class WindowsSiteView(QWidget):
         from System import Action, String
         from System.Drawing import Size
         from System.Threading.Tasks import Task
-        from System.Windows.Forms import Application, DockStyle, Form, FormBorderStyle, Timer
+        from System.Windows.Forms import Application, DockStyle, Form, FormBorderStyle, Timer, UnhandledExceptionMode
 
         try:
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException)
             form, web = Form(), WebView2()
             self._form, self._web = form, web
             form.FormBorderStyle = getattr(FormBorderStyle, "None")
@@ -109,8 +112,8 @@ class WindowsSiteView(QWidget):
 
             def ready(sender, args):
                 if not args.IsSuccess:
-                    logging.getLogger(__name__).error("WebView2: ошибка инициализации, код %s",
-                                                      args.InitializationException.HResult)
+                    self.failure = f"Инициализация WebView2: код {args.InitializationException.HResult}"
+                    logging.getLogger(__name__).error(self.failure)
                     self.loadFinished.emit(False)
                     return
                 core = web.CoreWebView2
@@ -160,10 +163,15 @@ class WindowsSiteView(QWidget):
             timer.Dispose()
             form.Dispose()
         except Exception as exc:  # noqa: BLE001 — ошибка native-компонента передаётся в Qt без адресов и данных сайта
-            logging.getLogger(__name__).error("WebView2: %s, код %s", type(exc).__name__,
-                                              getattr(exc, "HResult", "не указан"))
+            line = traceback.extract_tb(exc.__traceback__)[-1].lineno
+            self.failure = f"{type(exc).__name__}, строка {line}, код {getattr(exc, 'HResult', 'не указан')}"
+            logging.getLogger(__name__).error("WebView2: %s", self.failure)
             self.loadFinished.emit(False)
         finally:
+            if self._web is not None:
+                self._web.Dispose()
+            if self._form is not None:
+                self._form.Dispose()
             self._closed = True
 
     def _pixel_size(self):
