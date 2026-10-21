@@ -9,7 +9,7 @@ from app import paths
 from app.services.downloader import Cancelled, DownloadError
 from app.services.stock_download import run_stock_job
 from app.services.stock_listing import collect_listing
-from app.sources.base import SourceError
+from app.sources.base import NetworkError, SourceError
 
 
 class ListingWorker(QThread):
@@ -21,14 +21,20 @@ class ListingWorker(QThread):
         self.link, self.adapter = link, adapter
         self.cancel = threading.Event()
 
-    def stop(self):
+    def request_stop(self):
         self.cancel.set()
         self.adapter.source.stop.set()
+
+    def stop(self):
+        self.request_stop()
         self.wait()
 
     def run(self):
         try:
             collect_listing(self.link, self.adapter, self.cancel, self.page_found.emit)
+        except NetworkError:
+            # requests может включать URL с ключом в текст исключения.
+            self.problem.emit(f"{self.link.source}: ошибка подключения или таймаут. Проверьте сеть и повторите.")
         except SourceError as exc:
             self.problem.emit(exc.message)
         except (OSError, ValueError, TypeError, KeyError):
@@ -56,11 +62,14 @@ class StockDownloadWorker(QThread):
             job.paused.clear()
         self.paused.clear()
 
-    def stop(self):
+    def request_stop(self):
         self.cancel.set()
         for job in self.jobs:
             job.cancel.set()
         self.resume()
+
+    def stop(self):
+        self.request_stop()
         self.wait()
 
     def run(self):

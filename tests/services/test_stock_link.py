@@ -232,3 +232,45 @@ def test_api_error_does_not_publish_a_page(cache):
     with pytest.raises(AuthError):
         collect_listing(link, PixabayListing(source), threading.Event(),
                         lambda *args: pytest.fail("При отказе ключа не должно быть результатов"))
+
+
+def test_network_error_does_not_expose_api_key(cache):
+    import requests
+
+    from app.workers.stock_link import ListingWorker
+
+    class BrokenSession:
+        def get(self, *args, **kwargs):
+            raise requests.ConnectionError("request /api/videos/?key=fixture-private-value timed out")
+
+    source = PixabaySource("fixture-private-value", cache, BrokenSession())
+    worker = ListingWorker(parse_link("https://pixabay.com/videos/search/"), PixabayListing(source))
+    problems = []
+    worker.problem.connect(problems.append)
+    worker.run()
+    assert len(problems) == 1 and "таймаут" in problems[0]
+    assert "fixture-private-value" not in problems[0] and "key=" not in problems[0]
+
+
+def test_long_ids_have_distinct_output_names(videos):
+    from app.services.downloader import file_stem
+
+    first = replace(videos[0], source_id="x" * 130 + "1")
+    second = replace(videos[0], source_id="x" * 130 + "2")
+    assert file_stem(None, first) == file_stem(None, second)
+    assert file_stem(None, first, unique=True) != file_stem(None, second, unique=True)
+
+
+def test_previous_0260_metadata_is_recognised(videos, tmp_path):
+    from app.services.downloader import file_stem
+
+    job = job_for(videos[0], tmp_path)
+    file, _note = run_stock_job(job, StreamSession(StreamResponse(b"fixture")))
+    old_name = file_stem(None, job.result)
+    metadata = json.loads(file.with_suffix(".json").read_text(encoding="utf-8"))
+    old_file = tmp_path / (old_name + file.suffix)
+    file.replace(old_file)
+    file.with_suffix(".json").unlink()
+    metadata["filename"] = old_file.name
+    (tmp_path / (old_name + ".json")).write_text(json.dumps(metadata), encoding="utf-8")
+    assert existing_download(job) == old_file

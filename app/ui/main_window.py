@@ -1,4 +1,4 @@
-"""Главное окно: три вкладки («Поиск», «Пакетный поиск», «Каталог»), меню и связи между ними.
+"""Главное окно: поиск, пакетный поиск, каталог, загрузка по ссылке, меню и связи между ними.
 
 Работа вкладок и меню — в своих модулях: `tabs/` (вкладки), `actions/` (экспорт, обслуживание,
 пакетный поиск), `downloads.py` (скачивание). Окно только собирает их и закрывает фоновые потоки.
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.downloads = DownloadController(self.ctx, self)
         self.search = SearchTab(self.ctx, self.downloads)
         self.stock_link = StockLinkTab(self.ctx)
-        # Три раздела: поиск, пакетный поиск по всем услугам, каталог сохранённых роликов.
+        # Основные разделы услуг и отдельная загрузка выдачи по ссылке.
         self.batch_view = BatchView(self.ctx.catalog, categories)
         self.batch_view.open_service.connect(self.open_service)
         self.batch = BatchController(self.ctx, self.batch_view, self)
@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
     player = property(lambda self: self.search.player)
 
     def _build_menu(self):
-        """Меню — только «Файл» и «Справка»: всё основное — на трёх вкладках."""
+        """Меню — только «Файл» и «Справка»: основные разделы — на вкладках."""
         def add(menu, title, handler):
             action = QAction(title, self)
             action.triggered.connect(handler)

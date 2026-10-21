@@ -4,6 +4,7 @@
 массового автоматического скачивания нет (требование Pixabay).
 """
 
+import hashlib
 import json
 import logging
 import re
@@ -120,11 +121,16 @@ def extension(f: VideoFile) -> str:
     return _EXT_BY_MIME.get((f.mime or "").split(";")[0].strip(), ".mp4")
 
 
-def file_stem(process: Process | None, result: VideoResult, catalog_id: int | None = None) -> str:
+def file_stem(process: Process | None, result: VideoResult, catalog_id: int | None = None,
+              unique: bool = False) -> str:
     """Имя файла: IDвкаталоге_техпроцесс_площадка_IDролика."""
     source = re.sub(r"[^a-z0-9]+", "", result.source.lower())
     prefix = f"{catalog_id}_" if catalog_id else ""
-    return safe_name(f"{prefix}{process.id if process else 'zapros'}_{source}_{result.source_id}", 120)
+    text = f"{prefix}{process.id if process else 'zapros'}_{source}_{result.source_id}"
+    if unique:
+        suffix = hashlib.sha256("\0".join(result.key).encode("utf-8")).hexdigest()[:16]
+        return safe_name(text, 100) + "_" + suffix
+    return safe_name(text, 120)
 
 
 def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, probe: dict | None) -> str:
@@ -402,7 +408,7 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
     """Скачать ролик; вернуть путь к итоговому файлу и примечание для пользователя."""
     folder = job.base_dir if job.flat_folder else target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
-    stem = file_stem(job.process, job.result, job.catalog_id)
+    stem = file_stem(job.process, job.result, job.catalog_id, unique=job.flat_folder)
     file = job.file
     if file.page:
         if not job.resolver:

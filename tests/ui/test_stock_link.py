@@ -91,3 +91,25 @@ def test_forming_queue_uses_original_quality_and_no_catalog(window, tmp_path, mo
     assert not job.convert and not job.trim and not job.mute and not job.check_content and job.flat_folder
     assert job.catalog_id is None and job.base_dir == tmp_path
     assert window.catalog.entries() == []
+
+
+def test_cancel_button_requests_stop_without_waiting(window):
+    class Worker:
+        requested = False
+
+        def request_stop(self):
+            self.requested = True
+
+        def stop(self):
+            pytest.fail("Кнопка отмены не должна блокироваться на wait")
+
+        def isRunning(self):
+            return True
+
+    worker = Worker()
+    window.stock_link.download_worker = worker
+    try:
+        window.stock_link.stop()
+        assert worker.requested
+    finally:
+        window.stock_link.download_worker = None

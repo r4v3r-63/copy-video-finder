@@ -157,7 +157,8 @@ class StockLinkTab(QWidget):
             self.message.emit("Сначала отмените текущую загрузку.")
             return
         if self.listing_worker and self.listing_worker.isRunning():
-            self.listing_worker.stop()
+            self.message.emit("Дождитесь завершения или отмены текущего поиска.")
+            return
         try:
             link = parse_link(self.url.text())
             adapter = make_listing(link, self.ctx.all_sources())
@@ -328,10 +329,9 @@ class StockLinkTab(QWidget):
             self.download_worker.resume()
 
     def stop(self):
-        if self.listing_worker:
-            self.listing_worker.stop()
-        if self.download_worker:
-            self.download_worker.stop()
+        for worker in (self.listing_worker, self.download_worker):
+            if worker:
+                worker.stop() if self.closed else worker.request_stop()
         self._policy()
 
     def shutdown(self):

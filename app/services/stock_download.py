@@ -21,19 +21,21 @@ def digest(file: Path, cancel) -> str:
 
 
 def existing_download(job: DownloadJob) -> Path | None:
-    metadata = job.base_dir / (file_stem(None, job.result) + ".json")
-    try:
-        data = json.loads(metadata.read_text(encoding="utf-8"))
-        name = data["filename"]
-        if Path(name).name != name:
-            return None
-        file = job.base_dir / name
-        if (data["source"] == job.result.source and data["id"] == job.result.source_id
-                and file.is_file() and not file.is_symlink() and file.stat().st_size == data["size"]
-                and digest(file, job.cancel) == data["sha256"]):
-            return file
-    except (OSError, ValueError, KeyError, TypeError):
-        pass
+    # Старое имя 0.26.0 тоже узнаём: обновление не заставляет качать тот же файл снова.
+    for unique in (True, False):
+        metadata = job.base_dir / (file_stem(None, job.result, unique=unique) + ".json")
+        try:
+            data = json.loads(metadata.read_text(encoding="utf-8"))
+            name = data["filename"]
+            if Path(name).name != name:
+                continue
+            file = job.base_dir / name
+            if (data["source"] == job.result.source and data["id"] == job.result.source_id
+                    and file.is_file() and not file.is_symlink() and file.stat().st_size == data["size"]
+                    and digest(file, job.cancel) == data["sha256"]):
+                return file
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
     return None
 
 
