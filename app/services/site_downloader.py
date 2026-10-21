@@ -136,10 +136,12 @@ def download_page(url: str, directory: Path, max_height: int, ffmpeg: Path | Non
 
 
 def extractor_options(request: dict, directory: Path, progress) -> dict:
-    height = 2160 if request.get("height") == 2160 else 1080
+    height = request.get("height") if request.get("height") in (0, 720, 1080, 2160) else 1080
+    format_choice = (f"bestvideo[height<=?{height}]+bestaudio/best[height<=?{height}]/bestvideo+bestaudio/best"
+                     if height else "bestvideo+bestaudio/best")
     deno = request.get("deno")
     return {"outtmpl": str(directory / "video.%(ext)s"),
-            "format": f"bestvideo[height<=?{height}]+bestaudio/best[height<=?{height}]",
+            "format": format_choice,
             "merge_output_format": "mp4", "format_sort": ["ext:mp4:m4a"],
             "noplaylist": True, "playlistend": 1, "socket_timeout": 15,
             "retries": 0, "fragment_retries": 0, "extractor_retries": 0, "file_access_retries": 0,

@@ -183,6 +183,15 @@ jobs:
           if ($p.ExitCode -ne 0) { Get-Content dist/CopyVideoFinder/Данные/app.log; throw "Не подтверждено скачивание." }
           Remove-Item -Recurse -Force dist/CopyVideoFinder/Данные
 
+      - name: Загрузка по ссылке в собранном EXE
+        shell: pwsh
+        run: |
+          $fixture = (Resolve-Path tests/fixtures).Path
+          $p = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-stock-link", ('"{0}"' -f $fixture)) -PassThru
+          if (-not $p.WaitForExit(90000)) { Stop-Process -Id $p.Id -Force; throw "Проверка вкладки не завершилась." }
+          if ($p.ExitCode -ne 0) { Get-Content dist/CopyVideoFinder/Данные/app.log; throw "Ошибка загрузки по ссылке." }
+          Remove-Item -Recurse -Force dist/CopyVideoFinder/Данные
+
       - name: ZIP
         shell: pwsh
         run: |

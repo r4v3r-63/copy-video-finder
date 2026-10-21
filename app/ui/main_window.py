@@ -29,6 +29,7 @@ from app.ui.downloads import DownloadController
 from app.ui.tabs.batch_view import BatchView
 from app.ui.tabs.catalog_view import CatalogView
 from app.ui.tabs.search_tab import SearchTab
+from app.ui.tabs.stock_link_tab import StockLinkTab
 from app.ui.update import UpdateController
 
 
@@ -49,14 +50,15 @@ class MainWindow(QMainWindow):
 
         self.downloads = DownloadController(self.ctx, self)
         self.search = SearchTab(self.ctx, self.downloads)
+        self.stock_link = StockLinkTab(self.ctx)
         # Три раздела: поиск, пакетный поиск по всем услугам, каталог сохранённых роликов.
         self.batch_view = BatchView(self.ctx.catalog, categories)
         self.batch_view.open_service.connect(self.open_service)
         self.batch = BatchController(self.ctx, self.batch_view, self)
         self.catalog_view = CatalogView(self.ctx.catalog, categories)
         self.exports = ExportActions(self.ctx, self)
-        self.maintenance = MaintenanceActions(self.ctx, self,
-                                              busy=lambda: self.downloads.busy() or self.exports.busy())
+        self.maintenance = MaintenanceActions(
+            self.ctx, self, busy=lambda: self.downloads.busy() or self.stock_link.busy() or self.exports.busy())
         self.catalog_view.add_link_requested.connect(self.add_by_link)
         self.catalog_view.download_requested.connect(
             lambda entries: self.downloads.download_entries(entries, self.catalog_view.selected_process()))
@@ -71,6 +73,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.search, "Поиск")
         self.tabs.addTab(self.batch_view, "Пакетный поиск")
         self.tabs.addTab(self.catalog_view, "Каталог")
+        self.tabs.addTab(self.stock_link, "Загрузка по ссылке")
+        self.stock_link.message.connect(self.statusBar().showMessage)
         self.tabs.currentChanged.connect(self._on_tab)
         self.setCentralWidget(self.tabs)
         for button in self.search.status_buttons():
@@ -232,6 +236,7 @@ class MainWindow(QMainWindow):
         for worker in workers:
             worker.wait()
         self.updates.stop()
+        self.stock_link.shutdown()
         self.downloads.stop()
         self.search.stop()
         self.catalog_view.card.frames.stop()

@@ -66,6 +66,9 @@ class DownloadJob:
     # Для файла со страницы сайта (VideoFile.page): функция источника (файл, сессия) → ссылка на файл.
     resolver: object = None
     cookies: list = field(default_factory=list)
+    paused: threading.Event = field(default_factory=threading.Event)
+    check_content: bool = True  # отдельная загрузка по ссылке допускает любую ориентацию
+    flat_folder: bool = False
 
 
 def short_side(f: VideoFile) -> int:
@@ -156,7 +159,8 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
         f"Качество: {job.file.quality}" + (f" ({job.file.width}×{job.file.height})" if job.file.width else ""),
         (f"Скачано по исходной странице: {r.page_url}" if job.file.site
          else f"Скачано по ссылке из API: {job.file.url}"),
-        f"Дата скачивания и проверки лицензии: {downloaded_at:%Y-%m-%d %H:%M}",
+        (f"Дата скачивания: {downloaded_at:%Y-%m-%d %H:%M}" if job.flat_folder
+         else f"Дата скачивания и проверки лицензии: {downloaded_at:%Y-%m-%d %H:%M}"),
     ]
     if probe:
         lines.append(f"Проверка файла: {probe['width']}×{probe['height']}, {probe['duration']:.1f} с")
@@ -166,7 +170,7 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
 
 
 def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event | None = None,
-          retries: int = RETRIES, pause: float = 2.0) -> None:
+          retries: int = RETRIES, pause: float = 2.0, paused: threading.Event | None = None) -> None:
     """Скачать в dest.part с докачкой (Range) и повторами, затем переименовать в dest.
 
     Докачка — только того же файла по той же ссылке: рядом с .part хранятся ссылка и ETag (или дата
@@ -230,6 +234,11 @@ def fetch(url: str, dest: Path, session, progress=None, cancel: threading.Event 
                     have + int(resp.headers.get("Content-Length") or 0)
                 with open(part, "ab" if have else "wb") as out:
                     for chunk in resp.iter_content(CHUNK):
+                        while paused is not None and paused.is_set():
+                            if cancel and cancel.wait(0.1):
+                                raise Cancelled()
+                            if cancel is None:
+                                time.sleep(0.1)
                         if cancel and cancel.is_set():
                             raise Cancelled()
                         out.write(chunk)
@@ -372,7 +381,8 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     root.mkdir(exist_ok=True)
     try:
         with tempfile.TemporaryDirectory(prefix="job-", dir=root) as temporary:
-            media = download_page(job.result.page_url, Path(temporary), job.file.height or 1080,
+            height = job.file.height or (0 if job.flat_folder else 1080)
+            media = download_page(job.result.page_url, Path(temporary), height,
                                   ffmpeg, job.cancel, progress, job.cookies)
             mime = {".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
                     ".mkv": "video/x-matroska", ".m4v": "video/x-m4v", ".ogv": "video/ogg"}.get(media["ext"])
@@ -390,7 +400,7 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
 def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None,
             ffprobe: Path | None = None, now=datetime.now, local: Path | None = None) -> tuple[Path, str]:
     """Скачать ролик; вернуть путь к итоговому файлу и примечание для пользователя."""
-    folder = target_folder(job.base_dir, job.process, job.query_text)
+    folder = job.base_dir if job.flat_folder else target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
     stem = file_stem(job.process, job.result, job.catalog_id)
     file = job.file
@@ -410,7 +420,7 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
     final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))
     license_file = folder / (stem + ".txt")
     wanted = variant(file, job.trim if ffmpeg else 0, job.mute and bool(ffmpeg))
-    if final.exists():
+    if final.exists() and not job.flat_folder:
         saved = saved_variant(license_file)
         if saved == wanted or (saved is None and _legacy_same(license_file, file, wanted)):
             info = probe(final, ffprobe)
@@ -427,7 +437,7 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
     if local is not None:
         shutil.copy2(local, raw)
     else:
-        fetch(file.url, raw, session, progress, job.cancel)
+        fetch(file.url, raw, session, progress, job.cancel, paused=job.paused)
     note = note_replaced
     if want_mp4:
         if ffmpeg:
@@ -449,7 +459,7 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
         note = (note + "; " if note else "") + orientation.UNVERIFIED_TEXT
     if ffprobe and info is None:
         note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"
-    elif ffmpeg:
+    elif ffmpeg and job.check_content:
         job.loop_hint = loop_hint(final, ffmpeg)
     license_file.write_text(license_text(job, final, now(), info) + f"{VARIANT_PREFIX}{wanted}\n",
                             encoding="utf-8")
@@ -460,6 +470,8 @@ def check_orientation(job: DownloadJob, path: Path, ffmpeg: Path | None, duratio
     """Проверяем реальный локальный файл, в том числе повторно используемый."""
     if job.cancel.is_set():
         raise Cancelled()
+    if not job.check_content:
+        return
     if ffmpeg:
         duration = duration or job.result.duration
         if job.prepared and job.trim:

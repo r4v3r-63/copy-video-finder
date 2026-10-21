@@ -127,7 +127,8 @@ def test_main_window_assembles_tabs_menu_and_status_buttons(data_dir):
     data_dir.mkdir()
     window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog())
     try:
-        assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == ["Поиск", "Пакетный поиск", "Каталог"]
+        assert [window.tabs.tabText(i) for i in range(window.tabs.count())] == [
+            "Поиск", "Пакетный поиск", "Каталог", "Загрузка по ссылке"]
         assert window.tabs.widget(0) is window.search and window.player is window.search.player
         menus = [action.text() for action in window.menuBar().actions()]
         assert menus == ["Файл", "Справка"]

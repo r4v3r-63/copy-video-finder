@@ -256,14 +256,15 @@ QComboBox QAbstractItemView {{
 QSpinBox::up-button, QSpinBox::down-button {{ border: none; width: 18px; }}
 
 QCheckBox {{ spacing: {SPACE_S}px; background: transparent; }}
-QCheckBox::indicator {{ width: 18px; height: 18px; border: 1px solid {p.border_strong};
+QCheckBox::indicator, QTableView::indicator {{ width: 18px; height: 18px; border: 1px solid {p.border_strong};
                         border-radius: 5px; background: {p.bg_surface}; }}
-QCheckBox::indicator:hover {{ border-color: {p.accent_primary}; }}
-QCheckBox::indicator:focus {{ border: 2px solid {p.accent_primary}; }}
-QCheckBox::indicator:checked {{ background: {p.accent_primary}; border-color: {p.accent_primary};
-                                image: url({_check_icon()}); }}
+QCheckBox::indicator:hover, QTableView::indicator:hover {{ border-color: {p.accent_primary}; }}
+QCheckBox::indicator:focus, QTableView::indicator:focus {{ border: 2px solid {p.accent_primary}; }}
+QCheckBox::indicator:checked, QTableView::indicator:checked {{
+    background: {p.accent_primary}; border-color: {p.accent_primary}; image: url({_check_icon()}); }}
 QCheckBox:disabled {{ color: {p.disabled_text}; }}
-QCheckBox::indicator:disabled {{ background: {p.disabled_bg}; border-color: {p.border}; }}
+QCheckBox::indicator:disabled, QTableView::indicator:disabled {{
+    background: {p.disabled_bg}; border-color: {p.border}; }}
 
 /* --- вкладки и меню --- */
 QTabWidget::pane {{ border: none; }}
@@ -294,7 +295,7 @@ QStatusBar QLabel {{ color: {p.text_secondary}; }}
 /* --- списки, таблицы, деревья --- */
 QAbstractItemView {{ background: {p.bg_surface}; color: {p.text_primary};
                      selection-background-color: {p.selection_bg}; selection-color: {p.text_primary}; }}
-QListWidget, QTableWidget, QTreeWidget {{
+QListWidget, QTableWidget, QTableView, QTreeWidget {{
     background: {p.bg_surface}; border: 1px solid {p.border}; border-radius: {RADIUS_CARD}px;
     alternate-background-color: {p.bg_secondary}; outline: none; padding: 4px;
     selection-background-color: {p.selection_bg}; selection-color: {p.text_primary};
@@ -303,9 +304,9 @@ QListWidget#results {{ background: transparent; border: none; padding: 0; }}
 QListWidget::item {{ border-radius: {RADIUS_BUTTON}px; padding: 4px; color: {p.text_primary}; }}
 QListWidget::item:hover {{ background: {p.bg_secondary}; }}
 QListWidget::item:selected {{ background: {p.selection_bg}; color: {p.text_primary}; }}
-QTableWidget {{ gridline-color: {p.border}; }}
-QTableWidget::item, QTreeWidget::item {{ padding: 4px; }}
-QTableWidget::item:selected, QTreeWidget::item:selected {{ background: {p.selection_bg};
+QTableWidget, QTableView {{ gridline-color: {p.border}; }}
+QTableWidget::item, QTableView::item, QTreeWidget::item {{ padding: 4px; }}
+QTableWidget::item:selected, QTableView::item:selected, QTreeWidget::item:selected {{ background: {p.selection_bg};
                                                           color: {p.text_primary}; }}
 QTreeWidget::item {{ min-height: {design.TREE_ROW_HEIGHT}px; }}
 QTreeWidget::item:hover {{ background: {p.bg_secondary}; }}

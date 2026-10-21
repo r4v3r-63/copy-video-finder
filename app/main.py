@@ -41,6 +41,11 @@ def main() -> int:
 
         from app.services.site_download_check import main as check_site_download
         return check_site_download(Path(sys.argv[2]))
+    if len(sys.argv) == 3 and sys.argv[1] == "--check-stock-link":
+        from pathlib import Path
+
+        from app.ui.stock_link_check import main as check_stock_link
+        return check_stock_link(Path(sys.argv[2]))
     if "--check-site-player" in sys.argv:
         logging.getLogger("app").info("Проверка встроенного просмотра: аргументов %s", len(sys.argv))
     if len(sys.argv) == 3 and sys.argv[1] == "--check-site-player":

@@ -31,7 +31,7 @@ def parse_hit(hit: dict) -> VideoResult:
         v = videos.get(size) or {}
         if v.get("url"):
             files.append(VideoFile(quality=quality_label(v.get("height")), url=v["url"],
-                                   width=v.get("width"), height=v.get("height"), mime="video/mp4"))
+                                   width=v.get("width"), height=v.get("height"), mime="video/mp4", size=v.get("size")))
     # Для сетки достаточно превью среднего размера.
     thumbnail = next((videos[s]["thumbnail"] for s in ("medium", "small", "large")
                       if (videos.get(s) or {}).get("thumbnail")), None)

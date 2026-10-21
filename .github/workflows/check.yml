@@ -39,6 +39,9 @@ jobs:
       - name: Тесты
         run: pytest -q
 
+      - name: Загрузка по ссылке — локальная выдача и исходный файл
+        run: python scripts/check_stock_link.py
+
       - name: Скачивание со страницы без внешней сети
         run: python scripts/check_site_download.py
 
@@ -63,6 +66,9 @@ jobs:
       - name: Переносимый Deno с проверкой SHA-256
         shell: pwsh
         run: ./scripts/prepare_deno.ps1
+      - name: Загрузка по ссылке — локальная выдача и исходный файл
+        run: python scripts/check_stock_link.py
+
       - name: Скачивание со страницы без внешней сети
         run: python scripts/check_site_download.py
       - name: Переносимый WebView2 с проверкой подписи Microsoft
@@ -94,6 +100,9 @@ jobs:
             Get-Content dist/CopyVideoFinder/Данные/app.log -Tail 20 | ForEach-Object { Write-Host "::error::$_" }
             throw "Не подтверждено скачивание в оконной сборке."
           }
+          $s = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-stock-link", ('"{0}"' -f $downloads)) -PassThru
+          if (-not $s.WaitForExit(90000)) { Stop-Process -Id $s.Id -Force; throw "Новая вкладка не завершила проверку." }
+          if ($s.ExitCode -ne 0) { throw "Не подтверждена загрузка по ссылке в EXE." }
       - uses: actions/upload-artifact@v4
         with:
           name: webview2-runtime

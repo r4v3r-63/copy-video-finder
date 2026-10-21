@@ -17,6 +17,7 @@ class VideoFile:
     # ссылка живёт только в сессии сайта). Источник умеет это в resolve_download().
     page: bool = False
     site: bool = False  # url — страница; доступный поток определяет загрузчик площадки
+    size: int | None = None  # размер исходного файла из API, если известен
 
 
 @dataclass
