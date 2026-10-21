@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 518 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 535 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -57,6 +57,8 @@ python -m app.main                                   # запуск
 - Тесты окон: одно `QApplication` из `tests/conftest.py`; не вызывать `processEvents`/`show` без нужды — роняло полный прогон.
 
 - Проверка горизонтальности — `core/orientation.py`: полезная область без чёрных полей, три кадра, одиночная обложка не подтверждает весь ролик. В покрытие, M3U и шоурил — только проверенное горизонтальное содержимое; старые записи сохраняются непроверенными. Явное подтверждение после просмотра — отдельная галочка в плеере и каталоге.
+
+- Встроенный сайт — `ui/widgets/site_player.py`: Windows WebView2 (`windows_site_view.py`), Linux Qt WebEngine. Реальное воспроизведение проверяет `scripts/check_site_player.py` на локальных H.264/VP8 фикстурах. Переносимый runtime — `scripts/prepare_webview2.ps1`, подпись Microsoft обязательна; нельзя отключать sandbox/проверку TLS, конструировать ссылки на медиафайлы или включать JS-мост к Python.
 
 ## Работа
 

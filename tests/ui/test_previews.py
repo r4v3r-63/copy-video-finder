@@ -105,19 +105,21 @@ def test_reply_from_cleared_search_does_not_touch_deleted_items(window):
     assert response.deleted and not window.search._thumb_images
 
 
-def test_site_only_play_button_opens_original_page(monkeypatch):
+def test_site_only_play_button_keeps_original_page_in_panel(monkeypatch):
     opened = []
     monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toString()) or True)
     panel = PlayerPanel()
     try:
         result = video(preview_url=None)
         panel.show_result(result)
-        assert panel.play_button.isEnabled() and panel.play_button.text() == "Смотреть на сайте"
+        assert panel.play_button.isEnabled() and panel.play_button.text() == "Повторить просмотр"
         assert panel.position.isHidden() and panel.time_label.isHidden()
         assert panel.quality.isHidden()
         assert panel.player.source().isEmpty()
         panel.play_button.click()
-        assert opened == [result.page_url]
+        assert opened == []
+        assert panel.media.currentWidget() is panel.site
+        assert panel.site.view.urls[-1] == result.page_url
         panel.show_result(None)
         assert not panel.play_button.isEnabled()
     finally:
@@ -142,9 +144,11 @@ def test_direct_preview_still_plays_and_error_offers_site(monkeypatch):
         panel.play_button.click()
         assert paused == [True]
         panel._on_error(None, "Файл недоступен")
-        assert panel.play_button.text() == "Смотреть на сайте" and panel.play_button.isEnabled()
+        assert panel.play_button.text() == "Повторить просмотр" and panel.play_button.isEnabled()
         panel.play_button.click()
-        assert opened == [result.page_url] and played == [True]
+        assert opened == []
+        assert panel.media.currentWidget() is panel.site
+        assert panel.site.view.urls[-1] == result.page_url and played == [True]
     finally:
         panel.player.stop()
         panel.frames.stop()
@@ -203,3 +207,17 @@ def test_saved_content_confirmation_is_reused_when_selecting_card(window):
     window.search.results.setCurrentRow(0)
     assert window.player.horizontal.isChecked()
     assert result.content_orientation == orientation.LANDSCAPE
+
+
+def test_external_browser_opens_only_by_explicit_button(monkeypatch):
+    opened = []
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toString()) or True)
+    panel = PlayerPanel()
+    try:
+        result = video(preview_url=None)
+        panel.show_result(result)
+        assert opened == []
+        panel.open_page.click()
+        assert opened == [result.page_url]
+    finally:
+        panel.close()

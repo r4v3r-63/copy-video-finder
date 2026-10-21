@@ -188,8 +188,7 @@ class SearchTab(QWidget):
     def stop(self):
         """Окно закрывается: остановить поиск, плеер и кадры."""
         self.stop_search()
-        self.player.player.stop()
-        self.player.frames.stop()
+        self.player.stop()
 
     def show_hint(self):
         _, skipped = self.ctx.sources()

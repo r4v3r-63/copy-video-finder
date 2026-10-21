@@ -29,6 +29,7 @@ from app.services.search import preview_file
 from app.storage.catalog import REJECTED, SELECTED
 from app.ui import theme
 from app.ui.widgets.frames_view import FramesStrip
+from app.ui.widgets.site_player import SitePlayer
 
 
 def video_facts(r: VideoResult) -> list[str]:
@@ -110,6 +111,8 @@ class PlayerPanel(QWidget):
         self.media = QStackedWidget()
         self.media.addWidget(self.poster)
         self.media.addWidget(self.video)
+        self.site = SitePlayer()
+        self.media.addWidget(self.site)
         self.player = QMediaPlayer(self)
         self.audio = QAudioOutput(self)
         self.audio.setMuted(True)  # в копицентре ролики идут без звука
@@ -120,7 +123,8 @@ class PlayerPanel(QWidget):
         self.player.positionChanged.connect(self._on_position)
         self.player.durationChanged.connect(self._on_duration)
         self.player.hasVideoChanged.connect(
-            lambda available: self.media.setCurrentWidget(self.video if available else self.poster))
+            lambda available: self.media.setCurrentWidget(self.video if available else self.poster)
+            if self._inline_available else None)
 
         self.play_button = QPushButton()
         self.play_button.setProperty("icon_inverse", True)
@@ -132,7 +136,7 @@ class PlayerPanel(QWidget):
         self.position.setAccessibleName("Позиция воспроизведения")
         self.position.sliderMoved.connect(self.player.setPosition)
         self.position.clicked.connect(self.player.setPosition)
-        self.open_page = QPushButton("Открыть на сайте")
+        self.open_page = QPushButton("Открыть в браузере")
         self.open_page.setFlat(True)
         theme.set_icon(self.open_page, "external")
         self.open_page.clicked.connect(self._open_page)
@@ -255,6 +259,8 @@ class PlayerPanel(QWidget):
         self.show_result(None)
 
     def show_result(self, result: VideoResult | None):
+        self._inline_available = False
+        self.site.stop()
         self.result = result
         self.horizontal.blockSignals(True)
         self.horizontal.setChecked(bool(result and result.content_orientation == orientation.LANDSCAPE))
@@ -305,6 +311,24 @@ class PlayerPanel(QWidget):
             self.player.setSource(QUrl(file.url))
             self.player.play()
             theme.set_icon(self.play_button, "pause")
+        elif result.page_url:
+            self._show_site()
+
+    def _show_site(self):
+        if self.result and self.result.page_url:
+            self.player.stop()
+            self._set_playback_mode(False)
+            self.media.setCurrentWidget(self.site)
+            self.site.open(self.result.page_url)
+
+    def stop(self):
+        self.player.stop()
+        self.frames.stop()
+        self.site.shutdown()
+
+    def closeEvent(self, event):
+        self.stop()
+        super().closeEvent(event)
 
     def _confirm_orientation(self, checked: bool):
         if self.result and self.result.content_orientation != orientation.PORTRAIT:
@@ -326,12 +350,12 @@ class PlayerPanel(QWidget):
         self._inline_available = inline
         on_site = bool(self.result and self.result.page_url and not inline)
         self.play_button.setEnabled(inline or on_site)
-        self.play_button.setText("Смотреть на сайте" if on_site else "")
-        hint = ("Открыть ролик в браузере: площадка не предоставила ссылку для встроенного просмотра."
+        self.play_button.setText("Повторить просмотр" if on_site else "")
+        hint = ("Перезагрузить страницу ролика в этой панели. Управление воспроизведением — в плеере сайта."
                 if on_site else "Воспроизвести или приостановить")
         self.play_button.setToolTip(hint)
-        self.play_button.setAccessibleName("Смотреть на сайте" if on_site else "Воспроизвести или приостановить")
-        theme.set_icon(self.play_button, "external" if on_site else "play")
+        self.play_button.setAccessibleName("Повторить просмотр" if on_site else "Воспроизвести или приостановить")
+        theme.set_icon(self.play_button, "play")
         self.position.setEnabled(inline)
         self.position.setVisible(inline)
         self.time_label.setVisible(inline)
@@ -433,7 +457,7 @@ class PlayerPanel(QWidget):
 
     def toggle(self):
         if not self._inline_available:
-            self._open_page()
+            self._show_site()
             return
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.player.pause()
@@ -452,10 +476,10 @@ class PlayerPanel(QWidget):
         self._on_position(self.player.position())
 
     def _on_error(self, _error, message: str):
-        if self.result:
-            self.media.setCurrentWidget(self.poster)
-            self._set_playback_mode(False)
-            self.play_error.setText(f"Не удалось воспроизвести ролик ({message}). Откройте его на сайте.")
+        if self.result and self._inline_available:
+            self._show_site()
+            self.play_error.setText(f"Не удалось воспроизвести ролик ({message}). "
+                                    "Пробуем просмотр через плеер сайта в этой панели.")
             self.play_error.setTextFormat(Qt.TextFormat.PlainText)
             self.play_error.show()
 

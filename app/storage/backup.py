@@ -55,6 +55,8 @@ def create_backup(source: Path, dest: Path, cancel=None, progress=None) -> None:
     for folder, dirs, names in os.walk(source, onerror=walk_error):
         _check_cancel(cancel)
         root = Path(folder)
+        if root == source:
+            dirs[:] = [name for name in dirs if name != "webview"]  # временный приватный сеанс браузера
         directories.append(root)
         for name in dirs + names:
             if (root / name).is_symlink() or (root / name).is_junction():

@@ -152,3 +152,16 @@ def test_closing_main_window_cancels_and_waits_for_backup(data_dir, tmp_path, mo
         worker.wait()
         window.close()
         window.catalog.close()
+
+
+def test_temporary_private_browser_session_is_excluded(data_dir, tmp_path):
+    data_dir.mkdir()
+    session = data_dir / "webview" / "session-test"
+    session.mkdir(parents=True)
+    (session / "Cookies").write_bytes(b"temporary private state")
+    (data_dir / "settings.json").write_text('{"theme":"dark"}', encoding="utf-8")
+    dest = tmp_path / "backup.zip"
+    backup.create_backup(data_dir, dest)
+    with ZipFile(dest) as archive:
+        assert "Данные/settings.json" in archive.namelist()
+        assert not any("webview" in name for name in archive.namelist())

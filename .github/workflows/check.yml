@@ -39,9 +39,36 @@ jobs:
       - name: Тесты
         run: pytest -q
 
+      - name: Встроенный просмотр локального видео
+        run: python scripts/check_site_player.py
+
+  site-player:
+    name: Встроенный просмотр Windows
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Зависимости
+        run: pip install -r requirements-dev.txt
+      - name: Переносимый WebView2 с проверкой подписи Microsoft
+        shell: pwsh
+        run: ./scripts/prepare_webview2.ps1
+      - name: Воспроизведение H.264 внутри окна без сети
+        run: python scripts/check_site_player.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: webview2-runtime
+          path: app/webview2/
+          retention-days: 1
+
   release-version:
     name: Проверка новой версии
-    needs: check
+    needs: [check, site-player]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.deleted
     runs-on: ubuntu-latest
     outputs:

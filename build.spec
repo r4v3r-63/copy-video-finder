@@ -3,10 +3,14 @@
 # Только режим папки (onedir): однофайловый exe антивирусы принимают за троян.
 # UPX не используется по той же причине.
 
+from PyInstaller.utils.hooks import collect_data_files
+
+webview_data = collect_data_files("webview", includes=["lib/**/*.dll"])
+
 a = Analysis(
     ["run_app.py"],
     pathex=["."],
-    datas=[("resources", "resources"), ("docs/USER_GUIDE.md", "docs"), ("docs/vk.md", "docs")],
+    datas=[("resources", "resources"), ("docs/USER_GUIDE.md", "docs"), ("docs/vk.md", "docs")] + webview_data,
     hiddenimports=["PIL.AvifImagePlugin"],  # превью Coverr приходят в AVIF
     excludes=["tkinter", "pytest", "unittest"],
     noarchive=False,

@@ -3,7 +3,7 @@
 import logging
 import sys
 
-from PyQt6.QtCore import QLibraryInfo, QLocale, QLockFile, QTranslator
+from PyQt6.QtCore import QCoreApplication, QLibraryInfo, QLocale, QLockFile, Qt, QTranslator
 from PyQt6.QtGui import QIcon
 from PyQt6.QtNetwork import QNetworkProxyFactory
 from PyQt6.QtWidgets import QApplication, QMessageBox
@@ -31,6 +31,12 @@ def setup_logging() -> None:
 
 def main() -> int:
     setup_logging()
+    if len(sys.argv) == 3 and sys.argv[1] == "--check-site-player":
+        from pathlib import Path
+
+        from app.ui.site_player_check import main as check_site_player
+        return check_site_player(Path(sys.argv[2]))
+    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
     app.setApplicationName("Поиск видео Copy.ru")
     app.setWindowIcon(QIcon(str(paths.resources_dir() / "logo.svg")))
