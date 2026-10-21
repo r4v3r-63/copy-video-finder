@@ -114,7 +114,8 @@ def test_site_only_play_button_keeps_original_page_in_panel(monkeypatch):
         panel.show_result(result)
         assert panel.play_button.isEnabled() and panel.play_button.text() == "Повторить просмотр"
         assert panel.position.isHidden() and panel.time_label.isHidden()
-        assert panel.quality.isHidden()
+        assert not panel.quality.isHidden()
+        assert panel.quality.currentData().site
         assert panel.player.source().isEmpty()
         panel.play_button.click()
         assert opened == []

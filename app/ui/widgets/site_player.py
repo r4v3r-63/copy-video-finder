@@ -4,6 +4,7 @@ import sys
 import traceback
 from urllib.parse import urlsplit
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from app.core import design
@@ -28,6 +29,8 @@ class SitePlayer(QWidget):
         self.view = None
         self.current_url = ""
         self.failure = ""
+        self._cookie_callbacks = {}
+        self._cookie_token = 0
         self.status = QLabel()
         self.status.setWordWrap(True)
         self.status.setProperty("muted", True)
@@ -58,9 +61,26 @@ class SitePlayer(QWidget):
                 self.status.setText("Не удалось запустить встроенный просмотр. Попробуйте перезапустить программу.")
                 return False
             self.view.loadFinished.connect(self._loaded)
+            if hasattr(self.view, "cookiesReady"):
+                self.view.cookiesReady.connect(self._receive_cookies)
             self.layout.addWidget(self.view, 1)
         self.view.navigate(url)
         return True
+
+    def request_cookies(self, url: str, callback):
+        """Только текущий приватный сеанс программы, без чтения профилей внешних браузеров."""
+        if self.view is None or not allowed_page(url) or not hasattr(self.view, "request_cookies"):
+            callback([])
+            return
+        self._cookie_token += 1
+        token = self._cookie_token
+        self._cookie_callbacks[token] = callback
+        self.view.request_cookies(url, token)
+        QTimer.singleShot(3000, lambda: self._receive_cookies(token, []))
+
+    def _receive_cookies(self, token, cookies):
+        if callback := self._cookie_callbacks.pop(token, None):
+            callback(cookies)
 
     def _loaded(self, ok: bool):
         if self.current_url:
@@ -74,6 +94,8 @@ class SitePlayer(QWidget):
             self.view.navigate("about:blank")
 
     def shutdown(self):
+        for token in list(self._cookie_callbacks):
+            self._receive_cookies(token, [])
         self.current_url = ""
         if self.view is not None:
             self.view.shutdown()

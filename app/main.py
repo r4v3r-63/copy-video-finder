@@ -31,6 +31,16 @@ def setup_logging() -> None:
 
 def main() -> int:
     setup_logging()
+    if len(sys.argv) == 3 and sys.argv[1] == "--download-site":
+        from pathlib import Path
+
+        from app.services.site_downloader import run_extractor
+        return run_extractor(Path(sys.argv[2]))
+    if len(sys.argv) == 3 and sys.argv[1] == "--check-site-download":
+        from pathlib import Path
+
+        from app.services.site_download_check import main as check_site_download
+        return check_site_download(Path(sys.argv[2]))
     if "--check-site-player" in sys.argv:
         logging.getLogger("app").info("Проверка встроенного просмотра: аргументов %s", len(sys.argv))
     if len(sys.argv) == 3 and sys.argv[1] == "--check-site-player":

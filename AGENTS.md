@@ -11,7 +11,7 @@
 
 ## Коротко о проекте
 
-- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.25.4; состояние выпуска проверять в GitHub Releases).
+- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.25.5; состояние выпуска проверять в GitHub Releases).
 - Пользователь один, общается по-русски. Интерфейс, сообщения, комментарии в коде, коммиты — на русском.
 - Пользователю нужны только бесплатные варианты (поисковики, API).
 
@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 535 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 560 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -65,3 +65,5 @@ python -m app.main                                   # запуск
 - Коммит после каждого значимого шага, понятное сообщение на русском, пуш.
 - Решения пользователя фиксировать в `CLAUDE.md` с датой; после изменений обновлять `docs/STATUS.md`.
 - README — только общее описание программы, без подробностей работы и источников роликов.
+
+- Скачивание со страниц — `services/site_downloader.py`: отдельный процесс yt-dlp, без обхода DRM/лимитов, без сторонних cookies и плагинов. Реальную загрузку и авторизацию по синтетической cookie проверяет `scripts/check_site_download.py`, в том числе в Windows EXE. Переносимый Deno — `scripts/prepare_deno.ps1` с проверкой SHA-256 официального выпуска.

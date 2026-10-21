@@ -39,6 +39,9 @@ jobs:
       - name: Тесты
         run: pytest -q
 
+      - name: Скачивание со страницы без внешней сети
+        run: python scripts/check_site_download.py
+
       - name: Встроенный просмотр локального видео
         run: python scripts/check_site_player.py
 
@@ -57,6 +60,11 @@ jobs:
           cache-dependency-path: requirements*.txt
       - name: Зависимости
         run: pip install -r requirements-dev.txt
+      - name: Переносимый Deno с проверкой SHA-256
+        shell: pwsh
+        run: ./scripts/prepare_deno.ps1
+      - name: Скачивание со страницы без внешней сети
+        run: python scripts/check_site_download.py
       - name: Переносимый WebView2 с проверкой подписи Microsoft
         shell: pwsh
         run: ./scripts/prepare_webview2.ps1
@@ -67,6 +75,7 @@ jobs:
         run: |
           pyinstaller build.spec --noconfirm
           if ($LASTEXITCODE -ne 0) { throw "Ошибка сборки программы." }
+          Copy-Item app/deno dist/CopyVideoFinder/deno -Recurse
           Copy-Item app/webview2 dist/CopyVideoFinder/webview2 -Recurse
           $fixture = (Resolve-Path tests/fixtures/site_player).Path
           $p = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-site-player", ('"{0}"' -f $fixture)) -PassThru
@@ -77,6 +86,13 @@ jobs:
               Get-Content dist/CopyVideoFinder/Данные/app.log -Tail 20 | ForEach-Object { Write-Host "::error::$_" }
             }
             throw "Не подтверждено воспроизведение в оконной сборке."
+          }
+          $downloads = (Resolve-Path tests/fixtures).Path
+          $d = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-site-download", ('"{0}"' -f $downloads)) -PassThru
+          if (-not $d.WaitForExit(90000)) { Stop-Process -Id $d.Id -Force; throw "Загрузчик не завершился." }
+          if ($d.ExitCode -ne 0) {
+            Get-Content dist/CopyVideoFinder/Данные/app.log -Tail 20 | ForEach-Object { Write-Host "::error::$_" }
+            throw "Не подтверждено скачивание в оконной сборке."
           }
       - uses: actions/upload-artifact@v4
         with:

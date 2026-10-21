@@ -140,6 +140,7 @@ class SearchTab(QWidget):
 
         self.player = theme.make_card(PlayerPanel())
         self.player.allow_4k = ctx.settings.allow_4k
+        downloads.cookie_provider = self.player.site.request_cookies
         self.player.download_requested.connect(self.download)
         self.player.open_folder_requested.connect(self._open_folder)
         self.player.frames.orientation_checked.connect(self._on_orientation_checked)

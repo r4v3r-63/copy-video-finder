@@ -6,7 +6,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from app.core import orientation
 from app.core.models import VideoResult
-from app.services.downloader import DownloadJob, choose_file
+from app.services.downloader import DownloadJob, download_option
 from app.storage import catalog as cat
 from app.ui.context import AppContext
 from app.workers.download import DownloadQueue
@@ -25,6 +25,8 @@ class DownloadController(QObject):
         self.queue.progress.connect(self._on_progress)
         self.queue.done.connect(self._on_done)
         self.queue.failed.connect(self._on_failed)
+        self.cookie_provider = None
+        self._closed = False
         self.state: dict[tuple[str, str], tuple[str, str, bool]] = {}  # ключ ролика → (текст, путь, идёт)
 
     def busy(self) -> bool:
@@ -38,14 +40,14 @@ class DownloadController(QObject):
         queued, skipped = 0, 0
         for entry in entries:
             result = entry.result
-            file = choose_file(result, self.ctx.settings.allow_4k)
+            file = download_option(result, self.ctx.settings.allow_4k)
             if not file or self.is_queued(result.key) or result.content_orientation == orientation.PORTRAIT:
                 skipped += 1
                 continue
             pid = selected_process if selected_process in entry.links else next(iter(entry.links), None)
             self.download(result, file, self.ctx.process(pid), "Из каталога", preserve_status=True)
             queued += 1
-        self.message.emit(f"В очереди на скачивание: {queued}. Без файла или уже в очереди: {skipped}.")
+        self.message.emit(f"В очереди на скачивание: {queued}. Пропущено: {skipped}.")
 
     def download(self, result: VideoResult, file, process, query_text, preserve_status=False):
         if result.content_orientation == orientation.PORTRAIT:
@@ -74,10 +76,20 @@ class DownloadController(QObject):
                           convert=settings.convert_to_mp4, catalog_id=video_id,
                           trim=settings.trim_seconds, mute=settings.mute_audio,
                           resolver=getattr(source, "resolve_download", None))
-        self.queue.add(job)
         self._set_state(result.key, "В очереди на скачивание…", "", True)
 
+        def enqueue(cookies):
+            if not self._closed:
+                job.cookies = cookies
+                self.queue.add(job)
+
+        if file.site and self.cookie_provider:
+            self.cookie_provider(result.page_url, enqueue)
+        else:
+            enqueue([])
+
     def stop(self):
+        self._closed = True
         self.queue.stop()
 
     def _set_state(self, key, text: str, path: str, busy: bool):
@@ -88,7 +100,9 @@ class DownloadController(QObject):
         return self.queue.jobs[job_id].result.key
 
     def _on_progress(self, job_id: int, done: int, total: int):
-        if done < 0:
+        if done == -2:
+            text = "Определяем доступный файл на странице…"
+        elif done < 0:
             text = "Конвертация в MP4…"
         elif total:
             text = f"Скачивается: {done * 100 // total}% ({done / 1e6:.1f} из {total / 1e6:.1f} МБ)"

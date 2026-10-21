@@ -1,0 +1,7 @@
+{
+  "available": {"id": "fixture", "title": "Ламинирование визиток", "ext": "mp4", "width": 640, "height": 360, "duration": 2, "acodec": "none"},
+  "drm": {"id": "fixture", "has_drm": true},
+  "playlist": {"_type": "playlist", "entries": []},
+  "live": {"id": "fixture", "is_live": true},
+  "premium": {"id": "fixture", "availability": "premium_only"}
+}

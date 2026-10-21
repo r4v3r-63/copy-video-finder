@@ -81,7 +81,8 @@ def test_switching_to_view_on_site_clears_previous_media_and_preview(tmp_path):
         assert panel.play_button.isEnabled()
         assert panel.play_button.text() == "Повторить просмотр"
         assert not panel.position.isEnabled()
-        assert not panel.download_button.isEnabled()
+        assert panel.download_button.isEnabled()
+        assert panel.quality.currentData().site
         assert panel.open_page.isEnabled()
     finally:
         panel.player.stop()

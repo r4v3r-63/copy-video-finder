@@ -91,6 +91,10 @@ jobs:
       - name: Сборка PyInstaller (onedir)
         run: pyinstaller build.spec --noconfirm
 
+      - name: Переносимый Deno с проверкой SHA-256
+        shell: pwsh
+        run: ./scripts/prepare_deno.ps1 -Destination dist/CopyVideoFinder/deno
+
       - name: FFmpeg в папку программы
         shell: pwsh
         run: |
@@ -168,6 +172,15 @@ jobs:
           }
           if ($p.ExitCode -ne 0) { Get-Content dist/CopyVideoFinder/Данные/app.log; throw "Не подтверждено воспроизведение H.264." }
           Start-Sleep -Seconds 2
+          Remove-Item -Recurse -Force dist/CopyVideoFinder/Данные
+
+      - name: Скачивание со страницы в собранной программе
+        shell: pwsh
+        run: |
+          $fixture = (Resolve-Path tests/fixtures).Path
+          $p = Start-Process dist/CopyVideoFinder/CopyVideoFinder.exe -ArgumentList @("--check-site-download", ('"{0}"' -f $fixture)) -PassThru
+          if (-not $p.WaitForExit(90000)) { Stop-Process -Id $p.Id -Force; throw "Загрузчик не завершился." }
+          if ($p.ExitCode -ne 0) { Get-Content dist/CopyVideoFinder/Данные/app.log; throw "Не подтверждено скачивание." }
           Remove-Item -Recurse -Force dist/CopyVideoFinder/Данные
 
       - name: ZIP

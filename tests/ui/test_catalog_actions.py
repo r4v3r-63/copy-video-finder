@@ -102,11 +102,31 @@ def test_bulk_download_uses_catalog_group_and_preserves_rejection(store, monkeyp
     try:
         window.catalog_view.download_requested.emit([store.get(first), store.get(second)])
         window.catalog_view.download_requested.emit([store.get(first)])
-        assert len(queued) == 1
+        assert len(queued) == 2
+        assert queued[1].catalog_id == second and queued[1].file.site
         assert queued[0].catalog_id == first and queued[0].process.id == "lam_pouch"
         assert queued[0].file.url == "https://media.example.org/lamination.mp4"
         assert store.get(first).status == cat.REJECTED and not store.get(first).license_confirmed
         assert marks == [cat.REJECTED]
+    finally:
+        window.close()
+        window.cache.close()
+
+
+def test_pending_cookie_download_is_not_enqueued_after_close(store, monkeypatch):
+    entry_id = store.add(result(1, files=[]))
+    window = MainWindow(Settings(check_updates=False, link_check_days=0), processes.load_catalog(), store=store)
+    callbacks, queued = [], []
+    window.downloads.cookie_provider = lambda url, callback: callbacks.append(callback)
+    monkeypatch.setattr(window.downloads.queue, "add", queued.append)
+    try:
+        entries = [store.get(entry_id)]
+        window.downloads.download_entries(entries, None)
+        window.downloads.download_entries(entries, None)
+        assert len(callbacks) == 1 and not queued
+        window.downloads.stop()
+        callbacks[0]([{"name": "fixture", "value": "synthetic"}])
+        assert not queued
     finally:
         window.close()
         window.cache.close()

@@ -53,6 +53,7 @@ def main(directory: Path) -> int:
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(data)))
+                self.send_header("Set-Cookie", "fixture_session=local-check; HttpOnly; Path=/")
                 self.end_headers()
                 self.wfile.write(data)
             else:
@@ -90,7 +91,10 @@ def main(directory: Path) -> int:
                 if sys.stdout is not None:
                     print("Встроенный плеер воспроизводит локальное видео: " + video, flush=True)
                 logging.getLogger(__name__).info("Проверка встроенного просмотра: кадры воспроизводятся")
-                finish(True)
+                timer.stop()
+                panel.request_cookies(f"http://127.0.0.1:{server.server_port}/",
+                    lambda items: finish(any(c["name"] == "fixture_session" and c["value"] == "local-check"
+                                             for c in items)))
         except (TypeError, ValueError):
             pass
 

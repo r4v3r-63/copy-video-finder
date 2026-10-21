@@ -19,6 +19,7 @@ from app.ui.widgets.site_player import allowed_page
 class WindowsSiteView(QWidget):
     loadFinished = pyqtSignal(bool)
     scriptFinished = pyqtSignal(str)
+    cookiesReady = pyqtSignal(object, object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -70,9 +71,10 @@ class WindowsSiteView(QWidget):
         import ctypes
         from ctypes import wintypes
 
-        from Microsoft.Web.WebView2.Core import CoreWebView2PermissionState
+        from Microsoft.Web.WebView2.Core import CoreWebView2Cookie, CoreWebView2PermissionState
         from Microsoft.Web.WebView2.WinForms import CoreWebView2CreationProperties, WebView2
         from System import Action, String
+        from System.Collections.Generic import List
         from System.Drawing import Size
         from System.Threading.Tasks import Task
         from System.Windows.Forms import Application, DockStyle, Form, FormBorderStyle, Timer, UnhandledExceptionMode
@@ -146,6 +148,15 @@ class WindowsSiteView(QWidget):
                 core.NavigationCompleted += lambda sender, event: self.loadFinished.emit(bool(event.IsSuccess))
                 core.Navigate(self._url)
 
+            def cookies_done(task, token):
+                items = []
+                if not task.IsCanceled and not task.IsFaulted:
+                    for cookie in task.Result:
+                        items.append({"name": str(cookie.Name), "value": str(cookie.Value),
+                                      "domain": str(cookie.Domain), "path": str(cookie.Path),
+                                      "secure": bool(cookie.IsSecure), "http_only": bool(cookie.IsHttpOnly)})
+                self.cookiesReady.emit(token, items)
+
             def tick(sender, args):
                 while not self.commands.empty():
                     command, value = self.commands.get_nowait()
@@ -161,6 +172,13 @@ class WindowsSiteView(QWidget):
                         self._url = value
                         if web.CoreWebView2:
                             web.CoreWebView2.Navigate(value)
+                    elif command == "cookies":
+                        url, token = value
+                        if web.CoreWebView2:
+                            web.CoreWebView2.CookieManager.GetCookiesAsync(url).ContinueWith(
+                                Action[Task[List[CoreWebView2Cookie]]](lambda task, t=token: cookies_done(task, t)))
+                        else:
+                            self.cookiesReady.emit(token, [])
                     elif command == "script" and web.CoreWebView2:
                         web.CoreWebView2.ExecuteScriptAsync(value).ContinueWith(
                             Action[Task[String]](lambda task: self.scriptFinished.emit(str(task.Result))))
@@ -197,6 +215,9 @@ class WindowsSiteView(QWidget):
 
     def navigate(self, url: str):
         self.commands.put(("navigate", url))
+
+    def request_cookies(self, url: str, token):
+        self.commands.put(("cookies", (url, token)))
 
     def evaluate(self, script: str):
         self.commands.put(("script", script))

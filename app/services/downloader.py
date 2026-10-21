@@ -1,12 +1,13 @@
 """Скачивание роликов: папка услуги, файл лицензии рядом, докачка, конвертация в MP4.
 
-Скачивается только по ссылке из ответа API и только по действию пользователя —
+Скачивается по ссылке из ответа API или через загрузчик страницы, только по действию пользователя —
 массового автоматического скачивания нет (требование Pixabay).
 """
 
 import json
 import logging
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -19,10 +20,12 @@ from urllib.parse import urlparse
 
 import requests
 
+from app import paths
 from app.core import licenses, orientation
 from app.core.models import VideoFile, VideoResult
 from app.core.processes import Process
 from app.services.frames import extract_frames
+from app.services.site_downloader import SiteDownloadCancelled, SiteDownloadError, available_page, download_page
 from app.sources.base import SourceError
 from app.sources.http import USER_AGENT
 
@@ -33,7 +36,7 @@ RETRIES = 3
 MAX_WAIT = 30  # секунд: дольше по Retry-After не ждём, а сообщаем пользователю
 _FORBIDDEN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _EXT_BY_MIME = {"video/mp4": ".mp4", "video/webm": ".webm", "video/ogg": ".ogv", "application/ogg": ".ogv",
-                "video/quicktime": ".mov"}
+                "video/quicktime": ".mov", "video/x-matroska": ".mkv", "video/x-m4v": ".m4v"}
 _NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0  # не показывать консоль FFmpeg в Windows
 
 
@@ -62,6 +65,7 @@ class DownloadJob:
     prepared: bool = False  # обрезка и снятие звука выполнены
     # Для файла со страницы сайта (VideoFile.page): функция источника (файл, сессия) → ссылка на файл.
     resolver: object = None
+    cookies: list = field(default_factory=list)
 
 
 def short_side(f: VideoFile) -> int:
@@ -77,6 +81,16 @@ def choose_file(result: VideoResult, allow_4k: bool = False) -> VideoFile | None
     if not files:
         return None
     return max(files, key=lambda f: (short_side(f), extension(f) == ".mp4"))
+
+
+def download_option(result: VideoResult, allow_4k: bool = False, from_page: bool = False) -> VideoFile | None:
+    file = None if from_page else choose_file(result, allow_4k)
+    if file:
+        return file
+    if available_page(result.page_url) and not licenses.is_paid(result.license.name if result.license else ""):
+        height = 2160 if allow_4k else 1080
+        return VideoFile("Авто — до 4K" if allow_4k else "Авто — до Full HD", result.page_url, height=height, site=True)
+    return None
 
 
 def safe_name(text: str, limit: int = 80) -> str:
@@ -95,6 +109,8 @@ def target_folder(base: Path, process: Process | None, query_text: str) -> Path:
 
 
 def extension(f: VideoFile) -> str:
+    if f.site:
+        return _EXT_BY_MIME.get(f.mime or "", ".mp4")
     suffix = Path(urlparse(f.url).path).suffix.lower()
     if suffix in (".mp4", ".webm", ".ogv", ".ogg", ".mov", ".m4v"):
         return ".ogv" if suffix == ".ogg" else suffix
@@ -138,7 +154,8 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
         lines.append("Есть звуковая дорожка — проверить права на музыку.")
     lines += [
         f"Качество: {job.file.quality}" + (f" ({job.file.width}×{job.file.height})" if job.file.width else ""),
-        f"Скачано по ссылке из API: {job.file.url}",
+        (f"Скачано по исходной странице: {r.page_url}" if job.file.site
+         else f"Скачано по ссылке из API: {job.file.url}"),
         f"Дата скачивания и проверки лицензии: {downloaded_at:%Y-%m-%d %H:%M}",
     ]
     if probe:
@@ -349,6 +366,29 @@ def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event 
 
 def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None,
             ffprobe: Path | None = None, now=datetime.now) -> tuple[Path, str]:
+    if not job.file.site:
+        return _run_job(job, session, progress, ffmpeg, ffprobe, now)
+    root = paths.data_dir() / "download-jobs"
+    root.mkdir(exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory(prefix="job-", dir=root) as temporary:
+            media = download_page(job.result.page_url, Path(temporary), job.file.height or 1080,
+                                  ffmpeg, job.cancel, progress, job.cookies)
+            mime = {".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+                    ".mkv": "video/x-matroska", ".m4v": "video/x-m4v", ".ogv": "video/ogg"}.get(media["ext"])
+            job.file.width, job.file.height, job.file.mime = media["width"], media["height"], mime
+            job.result.has_audio = media["has_audio"]
+            return _run_job(job, session, progress, ffmpeg, ffprobe, now, media["path"])
+    except SiteDownloadCancelled as exc:
+        raise Cancelled() from exc
+    except SiteDownloadError as exc:
+        raise DownloadError(str(exc)) from exc
+    finally:
+        job.cookies.clear()
+
+
+def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None,
+            ffprobe: Path | None = None, now=datetime.now, local: Path | None = None) -> tuple[Path, str]:
     """Скачать ролик; вернуть путь к итоговому файлу и примечание для пользователя."""
     folder = target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
@@ -382,7 +422,12 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
 
     # Исходник — под отдельным именем, если его будут перекодировать в файл с тем же расширением.
     raw = folder / (stem + (".download" if want_mp4 and ffmpeg else "") + ext)
-    fetch(file.url, raw, session, progress, job.cancel)
+    if job.cancel.is_set():
+        raise Cancelled()
+    if local is not None:
+        shutil.copy2(local, raw)
+    else:
+        fetch(file.url, raw, session, progress, job.cancel)
     note = note_replaced
     if want_mp4:
         if ffmpeg:

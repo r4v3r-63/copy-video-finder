@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (
 
 from app.core import design, licenses, orientation
 from app.core.models import VideoResult
-from app.services.downloader import choose_file
+from app.services.downloader import choose_file, download_option
 from app.services.search import preview_file
 from app.storage.catalog import REJECTED, SELECTED
 from app.ui import theme
@@ -284,7 +284,7 @@ class PlayerPanel(QWidget):
         self.details_button.setEnabled(result is not None)
         self.open_page.setEnabled(bool(result and result.page_url))
         self._fill_qualities(result)
-        self.quality.setVisible(bool(result and result.files))
+        self.quality.setVisible(bool(self.quality.count()))
         self.set_download_state("", "")
         self.set_catalog_state("")
         preview = preview_file(result) if result else None
@@ -416,7 +416,9 @@ class PlayerPanel(QWidget):
 
     def _fill_qualities(self, result: VideoResult | None):
         self.quality.clear()
-        files = result.files if result else []
+        files = list(result.files) if result else []
+        if result and (option := download_option(result, self.allow_4k, from_page=True)):
+            files.append(option)
         for f in files:
             size = f" ({f.width}×{f.height})" if f.width and f.height else ""
             kind = f", {f.mime.split('/')[-1].upper()}" if f.mime and "mp4" not in f.mime else ""
@@ -447,7 +449,7 @@ class PlayerPanel(QWidget):
         self.download_status.setVisible(bool(text))
         self.downloaded_path = path
         self.folder_button.setVisible(bool(path))
-        if self.result and self.result.files and not self.result.view_only:
+        if self.result and self.quality.count() and not self.result.view_only:
             self.download_button.setEnabled(not busy and not path)
 
     def _download(self):

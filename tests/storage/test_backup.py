@@ -159,9 +159,12 @@ def test_temporary_private_browser_session_is_excluded(data_dir, tmp_path):
     session = data_dir / "webview" / "session-test"
     session.mkdir(parents=True)
     (session / "Cookies").write_bytes(b"temporary private state")
+    jobs = data_dir / "download-jobs" / "job-test"
+    jobs.mkdir(parents=True)
+    (jobs / "request.json").write_text("private session", encoding="utf-8")
     (data_dir / "settings.json").write_text('{"theme":"dark"}', encoding="utf-8")
     dest = tmp_path / "backup.zip"
     backup.create_backup(data_dir, dest)
     with ZipFile(dest) as archive:
         assert "Данные/settings.json" in archive.namelist()
-        assert not any("webview" in name for name in archive.namelist())
+        assert not any("webview" in name or "download-jobs" in name for name in archive.namelist())

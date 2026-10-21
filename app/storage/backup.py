@@ -56,7 +56,8 @@ def create_backup(source: Path, dest: Path, cancel=None, progress=None) -> None:
         _check_cancel(cancel)
         root = Path(folder)
         if root == source:
-            dirs[:] = [name for name in dirs if name != "webview"]  # временный приватный сеанс браузера
+            # Приватный браузерный сеанс и временные данные скачивания не архивируются.
+            dirs[:] = [name for name in dirs if name not in ("webview", "download-jobs")]
         directories.append(root)
         for name in dirs + names:
             if (root / name).is_symlink() or (root / name).is_junction():
