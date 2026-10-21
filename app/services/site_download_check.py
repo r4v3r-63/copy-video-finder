@@ -9,6 +9,7 @@ from pathlib import Path
 from app import paths
 from app.core.models import LicenseInfo, VideoResult
 from app.services.downloader import DownloadJob, download_option, run_job
+from app.storage.download_files import metadata_file
 
 
 def main(directory: Path) -> int:
@@ -53,11 +54,12 @@ def main(directory: Path) -> int:
                               cookies=[{"name": "fixture_session", "value": "local-check", "domain": "127.0.0.1"}])
             saved, _note = run_job(job, None)
             assert saved.read_bytes() == (directory / "site_player" / "landscape.mp4").read_bytes()
-            sidecar = saved.with_suffix(".txt").read_text(encoding="utf-8")
+            sidecar = metadata_file(saved, ".txt").read_text(encoding="utf-8")
             assert "Окончательное подтверждение лицензии — за пользователем" in sidecar
             assert "Скачано по исходной странице" in sidecar
             assert not job.cookies
-        assert not list((paths.data_dir() / "download-jobs").iterdir())
+            assert all(file.suffix == ".mp4" for file in saved.parent.iterdir())
+        assert not any(file.is_file() for file in (paths.data_dir() / "download-jobs").rglob("*"))
         return 0
     finally:
         server.shutdown()

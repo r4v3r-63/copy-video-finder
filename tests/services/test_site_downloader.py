@@ -136,7 +136,8 @@ def test_page_job_cleans_temporary_data_and_keeps_orientation_guard(data_dir, tm
     with pytest.raises(downloader.DownloadError, match="не горизонтальное"):
         downloader.run_job(job, None)
     assert video.license == license_before and job.cookies == []
-    assert list((data_dir / "download-jobs").iterdir()) == []
+    assert list((data_dir / "download-jobs" / "errors").rglob("*.invalid"))
+    assert not list(tmp_path.rglob("*.mp4"))
 
 
 def test_real_page_download_with_cookie_in_separate_process(data_dir):

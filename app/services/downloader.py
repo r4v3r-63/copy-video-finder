@@ -1,4 +1,4 @@
-"""Скачивание роликов: папка услуги, файл лицензии рядом, докачка, конвертация в MP4.
+"""Скачивание роликов: готовые MP4, служебные данные отдельно, докачка и подготовка.
 
 Скачивается по ссылке из ответа API или через загрузчик страницы, только по действию пользователя —
 массового автоматического скачивания нет (требование Pixabay).
@@ -29,6 +29,7 @@ from app.services.frames import extract_frames
 from app.services.site_downloader import SiteDownloadCancelled, SiteDownloadError, available_page, download_page
 from app.sources.base import SourceError
 from app.sources.http import USER_AGENT
+from app.storage.download_files import metadata_file, migrate_folder, quarantine, working_file
 
 log = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def extension(f: VideoFile) -> str:
     if f.site:
         return _EXT_BY_MIME.get(f.mime or "", ".mp4")
     suffix = Path(urlparse(f.url).path).suffix.lower()
-    if suffix in (".mp4", ".webm", ".ogv", ".ogg", ".mov", ".m4v"):
+    if suffix in (".mp4", ".webm", ".ogv", ".ogg", ".mov", ".m4v", ".mkv"):
         return ".ogv" if suffix == ".ogg" else suffix
     return _EXT_BY_MIME.get((f.mime or "").split(";")[0].strip(), ".mp4")
 
@@ -350,13 +351,15 @@ def loop_hint(path: Path, ffmpeg: Path) -> bool | None:
 
 
 def convert_to_mp4(src: Path, dest: Path, ffmpeg: Path, cancel: threading.Event | None = None,
-                   trim: int = 0, mute: bool = False) -> None:
+                   trim: int = 0, mute: bool = False, copy_streams: bool = False) -> None:
     """Перекодировать в MP4 (H.264); trim — оставить первые N секунд, mute — без звука."""
     tmp = dest.with_name(dest.stem + ".converting.mp4")
     audio = ["-an"] if mute else ["-c:a", "aac", "-b:a", "128k"]
     limit = ["-t", str(trim)] if trim > 0 else []
     cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), *limit, "-c:v", "libx264", "-preset", "medium",
            "-crf", "20", "-pix_fmt", "yuv420p", *audio, "-movflags", "+faststart", str(tmp)]
+    if copy_streams:
+        cmd = [str(ffmpeg), "-y", "-v", "error", "-i", str(src), "-c", "copy", "-movflags", "+faststart", str(tmp)]
     # Ошибки FFmpeg — во временный файл: из непрочитанного канала (PIPE) при длинном выводе
     # FFmpeg встал бы, а цикл ниже ждал бы его вечно.
     with tempfile.TemporaryFile() as log_file:
@@ -409,6 +412,7 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
     folder = job.base_dir if job.flat_folder else target_folder(job.base_dir, job.process, job.query_text)
     folder.mkdir(parents=True, exist_ok=True)
     stem = file_stem(job.process, job.result, job.catalog_id, unique=job.flat_folder)
+    migrate_folder(folder, (stem,))
     file = job.file
     if file.page:
         if not job.resolver:
@@ -422,9 +426,9 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
         file = VideoFile(file.quality, url, file.width, file.height, file.mime)
     ext = extension(file)
     prepare = job.trim > 0 or job.mute  # подготовка к показу: обрезать, убрать звук
-    want_mp4 = (job.convert and ext != ".mp4") or prepare
-    final = folder / (stem + (".mp4" if want_mp4 and ffmpeg else ext))
-    license_file = folder / (stem + ".txt")
+    want_mp4 = ext != ".mp4" or prepare
+    final = folder / (stem + ".mp4")
+    license_file = metadata_file(final, ".txt")
     wanted = variant(file, job.trim if ffmpeg else 0, job.mute and bool(ffmpeg))
     if final.exists() and not job.flat_folder:
         saved = saved_variant(license_file)
@@ -436,40 +440,71 @@ def _run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = Non
     else:
         note_replaced = ""
 
-    # Исходник — под отдельным именем, если его будут перекодировать в файл с тем же расширением.
-    raw = folder / (stem + (".download" if want_mp4 and ffmpeg else "") + ext)
+    if ext != ".mp4" and not ffmpeg:
+        raise DownloadError("Для сохранения этого формата в MP4 нужен FFmpeg. Другой формат в папку видео не записан.")
+    raw = working_file(folder / (stem + ext))
     if job.cancel.is_set():
         raise Cancelled()
     if local is not None:
         shutil.copy2(local, raw)
     else:
         fetch(file.url, raw, session, progress, job.cancel, paused=job.paused)
+    if file.size and raw.stat().st_size != file.size:
+        quarantine(raw, folder)
+        raise DownloadError("Размер файла отличается от данных API. Неполный файл отложен; повторите скачивание.")
     note = note_replaced
+    ready = raw
     if want_mp4:
         if ffmpeg:
             if progress:
                 progress(-1, -1)  # сигнал «конвертация»
-            convert_to_mp4(raw, final, ffmpeg, job.cancel, trim=job.trim, mute=job.mute)
+            ready = raw.with_name(stem + ".ready.mp4")
+            convert_to_mp4(raw, ready, ffmpeg, job.cancel, trim=job.trim, mute=job.mute,
+                           copy_streams=not job.convert and not prepare)
             raw.unlink(missing_ok=True)
             job.prepared = prepare
         else:
             note = (note + "; " if note else "") + \
                 "FFmpeg не найден — файл сохранён как есть, без конвертации и подготовки к показу"
-    info = probe(final, ffprobe)
+    info = probe(ready, ffprobe)
+    if ffprobe and info is None:
+        quarantine(ready, folder)
+        raise DownloadError("Файл повреждён или не содержит читаемого видео. Повторите скачивание.")
     try:
-        check_orientation(job, final, ffmpeg, info["duration"] if info else None)
+        check_orientation(job, ready, ffmpeg, info["duration"] if info else None)
     except DownloadError as exc:
-        license_file.write_text(license_text(job, final, now(), info) + f"Отказ: {exc}\n", encoding="utf-8")
+        paths.atomic_write_text(metadata_file(final, ".rejected.txt"),
+                                license_text(job, final, now(), info) + f"Отказ: {exc}\n")
+        quarantine(ready, folder)
         raise
     if not job.result.content_orientation:
         note = (note + "; " if note else "") + orientation.UNVERIFIED_TEXT
-    if ffprobe and info is None:
-        note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"
-    elif ffmpeg and job.check_content:
-        job.loop_hint = loop_hint(final, ffmpeg)
-    license_file.write_text(license_text(job, final, now(), info) + f"{VARIANT_PREFIX}{wanted}\n",
-                            encoding="utf-8")
+    if ffmpeg and job.check_content:
+        job.loop_hint = loop_hint(ready, ffmpeg)
+    publish_file(ready, final, job.cancel)
+    ready.unlink(missing_ok=True)
+    paths.atomic_write_text(license_file, license_text(job, final, now(), info) + f"{VARIANT_PREFIX}{wanted}\n")
     return final, note
+
+
+def publish_file(source: Path, destination: Path, cancel):
+    """Атомарная публикация и при сохранении на другой диск; отмена не оставляет обрывок MP4."""
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=destination.parent, prefix=".copyvf-",
+                                         suffix=".tmp", delete=False) as output:
+            temporary = Path(output.name)
+            with source.open("rb") as stream:
+                while block := stream.read(CHUNK):
+                    if cancel.is_set():
+                        raise Cancelled()
+                    output.write(block)
+        if cancel.is_set():
+            raise Cancelled()
+        temporary.replace(destination)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)
 
 
 def check_orientation(job: DownloadJob, path: Path, ffmpeg: Path | None, duration: float | None = None) -> None:

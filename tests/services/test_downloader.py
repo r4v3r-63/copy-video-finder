@@ -18,6 +18,7 @@ from app.services.downloader import (
     safe_name,
     target_folder,
 )
+from app.storage.download_files import metadata_file
 from tests.fakes import StreamResponse, StreamSession
 
 PROC = Process(id="lam_roll", name="Рулонная ламинация листовой продукции", category="Ламинация",
@@ -107,7 +108,7 @@ def test_run_job_writes_video_and_license(tmp_path):
     assert path == tmp_path / "Ламинация" / "Рулонная ламинация листовой продукции" / "lam_roll_pixabay_125.mp4"
     assert path.read_bytes() == b"videodata"
     assert session.calls[0]["url"] == "https://cdn/x_fhd.mp4"  # только ссылка из API
-    text = path.with_suffix(".txt").read_text(encoding="utf-8")
+    text = metadata_file(path, ".txt").read_text(encoding="utf-8")
     assert "Лицензия: Pixabay Content License" in text
     assert "Условия лицензии: https://lic" in text
     assert "Страница ролика: https://pixabay.com/videos/id-125/" in text
@@ -124,17 +125,18 @@ def test_attribution_in_license_file(tmp_path):
     v.license.note = licenses.SHARE_ALIKE_NOTE
     job = DownloadJob(result=v, file=FILES[2], process=None, query_text="ламинатор", base_dir=tmp_path)
     path, _ = run_job(job, StreamSession(StreamResponse(b"x")))
-    text = path.with_suffix(".txt").read_text(encoding="utf-8")
+    text = metadata_file(path, ".txt").read_text(encoding="utf-8")
     assert ("Атрибуция (показывать в титре): Anna — laminator, office — CC BY-SA 4.0 — "
             "https://pixabay.com/videos/id-125/") in text
     assert licenses.SHARE_ALIKE_NOTE in text
 
 
-def test_webm_without_ffmpeg_kept(tmp_path):
+def test_webm_without_ffmpeg_does_not_pollute_output(tmp_path):
     f = VideoFile("SD", "https://upload/x.webm", 640, 480, "video/webm")
     job = DownloadJob(result=video([f]), file=f, process=PROC, query_text="", base_dir=tmp_path)
-    path, note = run_job(job, StreamSession(StreamResponse(b"webm")), ffmpeg=None)
-    assert path.suffix == ".webm" and "FFmpeg не найден" in note
+    with pytest.raises(DownloadError, match="нужен FFmpeg"):
+        run_job(job, StreamSession(StreamResponse(b"webm")), ffmpeg=None)
+    assert not list(tmp_path.rglob("*.webm"))
 
 
 FFMPEG = shutil.which("ffmpeg")
@@ -153,7 +155,7 @@ def test_webm_converted_to_mp4_and_checked(tmp_path):
                          ffprobe=Path(FFPROBE))
     assert path.suffix == ".mp4" and note == ""
     assert not path.with_suffix(".webm").exists()
-    text = path.with_suffix(".txt").read_text(encoding="utf-8")
+    text = metadata_file(path, ".txt").read_text(encoding="utf-8")
     assert "Проверка файла: 320×240, 2.0 с" in text
 
 
@@ -161,8 +163,9 @@ def test_webm_converted_to_mp4_and_checked(tmp_path):
 def test_broken_file_reported(tmp_path):
     from pathlib import Path
     job = DownloadJob(result=video(FILES), file=FILES[2], process=PROC, query_text="", base_dir=tmp_path)
-    _, note = run_job(job, StreamSession(StreamResponse(b"not a video")), ffprobe=Path(FFPROBE))
-    assert "повреждён" in note
+    with pytest.raises(DownloadError, match="повреждён"):
+        run_job(job, StreamSession(StreamResponse(b"not a video")), ffprobe=Path(FFPROBE))
+    assert not list(tmp_path.rglob("*.mp4"))
 
 
 def test_short_429_waited_long_429_reported(tmp_path, monkeypatch):
@@ -183,7 +186,7 @@ def test_file_name_starts_with_catalog_id(tmp_path):
     job = DownloadJob(result=v, file=FILES[1], process=PROC, query_text="", base_dir=tmp_path, catalog_id=42)
     path, _ = run_job(job, StreamSession(StreamResponse(b"x")))
     assert path.name == "42_lam_roll_pixabay_125.mp4"
-    assert "Номер в каталоге: 42" in path.with_suffix(".txt").read_text(encoding="utf-8")
+    assert "Номер в каталоге: 42" in metadata_file(path, ".txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.skipif(not (FFMPEG and FFPROBE), reason="нет FFmpeg")
@@ -207,7 +210,7 @@ def test_prepared_for_screens_trimmed_and_muted(tmp_path):
     assert "audio" not in streams
     duration = float([line for line in streams.splitlines() if line.strip() and line[0].isdigit()][-1])
     assert 1.5 <= duration <= 2.5
-    text = path.with_suffix(".txt").read_text(encoding="utf-8")
+    text = metadata_file(path, ".txt").read_text(encoding="utf-8")
     assert "Подготовлен к показу: обрезан до 2 с, звук убран." in text
     assert "проверить права на музыку" not in text
 
@@ -227,7 +230,7 @@ def test_other_quality_replaces_file(tmp_path):
                         convert=False)
     path4k, note = run_job(job4k, StreamSession(StreamResponse(b"ultra-hd-data")))
     assert path4k == path and path.read_bytes() == b"ultra-hd-data" and "заменён" in note
-    assert "Вариант файла: 4K 3840×2160" in path.with_suffix(".txt").read_text(encoding="utf-8")
+    assert "Вариант файла: 4K 3840×2160" in metadata_file(path, ".txt").read_text(encoding="utf-8")
 
 
 def test_416_with_other_size_restarts(tmp_path):
@@ -268,7 +271,7 @@ def test_legacy_prepared_file_downloaded_again(tmp_path):
     """Файл до 0.18 обрезан до 2 с, теперь нужно 5 с: параметры старой подготовки не известны — заново."""
     job = DownloadJob(result=video(FILES), file=FILES[1], process=PROC, query_text="", base_dir=tmp_path)
     path, _ = run_job(job, StreamSession(StreamResponse(b"old")))
-    txt = path.with_suffix(".txt")
+    txt = metadata_file(path, ".txt")
     lines = [line for line in txt.read_text(encoding="utf-8").splitlines() if not line.startswith("Вариант файла")]
     txt.write_text("\n".join(lines + ["Подготовлен к показу: обрезан до 2 с."]) + "\n", encoding="utf-8")
     from app.services import downloader

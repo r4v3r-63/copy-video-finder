@@ -39,7 +39,7 @@ class Settings:
     only_without_attribution: bool = False
     download_dir: str = ""  # пусто — «Данные/Видео»
     allow_4k: bool = False  # по умолчанию скачивается максимум Full HD
-    convert_to_mp4: bool = True  # WebM/OGV с Wikimedia конвертируются в MP4
+    convert_to_mp4: bool = True  # другие форматы — в H.264; иначе перенос потоков в MP4 без перекодирования
     trim_seconds: int = 0  # подготовка к показу: обрезать скачанный ролик до N секунд (0 — не обрезать)
     mute_audio: bool = False  # подготовка к показу: убирать звук из скачанного ролика
     check_updates: bool = True  # проверять новую версию на GitHub при запуске

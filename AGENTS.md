@@ -11,7 +11,7 @@
 
 ## Коротко о проекте
 
-- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.26.3; состояние выпуска проверять в GitHub Releases).
+- Портативная программа для Windows (PyQt6), репозиторий `r4v3r-63/copy-video-finder`, ветка `main`, текущая версия кода — `app/__init__.py` (`__version__`, сейчас 0.26.4; состояние выпуска проверять в GitHub Releases).
 - Пользователь один, общается по-русски. Интерфейс, сообщения, комментарии в коде, коммиты — на русском.
 - Пользователю нужны только бесплатные варианты (поисковики, API).
 
@@ -20,7 +20,7 @@
 ```
 python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 636 passed, 1 skipped
+QT_QPA_PLATFORM=offscreen pytest -q                  # на Linux без экрана; сейчас 649 passed, 1 skipped
 ruff check app tests scripts
 python -m app.main                                   # запуск
 ```
@@ -70,3 +70,5 @@ python -m app.main                                   # запуск
 - Скачивание со страниц — `services/site_downloader.py`: отдельный процесс yt-dlp, без обхода DRM/лимитов, без сторонних cookies и плагинов. Реальную загрузку и авторизацию по синтетической cookie проверяет `scripts/check_site_download.py`, в том числе в Windows EXE. Переносимый Deno — `scripts/prepare_deno.ps1` с проверкой SHA-256 официального выпуска.
 
 - Четвёртая вкладка «Загрузка по ссылке» разрешена новым ТЗ 21.10.2026: `core/stock_link.py`, `sources/listings.py`, `services/stock_listing.py` / `stock_download.py`, `workers/stock_link.py`, `ui/tabs/stock_link_tab.py`. Новые скачивания не добавлять в каталог услуг; С 0.26.2 пакетный выбор доступен и для Pixabay по решению пользователя; объём запуска — число либо выбранная страница API. Лимиты API сохраняются. Сквозная проверка — `scripts/check_stock_link.py`, также у EXE.
+
+- С 0.26.4 папки скачанных видео содержат только готовые MP4. `storage/download_files.py` хранит TXT/JSON в `Данные/download-info`, временные/ошибочные файлы — в `Данные/download-jobs` (не включаются в резервную копию). При следующем скачивании распознанные старые служебные файлы переносятся, посторонние не удаляются. Повторная загрузка использует новые метаданные и совместима с 0.26.0–0.26.3. Другой контейнер без перекодирования переносится FFmpeg в настоящий MP4; несовместимый формат вызывает ошибку.

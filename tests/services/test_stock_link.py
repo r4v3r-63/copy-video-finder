@@ -16,6 +16,7 @@ from app.sources.base import RateLimitError
 from app.sources.cache import Cache
 from app.sources.listings import ArchiveListing, PixabayListing, make_listing
 from app.sources.pixabay import PixabaySource, parse_hit
+from app.storage.download_files import metadata_file
 from app.workers.stock_link import StockDownloadWorker
 from tests.fakes import FakeResponse, FakeSession, StreamResponse, StreamSession, fixture_text
 
@@ -150,7 +151,7 @@ def test_download_keeps_original_bytes_metadata_and_does_not_confirm_license(vid
     session = StreamSession(StreamResponse(payload))
     file, _note = run_stock_job(job, session)
     assert file.read_bytes() == payload and "201" in file.name and len(session.calls) == 1
-    metadata = json.loads(file.with_suffix(".json").read_text(encoding="utf-8"))
+    metadata = json.loads(metadata_file(file).read_text(encoding="utf-8"))
     assert not metadata["license_confirmed"] and metadata["source"] == "Pixabay"
     assert metadata["size"] == len(payload) and metadata["original_url"] == videos[0].page_url
     assert videos[0].content_orientation == ""
@@ -210,7 +211,8 @@ def test_api_size_mismatch_is_not_recorded_as_success(videos, tmp_path):
     job.file.size = 100
     with pytest.raises(DownloadError, match="Размер файла"):
         run_stock_job(job, StreamSession(StreamResponse(b"short")))
-    assert list(tmp_path.glob("*.invalid")) and not list(tmp_path.glob("*.json"))
+    assert list((tmp_path / "Данные" / "download-jobs" / "errors").rglob("*.invalid"))
+    assert not list(tmp_path.glob("*.mp4")) and not list(tmp_path.glob("*.json"))
 
 
 def test_unreadable_video_is_quarantined(videos, tmp_path, monkeypatch):
@@ -221,7 +223,8 @@ def test_unreadable_video_is_quarantined(videos, tmp_path, monkeypatch):
     with pytest.raises(DownloadError, match="повреждён"):
         run_stock_job(job_for(videos[0], tmp_path), StreamSession(StreamResponse(b"not video")),
                       ffprobe=tmp_path / "ffprobe")
-    assert list(tmp_path.glob("*.invalid")) and not list(tmp_path.glob("*.json"))
+    assert list((tmp_path / "Данные" / "download-jobs" / "errors").rglob("*.invalid"))
+    assert not list(tmp_path.glob("*.mp4")) and not list(tmp_path.glob("*.json"))
 
 
 def test_api_error_does_not_publish_a_page(cache):
@@ -267,10 +270,10 @@ def test_previous_0260_metadata_is_recognised(videos, tmp_path):
     job = job_for(videos[0], tmp_path)
     file, _note = run_stock_job(job, StreamSession(StreamResponse(b"fixture")))
     old_name = file_stem(None, job.result)
-    metadata = json.loads(file.with_suffix(".json").read_text(encoding="utf-8"))
+    metadata = json.loads(metadata_file(file).read_text(encoding="utf-8"))
     old_file = tmp_path / (old_name + file.suffix)
     file.replace(old_file)
-    file.with_suffix(".json").unlink()
+    metadata_file(file).unlink()
     metadata["filename"] = old_file.name
     (tmp_path / (old_name + ".json")).write_text(json.dumps(metadata), encoding="utf-8")
     assert existing_download(job) == old_file

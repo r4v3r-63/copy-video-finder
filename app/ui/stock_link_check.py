@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QApplication  # noqa: E402
 
 from app.core import processes  # noqa: E402
 from app.sources import pixabay  # noqa: E402
+from app.storage.download_files import metadata_file  # noqa: E402
 from app.storage.settings import Settings  # noqa: E402
 from app.ui.main_window import MainWindow  # noqa: E402
 
@@ -83,9 +84,9 @@ def main(directory: Path) -> int:
                 assert not tab.errors and not window.catalog.entries()
                 outputs = list(Path(tab.folder.text()).glob("*.mp4"))
                 assert len(outputs) == 1 and outputs[0].read_bytes() == media
-                metadata = json.loads(outputs[0].with_suffix(".json").read_text(encoding="utf-8"))
+                metadata = json.loads(metadata_file(outputs[0]).read_text(encoding="utf-8"))
                 assert not metadata["license_confirmed"] and metadata["id"] == "201"
-                assert not list(Path(tab.folder.text()).glob("*.part"))
+                assert all(file.suffix == ".mp4" for file in Path(tab.folder.text()).iterdir())
                 finish(True)
         except (AssertionError, OSError, ValueError, KeyError):
             finish(False)

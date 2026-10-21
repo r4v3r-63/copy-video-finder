@@ -4,10 +4,11 @@ import hashlib
 import json
 from dataclasses import asdict
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from app import paths
 from app.services.downloader import Cancelled, DownloadError, DownloadJob, file_stem, probe, run_job
+from app.storage.download_files import metadata_file, migrate_folder, quarantine
 
 
 def digest(file: Path, cancel) -> str:
@@ -21,13 +22,14 @@ def digest(file: Path, cancel) -> str:
 
 
 def existing_download(job: DownloadJob) -> Path | None:
+    migrate_folder(job.base_dir, (file_stem(None, job.result, unique=True), file_stem(None, job.result)))
     # Старое имя 0.26.0 тоже узнаём: обновление не заставляет качать тот же файл снова.
     for unique in (True, False):
-        metadata = job.base_dir / (file_stem(None, job.result, unique=unique) + ".json")
+        metadata = metadata_file(job.base_dir / (file_stem(None, job.result, unique=unique) + ".mp4"))
         try:
             data = json.loads(metadata.read_text(encoding="utf-8"))
             name = data["filename"]
-            if Path(name).name != name:
+            if Path(name).name != name or PureWindowsPath(name).name != name or Path(name).suffix != ".mp4":
                 continue
             file = job.base_dir / name
             if (data["source"] == job.result.source and data["id"] == job.result.source_id
@@ -45,12 +47,9 @@ def run_stock_job(job, session, progress=None, ffmpeg=None, ffprobe=None):
     # Общий механизм сохраняет .part, обрабатывает Range/If-Range, отмену и Retry-After.
     requested = job.file.height if job.file.site else None
     file, note = run_job(job, session, progress, ffmpeg, ffprobe)
-    if job.file.size and file.stat().st_size != job.file.size:
-        file.replace(file.with_name(file.name + ".invalid"))
-        raise DownloadError("Размер файла отличается от данных API. Неполный файл отложен; повторите скачивание.")
     info = probe(file, ffprobe) if ffprobe else None
     if ffprobe and info is None:
-        file.replace(file.with_name(file.name + ".invalid"))
+        quarantine(file, file.parent)
         raise DownloadError("Файл повреждён или не содержит читаемого видео. Повторите скачивание.")
     actual = min(job.file.width, job.file.height) if job.file.width and job.file.height else job.file.height
     if requested and actual and requested != actual:
@@ -62,5 +61,5 @@ def run_stock_job(job, session, progress=None, ffmpeg=None, ffprobe=None):
             "size": file.stat().st_size, "path": str(file.resolve()), "filename": file.name,
             "sha256": digest(file, job.cancel), "license": asdict(job.result.license) if job.result.license else None,
             "license_confirmed": False}
-    paths.atomic_write_text(file.with_suffix(".json"), json.dumps(data, ensure_ascii=False, indent=2))
+    paths.atomic_write_text(metadata_file(file), json.dumps(data, ensure_ascii=False, indent=2))
     return file, note

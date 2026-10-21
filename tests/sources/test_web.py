@@ -211,18 +211,21 @@ def test_free_limits_stay_free(cache, clock):
     assert [e.name for e in WebSource(cache, now=clock).engines] == ["DuckDuckGo"]  # без ключей
 
 
-def test_downloader_takes_file_from_page(tmp_path):
+def test_downloader_takes_file_from_page(tmp_path, monkeypatch):
     from datetime import datetime
+    from pathlib import Path
 
     from app.services.downloader import DownloadJob, run_job
     from tests.fakes import StreamResponse, StreamSession
     r = parse_video(fixture_text("videezy_video.html"), VIDEO_PATH)
     url = "https://static.videezy.com/system/protected/files/000/048/837/old_printing_machine_14.mov"
     job = DownloadJob(result=r, file=r.files[0], process=None, query_text="", base_dir=tmp_path, convert=False,
-                      resolver=lambda f, s: url)
+                      resolver=lambda f, s: url, check_content=False)
+    monkeypatch.setattr("app.services.downloader.convert_to_mp4", lambda src, dest, *a, **kw:
+                        dest.write_bytes(src.read_bytes()))
     session = StreamSession(StreamResponse(b"movdata"))
-    path, _ = run_job(job, session, now=lambda: datetime(2026, 10, 19))
-    assert path.suffix == ".mov" and path.read_bytes() == b"movdata"
+    path, _ = run_job(job, session, now=lambda: datetime(2026, 10, 19), ffmpeg=Path("ffmpeg"))
+    assert path.suffix == ".mp4" and path.read_bytes() == b"movdata"
     assert session.calls[0]["url"] == url
 
 
