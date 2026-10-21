@@ -64,6 +64,7 @@ def main(directory: Path) -> int:
     worker.start()
     passed = []
     reports = []
+    cookie_counts = []
     closing = False
 
     def finish(ok):
@@ -92,9 +93,11 @@ def main(directory: Path) -> int:
                     print("Встроенный плеер воспроизводит локальное видео: " + video, flush=True)
                 logging.getLogger(__name__).info("Проверка встроенного просмотра: кадры воспроизводятся")
                 timer.stop()
-                panel.request_cookies(f"http://127.0.0.1:{server.server_port}/",
-                    lambda items: finish(any(c["name"] == "fixture_session" and c["value"] == "local-check"
-                                             for c in items)))
+                def checked_cookies(items):
+                    cookie_counts.append(len(items))  # только число, без содержимого сеанса
+                    finish(any(c["name"] == "fixture_session" and c["value"] == "local-check" for c in items))
+
+                panel.request_cookies(f"http://127.0.0.1:{server.server_port}/", checked_cookies)
         except (TypeError, ValueError):
             pass
 
@@ -131,7 +134,7 @@ def main(directory: Path) -> int:
     if not ok:
         diagnostic = {"status": panel.status.text(), "failure": panel.failure,
                       "native": getattr(panel.view, "failure", ""), "video": reports,
-                      "private": getattr(panel.view, "private_mode", None)}
+                      "private": getattr(panel.view, "private_mode", None), "cookie_counts": cookie_counts}
         # Только локальные тестовые данные: никаких URL площадок, паролей и ключей.
         message = json.dumps(diagnostic, ensure_ascii=False)
         logging.getLogger(__name__).error("Проверка встроенного плеера: %s", message)

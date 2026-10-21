@@ -176,9 +176,14 @@ class WindowsSiteView(QWidget):
                         url, token = value
                         if web.CoreWebView2:
                             web.CoreWebView2.CookieManager.GetCookiesAsync(url).ContinueWith(
-                                Action[Task[List[CoreWebView2Cookie]]](lambda task, t=token: cookies_done(task, t)))
+                                Action[Task[List[CoreWebView2Cookie]]](
+                                    lambda task, t=token: self.commands.put(("cookies_done", (task, t)))))
                         else:
                             self.cookiesReady.emit(token, [])
+                    elif command == "cookies_done":
+                        # Свойства COM-cookie читаются только в STA-потоке WebView2.
+                        task, token = value
+                        cookies_done(task, token)
                     elif command == "script" and web.CoreWebView2:
                         web.CoreWebView2.ExecuteScriptAsync(value).ContinueWith(
                             Action[Task[String]](lambda task: self.scriptFinished.emit(str(task.Result))))
