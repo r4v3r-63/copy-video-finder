@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import threading
+import traceback
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -18,6 +19,20 @@ from app.ui.widgets.site_player import SitePlayer  # noqa: E402
 
 
 def main(directory: Path) -> int:
+    if sys.stdout is not None:
+        sys.stdout.reconfigure(encoding="utf-8")
+    if sys.stderr is not None:
+        sys.stderr.reconfigure(encoding="utf-8")
+
+    def unhandled(kind, error, tb):
+        frames = traceback.extract_tb(tb)
+        where = f"{Path(frames[-1].filename).name}:{frames[-1].lineno}" if frames else "без стека"
+        message = f"Проверка встроенного плеера: {kind.__name__}, {where}"
+        if sys.stdout is not None:
+            print("::error::" + message, flush=True)
+        sys.__excepthook__(kind, error, tb)
+
+    sys.excepthook = unhandled
     QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication(["Проверка встроенного просмотра"])
     panel = SitePlayer()
@@ -82,6 +97,9 @@ def main(directory: Path) -> int:
 
     def poll():
         view = panel.view
+        if panel.failure or getattr(view, "failure", ""):
+            finish(False)
+            return
         if view is not None:
             if sys.platform == "win32":
                 view.evaluate(script)
