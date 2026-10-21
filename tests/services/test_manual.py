@@ -72,6 +72,7 @@ def test_missing_file_and_license_can_be_saved_as_page_link(web, store):
         assert not dialog.result.files
         assert dialog.result.license.status == licenses.REVIEW
         dialog.confirmed.setChecked(True)
+        dialog.horizontal.setChecked(True)
         dialog._save()
         entry = store.get(dialog.video_id)
         assert entry.result.page_url == URL and not entry.counts_for_coverage
@@ -86,6 +87,7 @@ def test_nonfree_license_stays_rejected_even_after_confirmation(web, store, kind
     dialog = ready_dialog(web, store)
     try:
         dialog.confirmed.setChecked(True)
+        dialog.horizontal.setChecked(True)
         dialog._save()
         entry = store.get(dialog.video_id)
         assert entry.result.license.status == licenses.REJECTED
@@ -172,6 +174,7 @@ def test_confirmed_free_video_counts_for_selected_group(web, store):
     dialog = ready_dialog(web, store)
     try:
         dialog.confirmed.setChecked(True)
+        dialog.horizontal.setChecked(True)
         dialog._save()
         assert store.get(dialog.video_id).counts_for_coverage
         assert store.coverage() == {"lam_pouch": 1}

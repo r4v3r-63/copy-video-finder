@@ -19,9 +19,10 @@ from urllib.parse import urlparse
 
 import requests
 
-from app.core import licenses
+from app.core import licenses, orientation
 from app.core.models import VideoFile, VideoResult
 from app.core.processes import Process
+from app.services.frames import extract_frames
 from app.sources.base import SourceError
 from app.sources.http import USER_AGENT
 
@@ -116,6 +117,7 @@ def license_text(job: DownloadJob, video_path: Path, downloaded_at: datetime, pr
         f"Услуга: {job.process.name + ' (' + job.process.category + ')' if job.process else job.query_text}",
         f"Площадка: {r.source}, ID ролика: {r.source_id}",
         f"Страница ролика: {r.page_url}",
+        f"Содержимое: {r.content_orientation or orientation.UNVERIFIED_TEXT}",
         f"Автор: {r.author or '—'}" + (f" ({r.author_url})" if r.author_url else ""),
         f"Лицензия: {lic.name if lic else 'не указана'}",
         f"Условия лицензии: {lic.url if lic and lic.url else '—'}",
@@ -371,6 +373,8 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     if final.exists():
         saved = saved_variant(license_file)
         if saved == wanted or (saved is None and _legacy_same(license_file, file, wanted)):
+            info = probe(final, ffprobe)
+            check_orientation(job, final, ffmpeg, info["duration"] if info else None)
             return final, "уже был скачан"
         note_replaced = "заменён: прежний файл был в другом качестве или с другой подготовкой к показу"
     else:
@@ -391,6 +395,13 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
             note = (note + "; " if note else "") + \
                 "FFmpeg не найден — файл сохранён как есть, без конвертации и подготовки к показу"
     info = probe(final, ffprobe)
+    try:
+        check_orientation(job, final, ffmpeg, info["duration"] if info else None)
+    except DownloadError as exc:
+        license_file.write_text(license_text(job, final, now(), info) + f"Отказ: {exc}\n", encoding="utf-8")
+        raise
+    if not job.result.content_orientation:
+        note = (note + "; " if note else "") + orientation.UNVERIFIED_TEXT
     if ffprobe and info is None:
         note = (note + "; " if note else "") + "файл не удалось проверить — возможно, он повреждён"
     elif ffmpeg:
@@ -398,6 +409,25 @@ def run_job(job: DownloadJob, session, progress=None, ffmpeg: Path | None = None
     license_file.write_text(license_text(job, final, now(), info) + f"{VARIANT_PREFIX}{wanted}\n",
                             encoding="utf-8")
     return final, note
+
+
+def check_orientation(job: DownloadJob, path: Path, ffmpeg: Path | None, duration: float | None = None) -> None:
+    """Проверяем реальный локальный файл, в том числе повторно используемый."""
+    if job.cancel.is_set():
+        raise Cancelled()
+    if ffmpeg:
+        duration = duration or job.result.duration
+        if job.prepared and job.trim:
+            duration = min(duration, job.trim) if duration else job.trim
+        state = orientation.frames_orientation(extract_frames(
+            str(path), duration, ffmpeg, job.cancel))
+        if job.cancel.is_set():
+            raise Cancelled()
+        if state:
+            job.result.content_orientation = state
+        if state == orientation.PORTRAIT:
+            raise DownloadError("Содержимое ролика не горизонтальное (возможно, вертикальное видео с полями). "
+                                "Ролик отклонён; полученный файл оставлен для проверки.")
 
 
 VARIANT_PREFIX = "Вариант файла: "

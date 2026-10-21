@@ -35,9 +35,7 @@ class Cancelled(Exception):
 
 def suitable(e: cat.Entry) -> bool:
     """В шоурил идёт скачанный, не отклонённый ролик со свободной лицензией, подтверждённой пользователем."""
-    lic = e.result.license
-    return (e.status != cat.REJECTED and e.license_confirmed and lic is not None
-            and lic.status in licenses.SUITABLE and e.has_file)
+    return e.counts_for_coverage and e.has_file
 
 
 def showreel_entries(store: cat.Catalog, process_ids: list[str]) -> list[cat.Entry]:

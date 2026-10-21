@@ -152,7 +152,7 @@ def test_update_rejects_asset_path_before_writing(data_dir):
 
 def test_changed_license_needs_new_confirmation_and_keeps_other_marks(tmp_path):
     store = cat.Catalog(tmp_path / "catalog.sqlite")
-    original = video()
+    original = replace(video(), content_orientation="горизонтальное")
     vid = store.select(original, "lam_pouch", cat.EXACT)
     store.set_comment(vid, "на экран")
     changed = replace(original, license=replace(original.license, url="https://example.org/new-terms"))
@@ -169,7 +169,7 @@ def test_changed_license_needs_new_confirmation_and_keeps_other_marks(tmp_path):
 
 def test_link_check_refreshes_license_without_confirming_it(tmp_path):
     store = cat.Catalog(tmp_path / "catalog.sqlite")
-    original = video()
+    original = replace(video(), content_orientation="горизонтальное")
     vid = store.select(original, "lam_pouch")
 
     class Source:

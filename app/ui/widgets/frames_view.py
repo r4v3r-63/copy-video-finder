@@ -2,12 +2,12 @@
 
 from pathlib import Path
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 from app import paths
-from app.core import design
+from app.core import design, orientation
 from app.ui import theme
 from app.workers.frames import FramesWorker
 
@@ -29,6 +29,8 @@ class FramePreview(QLabel):
 
 
 class FramesStrip(QWidget):
+    orientation_checked = pyqtSignal(object, str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.key = None
@@ -78,6 +80,7 @@ class FramesStrip(QWidget):
         if key != self.key:
             return  # кадры ролика, который уже не выбран
         self._clear()
+        self.orientation_checked.emit(key, orientation.frames_orientation(frames))
         self.button.setEnabled(bool(self.source))
         if not frames:
             self.status.setText("Кадры взять не удалось — откройте ролик целиком.")

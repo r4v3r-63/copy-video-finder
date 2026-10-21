@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from app.core import design
+from app.core import design, orientation
 from app.services.manual import normalize_url
 from app.sources.web import WebSource
 from app.storage import catalog as cat
@@ -76,8 +76,11 @@ class AddLinkDialog(QDialog):
         self.process.setCurrentIndex(max(0, self.process.findData(process_id)))
         self.match = theme.compact_combo(QComboBox())
         self.match.addItems(cat.MATCHES)
+        self.horizontal = QCheckBox(orientation.CONFIRM_TEXT)
+        self.horizontal.setToolTip("Проверьте весь ролик: само изображение должно быть горизонтальным. "
+                                   "Вертикальное видео с чёрными полями не подходит.")
         self.confirmed = QCheckBox("Лицензию проверил(а) на странице ролика")
-        self.confirmed.setToolTip("В покрытие входят только ролики со свободной подтверждённой лицензией.")
+        self.confirmed.setToolTip("Для покрытия нужны проверенная свободная лицензия и горизонтальное содержимое.")
         self.open_page = QPushButton("Открыть страницу ролика")
         self.open_page.clicked.connect(
             lambda: self.result and QDesktopServices.openUrl(QUrl(self.result.page_url)))
@@ -95,6 +98,7 @@ class AddLinkDialog(QDialog):
         form.addRow("Группа услуг:", self.process)
         form.addRow("Соответствие:", self.match)
         form.addRow("", self.confirmed)
+        form.addRow("", self.horizontal)
         layout = QVBoxLayout(self)
         layout.addLayout(row)
         layout.addWidget(self.info)
@@ -107,8 +111,9 @@ class AddLinkDialog(QDialog):
         self.result = self.existing = None
         self.title.clear()
         self.confirmed.setChecked(False)
+        self.horizontal.setChecked(False)
         self.info.setText("Вставьте ссылку на страницу ролика, затем получите сведения.")
-        for widget in (self.title, self.process, self.match, self.confirmed, self.open_page):
+        for widget in (self.title, self.process, self.match, self.confirmed, self.horizontal, self.open_page):
             widget.setEnabled(False)
         self.save.setText("Добавить в каталог")
         self.save.setEnabled(False)
@@ -151,7 +156,7 @@ class AddLinkDialog(QDialog):
                               + ("Файл для скачивания доступен." if self.result.files else
                                  "Ссылки на файл нет — ролик можно смотреть на сайте."))
             self.title.setText(self.result.title)
-            for widget in (self.title, self.process, self.match, self.confirmed):
+            for widget in (self.title, self.process, self.match, self.confirmed, self.horizontal):
                 widget.setEnabled(True)
         self.open_page.setEnabled(True)
         self._update_save()
@@ -167,7 +172,9 @@ class AddLinkDialog(QDialog):
         if existing:
             self.video_id = existing.id
         else:
-            self.video_id = self.store.select(replace(self.result, title=self.title.text().strip()),
+            self.video_id = self.store.select(replace(self.result, title=self.title.text().strip(),
+                                                     content_orientation=orientation.LANDSCAPE
+                                                     if self.horizontal.isChecked() else orientation.UNKNOWN),
                                               self.process.currentData(), self.match.currentText(),
                                               license_confirmed=self.confirmed.isChecked())
         self.accept()

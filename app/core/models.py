@@ -53,6 +53,8 @@ class VideoResult:
     # кнопке, чтобы посмотреть и договориться с автором; скачивать и засчитывать в покрытие нельзя.
     view_only: bool = False
 
+    content_orientation: str = ""  # проверка кадров или явное подтверждение пользователя
+
     @property
     def key(self) -> tuple[str, str]:
         return (self.source, self.source_id)

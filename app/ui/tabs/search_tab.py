@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app.core import design, licenses, processes, query
+from app.core import design, licenses, orientation, processes, query
 from app.core.models import VideoResult
 from app.sources.base import Source
 from app.sources.http import USER_AGENT
@@ -56,6 +56,7 @@ def load_image(data: bytes) -> QImage:
 
 
 class SearchTab(QWidget):
+    catalog_changed = pyqtSignal()
     message = pyqtSignal(str)  # текст для строки состояния окна
 
     def __init__(self, ctx: AppContext, downloads: DownloadController, parent=None):
@@ -70,6 +71,7 @@ class SearchTab(QWidget):
         self.sources_seen: dict[str, str] = {}
         self._thumb_items: dict[str, list[QListWidgetItem]] = {}
         self._thumb_images: dict[str, QPixmap | None] = {}
+        self._thumb_orientation: dict[str, str] = {}
         self.network = QNetworkAccessManager(self)
         self.network.finished.connect(self._on_thumbnail)
         downloads.state_changed.connect(self._on_download_state)
@@ -140,6 +142,7 @@ class SearchTab(QWidget):
         self.player.allow_4k = ctx.settings.allow_4k
         self.player.download_requested.connect(self.download)
         self.player.open_folder_requested.connect(self._open_folder)
+        self.player.frames.orientation_checked.connect(self._on_orientation_checked)
         self.player.select_requested.connect(self.add_to_catalog)
         self.player.reject_requested.connect(self.reject_result)
 
@@ -248,6 +251,7 @@ class SearchTab(QWidget):
 
         self._thumb_items = {}
         self._thumb_images = {}
+        self._thumb_orientation = {}
         hidden = {key for key, status in self.ctx.catalog.statuses().items() if status == cat.REJECTED}
         self.worker = SearchWorker(plan, self.sources, self.ctx.filters(),
                                    self.ctx.settings.only_without_attribution, self, printing=self.ctx.printing,
@@ -365,7 +369,8 @@ class SearchTab(QWidget):
             result = item.data(Qt.ItemDataRole.UserRole)
             item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(result, statuses.get(result.key),
                                                                bool(item.data(Qt.ItemDataRole.UserRole + 3))))
-            item.setHidden(not self.result_filters.allows(result, statuses))
+            item.setHidden(result.content_orientation == orientation.PORTRAIT
+                           or not self.result_filters.allows(result, statuses))
         for item in items:
             if item.data(Qt.ItemDataRole.UserRole) is None:
                 item.setHidden(any(not card.isHidden() for card in ordered))
@@ -391,6 +396,11 @@ class SearchTab(QWidget):
         if pixmap is None:
             item.setData(Qt.ItemDataRole.UserRole + 4, "Картинка недоступна")
             return
+        result = item.data(Qt.ItemDataRole.UserRole)
+        if self._thumb_orientation.get(result.preview_url) == orientation.PORTRAIT:
+            result.content_orientation = orientation.PORTRAIT
+            if self.player.result and self.player.result.key == result.key:
+                self.player._checked_orientation(result.key, orientation.PORTRAIT)
         icon = QIcon(pixmap)
         icon.addPixmap(pixmap, QIcon.Mode.Selected)
         item.setIcon(icon)
@@ -402,7 +412,9 @@ class SearchTab(QWidget):
         if token is not None and str(token) in self._thumb_items:
             pixmap = None
             if reply.error() == QNetworkReply.NetworkError.NoError:
-                image = load_image(bytes(reply.readAll()))
+                data = bytes(reply.readAll())
+                self._thumb_orientation[str(token)] = orientation.image_orientation(data)
+                image = load_image(data)
                 if not image.isNull():
                     pixmap = QPixmap.fromImage(image).scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
                                                            Qt.TransformationMode.SmoothTransformation)
@@ -410,17 +422,19 @@ class SearchTab(QWidget):
             for item in self._thumb_items[str(token)]:
                 if self.results.row(item) >= 0:
                     self._set_thumbnail(item, pixmap)
+        self.filter_results()
         reply.deleteLater()
 
     def _on_current(self, item: QListWidgetItem | None, _previous):
         result = item.data(Qt.ItemDataRole.UserRole) if item else None
+        entry = self.ctx.catalog.find(result.key) if result else None
+        if result and entry and not result.content_orientation:
+            result.content_orientation = entry.result.content_orientation
         self.player.show_result(result)
         if result and not item.icon().isNull():
             self.player.set_poster(item.icon().pixmap(THUMB))
-        if result:
-            entry = self.ctx.catalog.find(result.key)
-            if entry:
-                self.player.set_catalog_state(entry.status, entry.id)
+        if entry:
+            self.player.set_catalog_state(entry.status, entry.id)
         if result and result.key in self.downloads.state:
             self.player.set_download_state(*self.downloads.state[result.key])
 
@@ -433,8 +447,19 @@ class SearchTab(QWidget):
         if self.player.result and self.player.result.key == key:
             self.player.set_catalog_state(status, video_id)
 
+    def _on_orientation_checked(self, key, state: str):
+        if self.player.result and self.player.result.key == key and state:
+            entry = self.ctx.catalog.find(key)
+            if entry:
+                self.ctx.catalog.set_orientation(entry.id, state)
+                self.catalog_changed.emit()
+            self.filter_results()
+
     def add_to_catalog(self, result: VideoResult):
         """«В каталог — лицензию проверил»: ролик привязывается к услуге поиска."""
+        if result.content_orientation != orientation.LANDSCAPE:
+            self.message.emit("Проверьте, что содержимое ролика горизонтальное, без вертикального кадра с полями.")
+            return
         process = self.plan.process if self.plan else None
         match = result.match_hint or cat.EXACT  # найден по похожим операциям — «смежный процесс»
         video_id = self.ctx.catalog.select(result, process.id if process else None, match)

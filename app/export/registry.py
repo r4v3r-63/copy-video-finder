@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app import paths
-from app.core import licenses
+from app.core import licenses, orientation
 from app.core.models import LicenseInfo, VideoFile, VideoResult
 from app.storage import catalog as cat
 
@@ -30,6 +30,7 @@ COLUMNS = [
     ("duration", "Длительность, с"),
     ("width", "Ширина"),
     ("height", "Высота"),
+    ("content_orientation", "Ориентация содержимого"),
     ("has_audio", "Звук"),
     ("license", "Лицензия"),
     ("license_status", "Статус лицензии"),
@@ -70,7 +71,8 @@ def rows(store: cat.Catalog, processes) -> list[dict]:
         base = {
             "id": e.id, "source": r.source, "source_id": r.source_id, "title": r.title,
             "description": r.description, "duration": "" if r.duration is None else round(r.duration, 1),
-            "width": r.width or "", "height": r.height or "", "has_audio": _yes_no(r.has_audio),
+            "width": r.width or "", "height": r.height or "",
+            "content_orientation": r.content_orientation, "has_audio": _yes_no(r.has_audio),
             "license": lic.name, "license_status": lic.status, "license_confirmed": _yes_no(e.license_confirmed),
             "license_url": lic.url or "", "license_note": lic.note, "author": r.author,
             "author_url": r.author_url or "",
@@ -189,6 +191,9 @@ def import_csv(path: Path, store: cat.Catalog, processes) -> tuple[int, int]:
             # Столбец есть — значение из файла, даже «нет» и пустое; столбца нет — в каталоге как было.
             if "license_confirmed" in columns:
                 store.confirm_license(video_id, row.get("license_confirmed") == YES)
+            if "content_orientation" in columns:
+                state = row.get("content_orientation", "")
+                store.set_orientation(video_id, state if state in (orientation.LANDSCAPE, orientation.PORTRAIT) else "")
             if "comment" in columns:
                 store.set_comment(video_id, row.get("comment", ""))
             if "downloaded_path" in columns:

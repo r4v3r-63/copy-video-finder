@@ -11,7 +11,8 @@ from app.storage import catalog as cat
 
 
 def video(i, title):
-    return VideoResult(source="Pixabay", source_id=str(i), title=title, description="", preview_url=f"https://p/{i}.jpg",
+    return VideoResult(content_orientation="горизонтальное",
+                       source="Pixabay", source_id=str(i), title=title, description="", preview_url=f"https://p/{i}.jpg",
                        duration=10, width=1920, height=1080, has_audio=None, page_url=f"https://pixabay.com/v/{i}",
                        license=LicenseInfo("Pixabay Content License", status="Разрешено"))
 

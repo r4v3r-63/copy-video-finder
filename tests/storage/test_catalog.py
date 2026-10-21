@@ -10,7 +10,8 @@ from tests.fakes import Clock, fixture_text
 
 
 def video(sid="1", source="Pixabay", status=licenses.ALLOWED, title="laminator, office"):
-    return VideoResult(source=source, source_id=sid, title=title, description="desc", preview_url="https://p/1.jpg",
+    return VideoResult(content_orientation="горизонтальное",
+                       source=source, source_id=sid, title=title, description="desc", preview_url="https://p/1.jpg",
                        duration=12.5, width=1920, height=1080, has_audio=False, page_url=f"https://page/{sid}",
                        files=[VideoFile("Full HD", f"https://cdn/{sid}.mp4", 1920, 1080, "video/mp4")],
                        author="Anna", author_url="https://a", license=LicenseInfo("Pixabay Content License", "https://lic",

@@ -33,7 +33,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app.core import design, licenses, similar
+from app.core import design, licenses, orientation, similar
 from app.core.processes import Category, Process
 from app.services.search import preview_file
 from app.storage import catalog as cat
@@ -83,6 +83,10 @@ class VideoCard(QWidget):
         self.status.activated.connect(self._save_status)
         self.confirmed = QCheckBox("Лицензию проверил(а)")
         self.confirmed.toggled.connect(self._save_confirmed)
+        self.horizontal = QCheckBox(orientation.CONFIRM_TEXT)
+        self.horizontal.setToolTip("Проверьте весь ролик: само изображение должно быть горизонтальным. "
+                                   "Вертикальное видео с чёрными полями не подходит.")
+        self.horizontal.toggled.connect(self._save_orientation)
         self.loop = theme.compact_combo(QComboBox())
         for name, value in LOOP_CHOICES:
             self.loop.addItem(name, value)
@@ -139,6 +143,7 @@ class VideoCard(QWidget):
         form.addRow("Название:", self.title)
         form.addRow("Отметка:", self.status)
         form.addRow("", self.confirmed)
+        form.addRow("", self.horizontal)
         form.addRow("Для зацикливания:", self.loop)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(theme.SPACE_L, theme.SPACE_L, theme.SPACE_L, theme.SPACE_L)
@@ -152,6 +157,7 @@ class VideoCard(QWidget):
         layout.addWidget(self.comment)
         layout.addWidget(self.save_comment)
         self.frames = FramesStrip()
+        self.frames.orientation_checked.connect(self._checked_orientation)
         layout.addWidget(self.frames)
         layout.addLayout(buttons)
         layout.addStretch()
@@ -170,8 +176,8 @@ class VideoCard(QWidget):
         self.license_badge.setVisible(entry is not None)
         if entry:
             self.license_badge.set_license(entry.result.license)
-        for w in (self.title, self.status, self.confirmed, self.loop, self.comment, self.links, self.add_process,
-                  self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
+        for w in (self.title, self.status, self.confirmed, self.horizontal, self.loop, self.comment, self.links,
+                  self.add_process, self.add_match, self.link_button, self.save_comment, self.open_page, self.delete):
             w.setEnabled(entry is not None)
         self.open_file.setEnabled(bool(entry and entry.downloaded_path))
         self.frames.set_video(entry.id if entry else None, self._frames_source(entry),
@@ -182,6 +188,10 @@ class VideoCard(QWidget):
             self.comment.clear()
             self.links.setRowCount(0)
             return
+        self.horizontal.blockSignals(True)
+        self.horizontal.setChecked(entry.result.content_orientation == orientation.LANDSCAPE)
+        self.horizontal.setEnabled(entry.result.content_orientation != orientation.PORTRAIT)
+        self.horizontal.blockSignals(False)
         r, lic = entry.result, entry.result.license
         facts = video_facts(r)[:-1]  # площадка уже в начале строки
         lines = [f"<b>№ {entry.id}</b> · {escape(r.source)} · ID {escape(r.source_id)}"
@@ -210,7 +220,7 @@ class VideoCard(QWidget):
             lines.append("Похож на ролики № " + ", ".join(map(str, similar_ids)) + " — возможный дубль.")
         if not entry.counts_for_coverage:
             lines.append("<i>В покрытие не засчитывается: нужна подходящая подтверждённая лицензия, "
-                         "отметка не «отклонено» и ролик на площадке или скачанный.</i>")
+                         "горизонтальное содержимое, отметка не «отклонено» и ролик на площадке или скачанный.</i>")
         self.header.setText("<br>".join(lines))
         self.title.setText(r.title)
         self.status.setCurrentIndex(max(self.status.findData(entry.status), 0))
@@ -270,6 +280,16 @@ class VideoCard(QWidget):
     def _save_confirmed(self, checked: bool):
         if self.entry:
             self.catalog.confirm_license(self.entry.id, checked)
+            self._reload()
+
+    def _save_orientation(self, checked: bool):
+        if self.entry:
+            self.catalog.set_orientation(self.entry.id, orientation.LANDSCAPE if checked else orientation.UNKNOWN)
+            self._reload()
+
+    def _checked_orientation(self, key, state: str):
+        if self.entry and key == self.entry.id and state:
+            self.catalog.set_orientation(key, state)
             self._reload()
 
     def _save_loop(self):

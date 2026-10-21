@@ -7,6 +7,8 @@
 import os
 from pathlib import Path
 
+from app.core import orientation
+
 
 def write_m3u(path: Path, entries) -> int:
     """Записать плейлист из роликов, файлы которых есть на диске. Возвращает число роликов."""
@@ -14,6 +16,8 @@ def write_m3u(path: Path, entries) -> int:
     lines = ["#EXTM3U"]
     count = 0
     for e in entries:
+        if e.result.content_orientation != orientation.LANDSCAPE:
+            continue
         file = Path(e.downloaded_path) if e.downloaded_path else None
         if not file or not file.exists():
             continue

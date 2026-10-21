@@ -9,7 +9,7 @@ import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from app.core import licenses
+from app.core import licenses, orientation
 from app.core.models import SearchFilters, VideoFile, VideoResult
 from app.core.query import SearchPlan
 from app.core.topic import AMBIGUOUS, NOT_PRINT, domain_words, in_print_domain, phrase_stems, topic_stems
@@ -34,6 +34,8 @@ def rejection_reason(result: VideoResult, filters: SearchFilters, only_without_a
     """Почему ролик не показывается; None — ролик подходит."""
     if result.duration is not None and not (filters.min_duration <= result.duration <= filters.max_duration):
         return DURATION
+    if filters.orientation == "landscape" and result.content_orientation == orientation.PORTRAIT:
+        return SIZE
     if result.width and result.height:
         if filters.orientation == "landscape" and result.width <= result.height:
             return SIZE

@@ -29,6 +29,7 @@ def _items(store: cat.Catalog, processes) -> list[dict]:
             "size": f"{r.width}×{r.height}" if r.width and r.height else "", "preview": r.preview_url or "",
             "page": r.page_url, "author": r.author, "authorUrl": r.author_url or "",
             "license": lic.name, "licenseUrl": lic.url or "", "licenseStatus": lic.status,
+            "orientation": r.content_orientation or "Не подтверждена",
             "licenseConfirmed": e.license_confirmed, "note": lic.note,
             "attribution": licenses.attribution_text(r.author, r.title, lic.name, r.page_url)
             if lic.status == licenses.ATTRIBUTION else "",
@@ -159,6 +160,7 @@ function card(i) {
     <div class="body">
       <div class="title">№ ${i.id} · ${esc(i.title)}</div>
       <div class="muted">${esc(i.source)} · ${dur(i.duration)}${i.size ? " · " + esc(i.size) : ""}${i.author ? " · " + (i.authorUrl ? `<a href="${esc(i.authorUrl)}" target="_blank">${esc(i.author)}</a>` : esc(i.author)) : ""}</div>
+      <div>Содержимое: ${esc(i.orientation)}</div>
       <div>Лицензия: ${lic} — <span class="${i.licenseConfirmed ? "ok" : "warn"}">${esc(i.licenseStatus)}${i.licenseConfirmed ? "" : " (не проверена)"}</span></div>
       ${i.attribution ? `<div class="muted">Атрибуция: ${esc(i.attribution)}</div>` : ""}
       ${i.note ? `<div class="muted">${esc(i.note)}</div>` : ""}

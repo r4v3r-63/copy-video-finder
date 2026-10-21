@@ -36,7 +36,8 @@ def other_scene(d, sx, sy):
 
 
 def video(sid, source="Pixabay", preview=None):
-    return VideoResult(source=source, source_id=sid, title=f"Ролик {sid}", description="", preview_url=preview,
+    return VideoResult(content_orientation="горизонтальное",
+                       source=source, source_id=sid, title=f"Ролик {sid}", description="", preview_url=preview,
                        duration=12.6, width=1920, height=1080, has_audio=None, page_url="",
                        files=[VideoFile("HD", "u")],
                        license=LicenseInfo("Pixabay Content License", status=licenses.ALLOWED))

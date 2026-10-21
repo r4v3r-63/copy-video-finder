@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
         self.catalog_view.check_links_requested.connect(self.maintenance.check_selected_links)
         for part in (self.search, self.downloads, self.exports, self.maintenance):
             part.message.connect(self.statusBar().showMessage)
-        for part in (self.downloads, self.exports, self.maintenance):
+        for part in (self.search, self.downloads, self.exports, self.maintenance):
             part.catalog_changed.connect(self.refresh_catalog)
         self.maintenance.open_entry.connect(self._open_entry)
 

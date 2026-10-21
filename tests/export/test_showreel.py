@@ -15,7 +15,8 @@ FFPROBE = shutil.which("ffprobe")
 
 
 def video(i, status="Разрешено", name="Pixabay Content License", duration=10.0):
-    return VideoResult(source="Pixabay", source_id=str(i), title=f"Ролик {i}", description="", preview_url="",
+    return VideoResult(content_orientation="горизонтальное",
+                       source="Pixabay", source_id=str(i), title=f"Ролик {i}", description="", preview_url="",
                        duration=duration, width=1920, height=1080, has_audio=None, page_url=f"https://pixabay.com/v/{i}",
                        author=f"Автор {i}", license=LicenseInfo(name, status=status))
 

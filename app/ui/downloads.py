@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
+from app.core import orientation
 from app.core.models import VideoResult
 from app.services.downloader import DownloadJob, choose_file
 from app.storage import catalog as cat
@@ -38,7 +39,7 @@ class DownloadController(QObject):
         for entry in entries:
             result = entry.result
             file = choose_file(result, self.ctx.settings.allow_4k)
-            if not file or self.is_queued(result.key):
+            if not file or self.is_queued(result.key) or result.content_orientation == orientation.PORTRAIT:
                 skipped += 1
                 continue
             pid = selected_process if selected_process in entry.links else next(iter(entry.links), None)
@@ -47,6 +48,9 @@ class DownloadController(QObject):
         self.message.emit(f"В очереди на скачивание: {queued}. Без файла или уже в очереди: {skipped}.")
 
     def download(self, result: VideoResult, file, process, query_text, preserve_status=False):
+        if result.content_orientation == orientation.PORTRAIT:
+            self.message.emit("Ролик не подходит: содержимое не горизонтальное.")
+            return
         if self.is_queued(result.key):
             return
         catalog = self.ctx.catalog
@@ -96,6 +100,7 @@ class DownloadController(QObject):
         text = f"Скачано: {path}" + (f" ({note})" if note else "") + ". Рядом — файл с лицензией."
         job = self.queue.jobs[job_id]
         if job.catalog_id:
+            self.ctx.catalog.set_orientation(job.catalog_id, job.result.content_orientation)
             self.ctx.catalog.set_downloaded(job.catalog_id, path)
             if job.loop_hint is not None:
                 self.ctx.catalog.set_loop_hint(job.catalog_id, job.loop_hint)
@@ -104,4 +109,9 @@ class DownloadController(QObject):
         self.catalog_changed.emit()
 
     def _on_failed(self, job_id: int, message: str):
+        job = self.queue.jobs[job_id]
+        if job.catalog_id and job.result.content_orientation == orientation.PORTRAIT:
+            self.ctx.catalog.set_orientation(job.catalog_id, orientation.PORTRAIT)
+            self.ctx.catalog.set_status(job.catalog_id, cat.REJECTED)
+            self.catalog_changed.emit()
         self._set_state(self._job_key(job_id), f"Не скачано: {message}", "", False)

@@ -7,6 +7,7 @@ from PyQt6.QtGui import QColor, QDesktopServices, QPainter, QPainterPath, QPixma
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -21,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app.core import design, licenses
+from app.core import design, licenses, orientation
 from app.core.models import VideoResult
 from app.services.downloader import choose_file
 from app.services.search import preview_file
@@ -33,7 +34,8 @@ from app.ui.widgets.frames_view import FramesStrip
 def video_facts(r: VideoResult) -> list[str]:
     """Длительность, размер и площадка — только то, что известно (Videezy их не сообщает)."""
     parts = [format_duration(r.duration) if r.duration else "", f"{r.width}×{r.height}" if r.width and r.height else ""]
-    return [p for p in parts if p] + [r.source]
+    return [p for p in parts if p] + ["Содержимое: " + r.content_orientation
+                                          if r.content_orientation else orientation.UNVERIFIED_TEXT, r.source]
 
 
 def format_duration(seconds: float | None) -> str:
@@ -162,6 +164,10 @@ class PlayerPanel(QWidget):
                                       "и условия лицензии.")
         theme.set_role(self.select_button, theme.SECONDARY)
         theme.set_icon(self.select_button, "folder")
+        self.horizontal = QCheckBox(orientation.CONFIRM_TEXT)
+        self.horizontal.setToolTip("Проверьте весь ролик: само изображение должно быть горизонтальным. "
+                                   "Вертикальное видео с чёрными полями не подходит.")
+        self.horizontal.toggled.connect(self._confirm_orientation)
         self.select_button.clicked.connect(lambda: self.result and self.select_requested.emit(self.result))
         self.reject_button = QPushButton("Не подходит")
         self.reject_button.setToolTip("Больше не показывать этот ролик в поиске")
@@ -226,6 +232,7 @@ class PlayerPanel(QWidget):
         lower.addWidget(self.license_hint)
         lower.addWidget(self.play_error)
         lower.addLayout(download_row)
+        lower.addWidget(self.horizontal)
         lower.addLayout(catalog_row)
         lower.addWidget(self.catalog_status)
         lower.addWidget(self.download_status)
@@ -234,6 +241,7 @@ class PlayerPanel(QWidget):
         lower.addWidget(self.details_button)
         lower.addWidget(self.info)
         self.frames = FramesStrip()
+        self.frames.orientation_checked.connect(self._checked_orientation)
         lower.addWidget(self.frames)
         lower.addStretch()
         scroll = QScrollArea()
@@ -248,6 +256,10 @@ class PlayerPanel(QWidget):
 
     def show_result(self, result: VideoResult | None):
         self.result = result
+        self.horizontal.blockSignals(True)
+        self.horizontal.setChecked(bool(result and result.content_orientation == orientation.LANDSCAPE))
+        self.horizontal.blockSignals(False)
+        self.horizontal.setEnabled(bool(result and result.content_orientation != orientation.PORTRAIT))
         self.player.stop()
         self.player.setSource(QUrl())
         self.media.setCurrentWidget(self.poster)
@@ -293,6 +305,22 @@ class PlayerPanel(QWidget):
             self.player.setSource(QUrl(file.url))
             self.player.play()
             theme.set_icon(self.play_button, "pause")
+
+    def _confirm_orientation(self, checked: bool):
+        if self.result and self.result.content_orientation != orientation.PORTRAIT:
+            self.result.content_orientation = orientation.LANDSCAPE if checked else orientation.UNKNOWN
+            self.facts.setText(" · ".join(video_facts(self.result)))
+            self.select_button.setEnabled(checked and not self.result.view_only)
+
+    def _checked_orientation(self, key, state: str):
+        if self.result and key == self.result.key and state:
+            self.result.content_orientation = state
+            self.facts.setText(" · ".join(video_facts(self.result)))
+            self.horizontal.setEnabled(state != orientation.PORTRAIT)
+            self.horizontal.setChecked(state == orientation.LANDSCAPE)
+            self.select_button.setEnabled(state == orientation.LANDSCAPE and not self.result.view_only)
+            self.play_error.setText("Содержимое: " + state)
+            self.play_error.show()
 
     def _set_playback_mode(self, inline: bool):
         self._inline_available = inline
@@ -378,7 +406,8 @@ class PlayerPanel(QWidget):
     def set_catalog_state(self, status: str, catalog_id: int | None = None):
         """Отметка ролика в каталоге: «выбрано», «отклонено» или пусто."""
         has = self.result is not None
-        self.select_button.setEnabled(has and status != SELECTED and not self.result.view_only)
+        self.select_button.setEnabled(has and status != SELECTED and not self.result.view_only
+                                      and self.result.content_orientation == orientation.LANDSCAPE)
         self.reject_button.setEnabled(has and status != REJECTED)
         if status == SELECTED:
             self.catalog_status.setText(f"В каталоге, № {catalog_id}." if catalog_id else "В каталоге.")

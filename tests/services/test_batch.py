@@ -11,7 +11,8 @@ from app.workers.batch import BatchWorker
 
 
 def video(sid, tags):
-    return VideoResult(source="Fake", source_id=sid, title=tags, description=tags, preview_url=None, duration=10,
+    return VideoResult(content_orientation="горизонтальное",
+                       source="Fake", source_id=sid, title=tags, description=tags, preview_url=None, duration=10,
                        width=1920, height=1080, has_audio=None, page_url="",
                        license=LicenseInfo("x", status=licenses.ALLOWED))
 

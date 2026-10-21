@@ -149,3 +149,57 @@ def test_direct_preview_still_plays_and_error_offers_site(monkeypatch):
         panel.player.stop()
         panel.frames.stop()
         panel.close()
+
+
+def test_catalog_selection_requires_content_confirmation(monkeypatch):
+    from app.core import orientation
+
+    panel = PlayerPanel()
+    monkeypatch.setattr(panel.player, "setSource", lambda url: None)
+    monkeypatch.setattr(panel.player, "play", lambda: None)
+    try:
+        result = video(preview_url=None)
+        panel.show_result(result)
+        assert not panel.select_button.isEnabled()
+        assert not panel.horizontal.isChecked()
+        panel.horizontal.setChecked(True)
+        assert panel.select_button.isEnabled()
+        assert result.content_orientation == orientation.LANDSCAPE
+        panel.horizontal.setChecked(False)
+        assert not panel.select_button.isEnabled() and not result.content_orientation
+        panel._checked_orientation(result.key, orientation.PORTRAIT)
+        assert not panel.select_button.isEnabled() and not panel.horizontal.isEnabled()
+        panel.show_result(video(2, preview_url=None))
+        panel._checked_orientation(result.key, orientation.LANDSCAPE)
+        assert not panel.horizontal.isChecked()  # поздние кадры прежнего ролика
+    finally:
+        panel.frames.stop()
+        panel.player.stop()
+        panel.close()
+
+
+def test_padded_portrait_thumbnail_is_hidden(window):
+    from app.core import orientation
+    from tests.fakes import FIXTURES
+
+    class PortraitReply(Reply):
+        def readAll(self):
+            return QByteArray((FIXTURES / "orientation" / "portrait_logo.png").read_bytes())
+
+    result = video(preview_url="https://images.example.org/portrait.jpg")
+    window.search.add_results([result])
+    window.search._on_thumbnail(PortraitReply(window.requests[0]))
+    assert result.content_orientation == orientation.PORTRAIT
+    assert window.search.results.item(0).isHidden()
+
+
+def test_saved_content_confirmation_is_reused_when_selecting_card(window):
+    from app.core import orientation
+
+    result = video(preview_url=None)
+    vid = window.catalog.add(result)
+    window.catalog.set_orientation(vid, orientation.LANDSCAPE)
+    window.search.add_results([result])
+    window.search.results.setCurrentRow(0)
+    assert window.player.horizontal.isChecked()
+    assert result.content_orientation == orientation.LANDSCAPE

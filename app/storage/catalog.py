@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from app import paths
-from app.core import licenses, processes
+from app.core import licenses, orientation, processes
 from app.core.models import LicenseInfo, VideoFile, VideoResult
 
 # Степень соответствия ролика услуге.
@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS links (
 
 
 _ADDED_COLUMNS = {
+    "content_orientation": "TEXT NOT NULL DEFAULT ''",
     "available": "INTEGER NOT NULL DEFAULT 1",
     "link_checked_at": "REAL",
     "phash": "TEXT NOT NULL DEFAULT ''",
@@ -103,6 +104,8 @@ class Entry:
         lic = self.result.license
         # Удалённый с площадки ролик засчитывается, только если его файл есть на диске.
         return (self.status != REJECTED and self.license_confirmed
+                and self.result.content_orientation == orientation.LANDSCAPE
+                and not (self.result.width and self.result.height and self.result.width <= self.result.height)
                 and lic is not None and lic.status in licenses.SUITABLE
                 and (self.available or self.has_file))
 
@@ -186,6 +189,8 @@ class Catalog:
             author=r.author, author_url=r.author_url, license_name=lic.name, license_url=lic.url,
             license_status=lic.status, license_note=lic.note, files=_files_to_json(r.files), updated_at=now,
         )
+        if r.content_orientation:
+            values["content_orientation"] = r.content_orientation
         with self._lock, self._db:
             row = self._db.execute("SELECT id, license_name, license_url, license_status FROM videos "
                                    "WHERE source = ? AND source_id = ?",
@@ -230,6 +235,10 @@ class Catalog:
     def set_status(self, video_id: int, status: str) -> None:
         assert status in (NEW, SELECTED, REJECTED)
         self._update(video_id, status=status)
+
+    def set_orientation(self, video_id: int, state: str) -> None:
+        assert state in (orientation.UNKNOWN, orientation.LANDSCAPE, orientation.PORTRAIT)
+        self._update(video_id, content_orientation=state)
 
     def confirm_license(self, video_id: int, confirmed: bool = True) -> None:
         self._update(video_id, license_confirmed=int(confirmed), checked_at=self._now() if confirmed else None)
@@ -288,7 +297,7 @@ class Catalog:
         result = VideoResult(
             source=row["source"], source_id=row["source_id"], title=row["title"] or "",
             description=row["description"] or "", preview_url=row["preview_url"], duration=row["duration"],
-            width=row["width"], height=row["height"],
+            width=row["width"], height=row["height"], content_orientation=row["content_orientation"],
             has_audio=None if row["has_audio"] is None else bool(row["has_audio"]),
             page_url=row["page_url"] or "", files=_files_from_json(row["files"]), author=row["author"] or "",
             author_url=row["author_url"],
