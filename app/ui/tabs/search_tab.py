@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import (
 from app.core import design, licenses, processes, query
 from app.core.models import VideoResult
 from app.sources.base import Source
+from app.sources.http import USER_AGENT
 from app.storage import catalog as cat
 from app.ui import theme
 from app.ui.context import AppContext
@@ -67,7 +68,8 @@ class SearchTab(QWidget):
         self.plan: query.SearchPlan | None = None
         self.plan_text = ""
         self.sources_seen: dict[str, str] = {}
-        self._thumb_items: dict[str, QListWidgetItem] = {}
+        self._thumb_items: dict[str, list[QListWidgetItem]] = {}
+        self._thumb_images: dict[str, QPixmap | None] = {}
         self.network = QNetworkAccessManager(self)
         self.network.finished.connect(self._on_thumbnail)
         downloads.state_changed.connect(self._on_download_state)
@@ -245,6 +247,7 @@ class SearchTab(QWidget):
         self.source_links.hide()
 
         self._thumb_items = {}
+        self._thumb_images = {}
         hidden = {key for key, status in self.ctx.catalog.statuses().items() if status == cat.REJECTED}
         self.worker = SearchWorker(plan, self.sources, self.ctx.filters(),
                                    self.ctx.settings.only_without_attribution, self, printing=self.ctx.printing,
@@ -319,6 +322,8 @@ class SearchTab(QWidget):
             item.setData(Qt.ItemDataRole.UserRole + 1, off_topic or view_only)
             item.setData(Qt.ItemDataRole.UserRole + 2, card_notes(r, statuses.get(r.key), off_topic))
             item.setData(Qt.ItemDataRole.UserRole + 3, off_topic)
+            item.setData(Qt.ItemDataRole.UserRole + 4,
+                         "Загрузка превью…" if r.preview_url else "Картинка не предоставлена")
             item.setToolTip(r.title or r.page_url)
             item.setSizeHint(QSize(design.RESULT_WIDTH, design.RESULT_HEIGHT))
             # Ближе к теме и к полиграфии — выше в выдаче.
@@ -328,11 +333,7 @@ class SearchTab(QWidget):
                        self.results.count())
             self.results.insertItem(row, item)
             if r.preview_url:
-                token = f"{r.source}|{r.source_id}"
-                self._thumb_items[token] = item
-                request = QNetworkRequest(QUrl(r.preview_url))
-                request.setAttribute(QNetworkRequest.Attribute.User, token)
-                self.network.get(request)
+                self._request_thumbnail(item, r.preview_url)
             # Рядом с результатами площадки всегда ссылка на неё (требование Pexels и Pixabay).
             homepage = next((s.homepage for s in self.sources if s.name == r.source), "")
             self.sources_seen.setdefault(r.source, homepage)
@@ -372,21 +373,43 @@ class SearchTab(QWidget):
             self.results.setCurrentItem(None)
             self.player.show_result(None)
 
+    def _request_thumbnail(self, item: QListWidgetItem, url: str):
+        # Одна картинка может относиться к нескольким результатам; загружаем её один раз за поиск.
+        waiting = self._thumb_items.setdefault(url, [])
+        waiting.append(item)
+        if url in self._thumb_images:
+            self._set_thumbnail(item, self._thumb_images[url])
+        elif len(waiting) == 1:
+            request = QNetworkRequest(QUrl(url))
+            request.setAttribute(QNetworkRequest.Attribute.User, url)
+            request.setRawHeader(b"User-Agent", USER_AGENT.encode("ascii"))
+            request.setRawHeader(b"Accept", b"image/*")
+            request.setTransferTimeout(15000)
+            self.network.get(request)
+
+    def _set_thumbnail(self, item: QListWidgetItem, pixmap: QPixmap | None):
+        if pixmap is None:
+            item.setData(Qt.ItemDataRole.UserRole + 4, "Картинка недоступна")
+            return
+        icon = QIcon(pixmap)
+        icon.addPixmap(pixmap, QIcon.Mode.Selected)
+        item.setIcon(icon)
+        if self.player.result and item.data(Qt.ItemDataRole.UserRole).key == self.player.result.key:
+            self.player.set_poster(pixmap)
+
     def _on_thumbnail(self, reply: QNetworkReply):
         token = reply.request().attribute(QNetworkRequest.Attribute.User)
-        if reply.error() == QNetworkReply.NetworkError.NoError and token is not None:
-            image = load_image(bytes(reply.readAll()))
-            if not image.isNull():
-                pixmap = QPixmap.fromImage(image)
-                item = self._thumb_items.get(str(token))
-                if item and self.results.row(item) >= 0:
-                    thumb = pixmap.scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
-                                          Qt.TransformationMode.SmoothTransformation)
-                    icon = QIcon(thumb)
-                    icon.addPixmap(thumb, QIcon.Mode.Selected)  # без синей подкраски у выбранного ролика
-                    item.setIcon(icon)
-                    if self.player.result and item.data(Qt.ItemDataRole.UserRole).key == self.player.result.key:
-                        self.player.set_poster(pixmap)
+        if token is not None and str(token) in self._thumb_items:
+            pixmap = None
+            if reply.error() == QNetworkReply.NetworkError.NoError:
+                image = load_image(bytes(reply.readAll()))
+                if not image.isNull():
+                    pixmap = QPixmap.fromImage(image).scaled(THUMB, Qt.AspectRatioMode.KeepAspectRatio,
+                                                           Qt.TransformationMode.SmoothTransformation)
+            self._thumb_images[str(token)] = pixmap
+            for item in self._thumb_items[str(token)]:
+                if self.results.row(item) >= 0:
+                    self._set_thumbnail(item, pixmap)
         reply.deleteLater()
 
     def _on_current(self, item: QListWidgetItem | None, _previous):

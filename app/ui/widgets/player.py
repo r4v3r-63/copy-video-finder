@@ -100,6 +100,7 @@ class PlayerPanel(QWidget):
         self.result: VideoResult | None = None
         self.allow_4k = False
         self.downloaded_path = ""
+        self._inline_available = False
 
         self.video = QVideoWidget()
         self.video.setMinimumSize(design.PLAYER_MIN_WIDTH, design.PLAYER_MIN_HEIGHT)
@@ -251,7 +252,7 @@ class PlayerPanel(QWidget):
         self.player.setSource(QUrl())
         self.media.setCurrentWidget(self.poster)
         self.poster.image = QPixmap()
-        self.poster.caption = "Превью ролика" if result else "Выберите ролик для просмотра"
+        self.poster.caption = "Загрузка видео…" if result else "Выберите ролик для просмотра"
         self.poster.update()
         self.play_error.clear()
         self.play_error.hide()
@@ -263,18 +264,18 @@ class PlayerPanel(QWidget):
         self.license_hint.setText(self._license_hint(result))
         self.license_hint.setVisible(result is not None)
         self.details_button.setEnabled(result is not None)
-        self.open_page.setEnabled(result is not None)
+        self.open_page.setEnabled(bool(result and result.page_url))
         self._fill_qualities(result)
+        self.quality.setVisible(bool(result and result.files))
         self.set_download_state("", "")
         self.set_catalog_state("")
         preview = preview_file(result) if result else None
-        self.play_button.setEnabled(preview is not None)
-        self.position.setEnabled(preview is not None)
+        self._set_playback_mode(preview is not None)
         self.position.setValue(0)
         self.time_label.setText(f"0:00 / {format_duration(result.duration) if result else '0:00'}")
-        theme.set_icon(self.play_button, "play")
         self.frames.set_video(result.key if result else None, preview.url if preview else "",
                               result.duration if result else None)
+        self.frames.setVisible(preview is not None)
         if result is not None and result.view_only:
             # Лицензия не свободная: только посмотреть; «Не подходит» — можно.
             self.download_button.setEnabled(False)
@@ -292,6 +293,23 @@ class PlayerPanel(QWidget):
             self.player.setSource(QUrl(file.url))
             self.player.play()
             theme.set_icon(self.play_button, "pause")
+
+    def _set_playback_mode(self, inline: bool):
+        self._inline_available = inline
+        on_site = bool(self.result and self.result.page_url and not inline)
+        self.play_button.setEnabled(inline or on_site)
+        self.play_button.setText("Смотреть на сайте" if on_site else "")
+        hint = ("Открыть ролик в браузере: площадка не предоставила ссылку для встроенного просмотра."
+                if on_site else "Воспроизвести или приостановить")
+        self.play_button.setToolTip(hint)
+        self.play_button.setAccessibleName("Смотреть на сайте" if on_site else "Воспроизвести или приостановить")
+        theme.set_icon(self.play_button, "external" if on_site else "play")
+        self.position.setEnabled(inline)
+        self.position.setVisible(inline)
+        self.time_label.setVisible(inline)
+        if on_site:
+            self.poster.caption = "Просмотр на сайте"
+            self.poster.update()
 
     @staticmethod
     def _license_hint(result: VideoResult | None) -> str:
@@ -385,6 +403,9 @@ class PlayerPanel(QWidget):
             self.download_requested.emit(self.result, file)
 
     def toggle(self):
+        if not self._inline_available:
+            self._open_page()
+            return
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.player.pause()
             theme.set_icon(self.play_button, "play")
@@ -404,6 +425,7 @@ class PlayerPanel(QWidget):
     def _on_error(self, _error, message: str):
         if self.result:
             self.media.setCurrentWidget(self.poster)
+            self._set_playback_mode(False)
             self.play_error.setText(f"Не удалось воспроизвести ролик ({message}). Откройте его на сайте.")
             self.play_error.setTextFormat(Qt.TextFormat.PlainText)
             self.play_error.show()

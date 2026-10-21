@@ -65,7 +65,8 @@ class ResultCardDelegate(QStyledItemDelegate):
             painter.drawPixmap(thumb.center() - image.rect().center(), image)
         else:
             painter.setPen(QColor(p.text_secondary))
-            painter.drawText(thumb, Qt.AlignmentFlag.AlignCenter, "Без превью")
+            painter.drawText(thumb, Qt.AlignmentFlag.AlignCenter,
+                             index.data(Qt.ItemDataRole.UserRole + 4) or "Без превью")
         painter.restore()
         caption_font = QFont(option.font)
         caption_font.setPixelSize(design.FONT_CAPTION)

@@ -78,7 +78,9 @@ def test_switching_to_view_on_site_clears_previous_media_and_preview(tmp_path):
         assert panel.player.source().isEmpty()
         assert panel.poster.image.isNull()
         assert panel.media.currentWidget() is panel.poster
-        assert not panel.play_button.isEnabled()
+        assert panel.play_button.isEnabled()
+        assert panel.play_button.text() == "Смотреть на сайте"
+        assert not panel.position.isEnabled()
         assert not panel.download_button.isEnabled()
         assert panel.open_page.isEnabled()
     finally:

@@ -51,8 +51,12 @@ def parse_results(page: str) -> list[VideoResult]:
             continue
         if obj.get("cleanTitle") and isinstance(obj.get("host"), dict):
             clips.setdefault(obj["videoId"], obj)
-        elif obj.get("preview") or obj.get("description"):
-            docs.setdefault(obj["videoId"], obj)
+        if obj.get("preview") or obj.get("description") or obj.get("thumbnailUrl"):
+            doc = docs.setdefault(obj["videoId"], {})
+            if obj.get("description") and not doc.get("description"):
+                doc["description"] = obj["description"]
+            if poster := _poster(obj):
+                doc["preview"] = {"posterSrc": poster}
     results = []
     for video_id, clip in clips.items():
         r = _result(clip, docs.get(video_id, {}))
@@ -65,6 +69,24 @@ def _https(url: str) -> str:
     if url.startswith("//"):
         return "https:" + url
     return "https://" + url[len("http://"):] if url.startswith("http://") else url
+
+
+def _poster(obj: dict) -> str:
+    """Только адрес картинки из ответа: он может прийти вместе с описанием или позднее."""
+    preview = obj.get("preview")
+    candidates = [preview.get("posterSrc"), preview.get("url")] if isinstance(preview, dict) else [preview]
+    candidates.append(obj.get("thumbnailUrl"))
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        url = _https(html.unescape(candidate.strip()))
+        try:
+            parsed = urlparse(url)
+        except ValueError:
+            continue
+        if parsed.scheme == "https" and parsed.netloc:
+            return url
+    return ""
 
 
 def _result(clip: dict, doc: dict) -> VideoResult | None:
@@ -82,7 +104,7 @@ def _result(clip: dict, doc: dict) -> VideoResult | None:
     else:
         source_id = page_url
     duration = (clip.get("duration") or {}).get("value")
-    poster = ((doc.get("preview") or {}).get("posterSrc") or "") if isinstance(doc.get("preview"), dict) else ""
+    poster = _poster(doc) or _poster(clip)
     channel = (host.get("secondPart") or {}).get("name", "") if isinstance(host.get("secondPart"), dict) else ""
     title = html.unescape(_MARKS.sub("", str(clip.get("cleanTitle") or clip.get("title"))))[:200]
     return VideoResult(
