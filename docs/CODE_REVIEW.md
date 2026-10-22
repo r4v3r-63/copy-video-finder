@@ -51,7 +51,7 @@
 
 Исходники отправлены в main. Пользователь запустил [Windows-workflow](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39467153433):
 тесты, PyInstaller, проверка запуска и публикация прошли успешно.
-[Выпуск 0.24.0 опубликован](https://github.com/r4v3r-63/copy-video-finder/releases/tag/v0.24.0), тег указывает на `99897ad`.
+Версия 0.24.0 была опубликована; [исходники проверенной сборки](https://github.com/r4v3r-63/copy-video-finder/tree/99897ad38c644ce0c06f2d183db16f2239b247f0). Старый ZIP удалён по политике хранения; [актуальная версия](https://github.com/r4v3r-63/copy-video-finder/releases/latest).
 Опубликованный ZIP (120,8 МиБ) скачан и проверен по SHA-256 и CRC всех файлов. Внутри присутствуют
 EXE, FFmpeg, ffprobe, руководство и инструкция VK; пользовательской папки «Данные» нет.
 

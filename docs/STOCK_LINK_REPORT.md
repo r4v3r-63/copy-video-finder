@@ -1,4 +1,6 @@
-# Загрузка по ссылке — отчёт по ТЗ, 0.26.4
+# Загрузка по ссылке — исторический отчёт по ТЗ, 0.26.4
+
+[Скачать актуальную версию](https://github.com/r4v3r-63/copy-video-finder/releases/latest) · [Текущий статус](STATUS.md).
 
 Примечание 22.10.2026: сквозной сценарий перенесён из `app/ui/stock_link_check.py`
 в `app/diagnostics/stock_link.py`; приведённые ниже списки файлов относятся к историческим выпускам.
@@ -13,11 +15,11 @@
 
 Ниже — история реализации 0.26.0–0.26.2. Старые выпускные ZIP хранятся только для трёх последних стабильных версий; исходный код и примечания сохраняются.
 
-[Скачать Windows 0.26.2](https://github.com/r4v3r-63/copy-video-finder/releases/download/v0.26.2/CopyVideoFinder-v0.26.2-windows.zip), [выпуск](https://github.com/r4v3r-63/copy-video-finder/releases/tag/v0.26.2), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39612702765). Тег указывает на [655a809](https://github.com/r4v3r-63/copy-video-finder/commit/655a809e211beaf302cca44bf3e6082cf8e86d58). Опубликованный ZIP 478,6 МиБ проверен по SHA-256 и CRC: версия 0.26.2, новые модули, руководство с выбором количества/страницы и переносимые зависимости включены; пользовательских данных нет. Windows-тесты, сборка, запуск EXE, встроенное видео и обе сквозные проверки загрузчиков прошли. Состояние проверок предыдущей версии зафиксировано для истории.
+[Исходники 0.26.2](https://github.com/r4v3r-63/copy-video-finder/tree/v0.26.2), [примечания выпуска](release-notes/0.26.2.md), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39612702765). Тег указывает на [655a809](https://github.com/r4v3r-63/copy-video-finder/commit/655a809e211beaf302cca44bf3e6082cf8e86d58). Опубликованный ZIP 478,6 МиБ проверен по SHA-256 и CRC: версия 0.26.2, новые модули, руководство с выбором количества/страницы и переносимые зависимости включены; пользовательских данных нет. Windows-тесты, сборка, запуск EXE, встроенное видео и обе сквозные проверки загрузчиков прошли. Состояние проверок предыдущей версии зафиксировано для истории.
 
 История предыдущего выпуска:
 
-[Скачать Windows 0.26.1](https://github.com/r4v3r-63/copy-video-finder/releases/download/v0.26.1/CopyVideoFinder-v0.26.1-windows.zip), [выпуск](https://github.com/r4v3r-63/copy-video-finder/releases/tag/v0.26.1), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39610206532).
+[Исходники 0.26.1](https://github.com/r4v3r-63/copy-video-finder/tree/v0.26.1), [примечания выпуска](release-notes/0.26.1.md), [успешная цепочка CI/сборки](https://github.com/r4v3r-63/copy-video-finder/actions/runs/39610206532).
 
 Тег `v0.26.1` указывает на `ffcfef300d9eef152b06e1fe2b65a2d1f6695cb4`. Портативный ZIP 478,6 МиБ скачан после публикации и проверен по опубликованной SHA-256 и CRC. В EXE подтверждены версия 0.26.1 и новые модули; включены FFmpeg/ffprobe, WebView2, yt-dlp/EJS/Deno и новое руководство. Папки «Данные» в архиве нет. Выпуск 0.26.0 тоже собран успешно, 0.26.1 содержит исправления после ревью.
 

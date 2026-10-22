@@ -37,11 +37,14 @@ copy-video-finder/
 │   ├── release-notes/       пользовательские изменения по версиям
 │   ├── screenshots/         реальные снимки программы
 │   └── mockups/             согласованные макеты
-├── .github/workflows/       проверки, сборка и обслуживание выпусков
+├── .github/                 workflow проверок/сборки, шаблоны Issues и PR
 ├── run_app.py               точка входа PyInstaller, подготовка потоков вывода
 ├── build.spec               состав переносимой Windows-поставки
 ├── requirements.txt         зависимости приложения
 ├── requirements-dev.txt     зависимости разработки и сборки
+├── CONTRIBUTING.md          правила участия и проверки перед изменениями
+├── .editorconfig            единое оформление текстовых файлов
+├── .gitattributes           переносы строк и бинарные файлы в Git
 └── ruff.toml                единые правила Python
 ```
 
