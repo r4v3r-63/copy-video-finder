@@ -94,3 +94,65 @@ def test_encoded_launch_requires_ready_marker(tmp_path, monkeypatch):
     updater.launch(script)
     assert "-EncodedCommand" in calls[0] and "cmd.exe" not in calls[0]
     assert base64.b64decode(calls[0][-1]).decode("utf-16-le") == "# Проверка"
+
+
+def test_slow_powershell_start_can_confirm_after_15_seconds(tmp_path, monkeypatch):
+    script = tmp_path / "installer.ps1"
+    script.write_text("# Проверка", encoding="utf-8")
+    clock = [0.0]
+
+    class Running:
+        pid = 12345
+
+        def poll(self):
+            if clock[0] >= 20:
+                script.with_suffix(".ready").write_text(str(self.pid))
+            return None
+
+    monkeypatch.setattr(updater.subprocess, "Popen", lambda *args, **kwargs: Running())
+    monkeypatch.setattr(updater.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(updater.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + 1))
+    updater.launch(script)
+    assert clock[0] >= 20
+
+
+def test_missing_confirmation_terminates_installer_and_keeps_app_open(tmp_path, monkeypatch):
+    import pytest
+
+    script = tmp_path / "installer.ps1"
+    script.write_text("# Проверка", encoding="utf-8")
+    clock, stopped = [0.0], []
+
+    class Running:
+        pid = 12345
+
+        def poll(self):
+            return None
+
+        def terminate(self):
+            stopped.append(True)
+
+        def wait(self, timeout):
+            assert stopped
+
+    monkeypatch.setattr(updater.subprocess, "Popen", lambda *args, **kwargs: Running())
+    monkeypatch.setattr(updater.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(updater.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + 1))
+    with pytest.raises(updater.UpdateError, match="остаётся открытой"):
+        updater.launch(script)
+    assert clock[0] == 60 and stopped == [True]
+
+
+def test_diagnostic_failure_returns_error_instead_of_unhandled_gui_exception(tmp_path, monkeypatch, caplog):
+    from app.diagnostics import updater as check
+
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({"new": str(tmp_path)}))
+    monkeypatch.setattr(updater, "write_script", lambda *args, **kwargs: tmp_path / "installer.ps1")
+
+    def fail(script):
+        raise updater.UpdateError("Установщик не подтвердил запуск.")
+
+    monkeypatch.setattr(updater, "launch", fail)
+    assert check.install(config) == 1
+    assert "Установщик не подтвердил запуск" in caplog.text

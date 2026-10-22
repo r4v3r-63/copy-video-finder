@@ -263,7 +263,8 @@ def launch(script: Path) -> None:
             cwd=str(script.parent),
             env=environment,
         )
-    deadline = time.monotonic() + 15
+    # Первый запуск PowerShell на загруженной Windows может занимать десятки секунд.
+    deadline = time.monotonic() + 60
     ready = script.with_suffix(".ready")
     while time.monotonic() < deadline:
         if process.poll() is not None:

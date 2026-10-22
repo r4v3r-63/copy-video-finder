@@ -45,7 +45,7 @@ def main(bundle: Path):
             environment = {**os.environ, "COPYVF_DATA_DIR": str(data)}
             process = subprocess.Popen([str(app / "CopyVideoFinder.exe"), "--check-updater", str(config)],
                                        env=environment)
-            assert process.wait(timeout=45) == 0, "Старый EXE не подготовил обновление"
+            assert process.wait(timeout=90) == 0, "Старый EXE не подготовил обновление"
             report = data / "update-check.json"
             deadline = time.monotonic() + 90
             while not report.exists() and time.monotonic() < deadline:
