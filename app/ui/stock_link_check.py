@@ -25,12 +25,21 @@ def main(directory: Path) -> int:
     raw = json.loads((directory / "stock_link" / "pixabay.json").read_text(encoding="utf-8"))
     raw["total"] = raw["totalHits"] = len(raw["hits"])
 
+    simultaneous = threading.Barrier(2, timeout=10)
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
 
         def do_GET(self):
-            data = json.dumps(raw).encode() if self.path.startswith("/api?") else media
+            api_request = self.path.startswith("/api?")
+            if not api_request:
+                try:
+                    simultaneous.wait()
+                except threading.BrokenBarrierError:
+                    self.send_error(500)
+                    return
+            data = json.dumps(raw).encode() if api_request else media
             self.send_response(200)
             self.send_header("Content-Type", "application/json" if self.path.startswith("/api?") else "video/mp4")
             self.send_header("Content-Length", str(len(data)))
@@ -76,16 +85,18 @@ def main(directory: Path) -> int:
                 tab.maximum.setText("30")
                 assert {item.source_id for item in tab.model.items} == {"201", "202"}
                 assert tab.download_all.isEnabled()
-                tab.quantity_count.setValue(1)
+                tab.quantity_mode.setCurrentIndex(tab.quantity_mode.findData("all"))
+                tab.parallel_count.setValue(2)
                 tab.model.setData(tab.model.index(0, 0), Qt.CheckState.Checked.value, Qt.ItemDataRole.CheckStateRole)
                 tab.start_download(True)
                 stage = 1
-            elif stage == 1 and tab.completed:
+            elif stage == 1 and len(tab.completed) == 2:
                 assert not tab.errors and not window.catalog.entries()
                 outputs = list(Path(tab.folder.text()).glob("*.mp4"))
-                assert len(outputs) == 1 and outputs[0].read_bytes() == media
-                metadata = json.loads(metadata_file(outputs[0]).read_text(encoding="utf-8"))
-                assert not metadata["license_confirmed"] and metadata["id"] == "201"
+                assert len(outputs) == 2 and all(file.read_bytes() == media for file in outputs)
+                metadata = [json.loads(metadata_file(file).read_text(encoding="utf-8")) for file in outputs]
+                assert all(not item["license_confirmed"] for item in metadata)
+                assert {item["id"] for item in metadata} == {"201", "202"}
                 assert all(file.suffix == ".mp4" for file in Path(tab.folder.text()).iterdir())
                 finish(True)
         except (AssertionError, OSError, ValueError, KeyError):

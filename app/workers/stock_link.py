@@ -2,12 +2,10 @@
 
 import threading
 
-import requests
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from app import paths
-from app.services.downloader import Cancelled, DownloadError
-from app.services.stock_download import run_stock_job
+from app.services.stock_download import DEFAULT_PARALLEL_DOWNLOADS, run_stock_queue
 from app.services.stock_listing import collect_listing
 from app.sources.base import NetworkError, SourceError
 
@@ -46,9 +44,10 @@ class StockDownloadWorker(QThread):
     done = pyqtSignal(int, str, str)
     failed = pyqtSignal(int, str)
 
-    def __init__(self, jobs, parent=None):
+    def __init__(self, jobs, parent=None, *, parallel=DEFAULT_PARALLEL_DOWNLOADS):
         super().__init__(parent)
         self.jobs = jobs
+        self.parallel = parallel
         self.cancel = threading.Event()
         self.paused = threading.Event()
 
@@ -74,22 +73,5 @@ class StockDownloadWorker(QThread):
 
     def run(self):
         ffmpeg, ffprobe = paths.ffmpeg_tool("ffmpeg"), paths.ffmpeg_tool("ffprobe")
-        with requests.Session() as session:
-            for index, job in enumerate(self.jobs):
-                while self.paused.is_set() and not self.cancel.wait(0.1):
-                    pass
-                if self.cancel.is_set():
-                    self.failed.emit(index, "Скачивание отменено.")
-                    continue
-                try:
-                    report = lambda done, total, i=index: self.progress.emit(i, done, total)  # noqa: E731
-                    file, note = run_stock_job(job, session, report, ffmpeg, ffprobe)
-                    self.done.emit(index, str(file), note)
-                except Cancelled:
-                    self.failed.emit(index, "Скачивание отменено.")
-                except (DownloadError, OSError) as exc:
-                    message = (str(exc) if isinstance(exc, DownloadError)
-                               else "Нет места или нет прав на запись в папку.")
-                    self.failed.emit(index, message)
-                except Exception:  # noqa: BLE001 — отказ одного ролика не останавливает очередь
-                    self.failed.emit(index, "Не удалось скачать ролик. Проверьте доступность и повторите.")
+        run_stock_queue(self.jobs, self.cancel, self.paused, self.progress.emit, self.done.emit,
+                        self.failed.emit, ffmpeg, ffprobe, self.parallel)

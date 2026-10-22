@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
 from app.core import design
 from app.core.stock_link import ListingFilters, choose_quality, limit_downloads, parse_link
 from app.services.downloader import DownloadJob, download_option
+from app.services.stock_download import DEFAULT_PARALLEL_DOWNLOADS, MAX_PARALLEL_DOWNLOADS
 from app.sources.base import SourceError
 from app.sources.listings import make_listing
 from app.ui import theme
@@ -104,6 +105,7 @@ class StockLinkTab(QWidget):
         self.quantity_mode = theme.compact_combo(QComboBox())
         self.quantity_mode.addItem("Указать количество", "number")
         self.quantity_mode.addItem("Все на странице", "page")
+        self.quantity_mode.addItem("Все найденные", "all")
         self.quantity_count = QSpinBox()
         self.quantity_count.setRange(1, 2_147_483_647)
         self.quantity_count.setValue(10)
@@ -111,12 +113,20 @@ class StockLinkTab(QWidget):
         self.source_page = theme.compact_combo(QComboBox())
         self.source_page.addItem("Все полученные страницы", 0)
         self.source_page.setToolTip("Страница официального API; разбиение сайта может отличаться.")
+        self.parallel_count = QSpinBox()
+        self.parallel_count.setRange(1, MAX_PARALLEL_DOWNLOADS)
+        self.parallel_count.setValue(DEFAULT_PARALLEL_DOWNLOADS)
+        self.parallel_count.setToolTip("Сколько файлов скачивать одновременно. Больше потоков не всегда быстрее.")
         self.quantity_hint = QLabel()
         self.quantity_hint.setWordWrap(True)
         batch_options = QHBoxLayout()
         for widget in (QLabel("За один запуск:"), self.quantity_mode, self.quantity_count,
                        QLabel("Страница выдачи:"), self.source_page):
             batch_options.addWidget(widget)
+        concurrency_options = QHBoxLayout()
+        concurrency_options.addWidget(QLabel("Одновременно:"))
+        concurrency_options.addWidget(self.parallel_count)
+        concurrency_options.addStretch()
         destination = QHBoxLayout()
         destination.addWidget(self.folder, 1)
         destination.addWidget(browse)
@@ -145,6 +155,7 @@ class StockLinkTab(QWidget):
             layout.addWidget(widget, 1 if widget is self.table else 0)
         layout.addLayout(batch_options)
         layout.addWidget(self.quantity_hint)
+        layout.addLayout(concurrency_options)
         layout.addLayout(destination)
         layout.addLayout(actions)
         layout.addWidget(self.progress)
@@ -159,6 +170,8 @@ class StockLinkTab(QWidget):
         self.update_stats()
 
     def _quantity_changed(self):
+        if self.quantity_mode.currentData() == "all":
+            self.source_page.setCurrentIndex(0)
         if self.quantity_mode.currentData() == "page" and self.source_page.currentData() == 0:
             if self.source_page.count() > 1:
                 self.source_page.setCurrentIndex(1)
@@ -272,8 +285,10 @@ class StockLinkTab(QWidget):
             self.quantity_mode.blockSignals(False)
             self.quantity_count.setValue(1)
         self.quantity_count.setEnabled(bulk and self.quantity_mode.currentData() == "number" and not self.busy())
-        self.download_all.setText("Скачать страницу" if self.quantity_mode.currentData() == "page"
-                                  else "Скачать по количеству")
+        self.source_page.setEnabled(not self.busy() and self.quantity_mode.currentData() != "all")
+        self.parallel_count.setEnabled(not self.busy())
+        self.download_all.setText({"page": "Скачать страницу", "all": "Скачать все найденные"}.get(
+            self.quantity_mode.currentData(), "Скачать по количеству"))
         self.all_select.setEnabled(bulk and not self.busy())
         self.download_all.setEnabled(bulk and bool(self.model.items) and not self.busy())
         self.download.setText("Скачать выбранные" if bulk else "Скачать выбранный")
@@ -293,6 +308,8 @@ class StockLinkTab(QWidget):
             page = self.source_page.currentData()
             hint = (f"За запуск: все {remaining} новых подходящих видео страницы {page}." if page
                     else "Для режима «Все на странице» выберите конкретную страницу выдачи.")
+        elif self.quantity_mode.currentData() == "all":
+            hint = f"За запуск: все {remaining} новых подходящих видео со всех полученных страниц."
         else:
             hint = f"За запуск: не более {self.quantity_count.value()} видео; новых в списке: {remaining}."
         self.quantity_hint.setText(hint)
@@ -313,7 +330,8 @@ class StockLinkTab(QWidget):
             page_mode = self.quantity_mode.currentData() == "page"
             if page_mode and not self.source_page.currentData():
                 raise ValueError("Выберите конкретную страницу для режима «Все на странице».")
-            selected = limit_downloads(selected, None if page_mode else self.quantity_count.value(),
+            count = self.quantity_count.value() if self.quantity_mode.currentData() == "number" else None
+            selected = limit_downloads(selected, count,
                                        batch_enabled=self.link.batch_enabled, completed=self.completed)
             if not selected:
                 return
@@ -339,7 +357,7 @@ class StockLinkTab(QWidget):
             self.completed.discard(job.result.key)
             self.errors.discard(job.result.key)
             self.model.set_state(job.result.key, "В очереди")
-        self.download_worker = StockDownloadWorker(jobs, self)
+        self.download_worker = StockDownloadWorker(jobs, self, parallel=self.parallel_count.value())
         worker = self.download_worker
         worker.progress.connect(lambda i, done, total: self._progress(i, done, total)
                                 if self.download_worker is worker and not self.closed else None)

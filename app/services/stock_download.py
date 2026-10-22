@@ -2,9 +2,13 @@
 
 import hashlib
 import json
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
+from queue import Empty, Queue
+
+import requests
 
 from app import paths
 from app.services.downloader import Cancelled, DownloadError, DownloadJob, file_stem, probe, run_job
@@ -63,3 +67,48 @@ def run_stock_job(job, session, progress=None, ffmpeg=None, ffprobe=None):
             "license_confirmed": False}
     paths.atomic_write_text(metadata_file(file), json.dumps(data, ensure_ascii=False, indent=2))
     return file, note
+
+
+DEFAULT_PARALLEL_DOWNLOADS = 4
+MAX_PARALLEL_DOWNLOADS = 8
+
+
+def run_stock_queue(jobs, cancel, paused, progress, done, failed, ffmpeg=None, ffprobe=None,
+                    parallel=DEFAULT_PARALLEL_DOWNLOADS):
+    """Ограниченная очередь: отдельная HTTP-сессия на поток, завершение всех перед возвратом."""
+    if type(parallel) is not int or not 1 <= parallel <= MAX_PARALLEL_DOWNLOADS:
+        raise ValueError("Число одновременных загрузок должно быть от 1 до 8.")
+    queue = Queue()
+    for index, job in enumerate(jobs):
+        queue.put((index, job))
+
+    def consume():
+        with requests.Session() as session:
+            while True:
+                try:
+                    index, job = queue.get_nowait()
+                except Empty:
+                    return
+                while paused.is_set() and not cancel.wait(0.1):
+                    pass
+                if cancel.is_set():
+                    failed(index, "Скачивание отменено.")
+                    continue
+                try:
+                    report = lambda received, total, i=index: progress(i, received, total)  # noqa: E731
+                    file, note = run_stock_job(job, session, report, ffmpeg, ffprobe)
+                    done(index, str(file), note)
+                except Cancelled:
+                    failed(index, "Скачивание отменено.")
+                except (DownloadError, OSError) as exc:
+                    message = (str(exc) if isinstance(exc, DownloadError)
+                               else "Нет места или нет прав на запись в папку.")
+                    failed(index, message)
+                except Exception:  # noqa: BLE001 — ошибка одного файла не останавливает очередь
+                    failed(index, "Не удалось скачать ролик. Проверьте доступность и повторите.")
+
+    if jobs:
+        with ThreadPoolExecutor(max_workers=min(parallel, len(jobs))) as pool:
+            futures = [pool.submit(consume) for _ in range(min(parallel, len(jobs)))]
+            for future in futures:
+                future.result()

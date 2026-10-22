@@ -182,7 +182,9 @@ def test_cancel_while_paused_then_restart(videos, tmp_path):
 
 
 def test_queue_continues_after_file_error_and_supports_pause(videos, tmp_path, monkeypatch):
-    from app.workers import stock_link
+    from PyQt6.QtCore import Qt
+
+    from app.services import stock_download
 
     jobs = [job_for(video, tmp_path) for video in videos[:2]]
     worker = StockDownloadWorker(jobs)
@@ -191,15 +193,15 @@ def test_queue_continues_after_file_error_and_supports_pause(videos, tmp_path, m
     worker.resume()
     assert not any(job.paused.is_set() for job in jobs)
     failed, done = [], []
-    worker.failed.connect(lambda index, text: failed.append(index))
-    worker.done.connect(lambda index, path, note: done.append(index))
+    worker.failed.connect(lambda index, text: failed.append(index), Qt.ConnectionType.DirectConnection)
+    worker.done.connect(lambda index, path, note: done.append(index), Qt.ConnectionType.DirectConnection)
 
     def run(job, *args):
         if job is jobs[0]:
             raise OSError("нет места")
         return tmp_path / "video.mp4", ""
 
-    monkeypatch.setattr(stock_link, "run_stock_job", run)
+    monkeypatch.setattr(stock_download, "run_stock_job", run)
     worker.run()
     assert failed == [0] and done == [1]
 
@@ -295,3 +297,83 @@ def test_batch_quantity_counts_unique_unfinished_results(videos):
     assert [video.source_id for video in selected] == ["202", "203"]
     assert len(limit_downloads(videos, None, batch_enabled=True)) == 7
     assert len(limit_downloads(videos, 1000, batch_enabled=True)) == 7
+
+
+def test_parallel_queue_overlaps_files_and_keeps_sessions_separate(videos, tmp_path, monkeypatch):
+    from app.services import stock_download
+
+    jobs = [job_for(video, tmp_path) for video in videos[:5]]
+    barrier = threading.Barrier(2, timeout=5)
+    lock = threading.Lock()
+    active = peak = 0
+    sessions = {}
+    completed, progress = [], []
+
+    def run(job, session, report, *args):
+        nonlocal active, peak
+        index = jobs.index(job)
+        with lock:
+            active += 1
+            peak = max(peak, active)
+            thread = threading.get_ident()
+            assert thread not in sessions or sessions[thread] is session
+            sessions[thread] = session
+        if index < 2:
+            barrier.wait()
+        report(index + 1, 100)
+        with lock:
+            active -= 1
+        return tmp_path / f"{index}.mp4", ""
+
+    monkeypatch.setattr(stock_download, "run_stock_job", run)
+    stock_download.run_stock_queue(jobs, threading.Event(), threading.Event(),
+                                   lambda i, received, total: progress.append((i, received)),
+                                   lambda i, path, note: completed.append(i),
+                                   lambda i, message: pytest.fail(message), parallel=2)
+    assert peak == 2 and active == 0
+    assert len({id(session) for session in sessions.values()}) == 2
+    assert sorted(completed) == list(range(5))
+    assert sorted(progress) == [(i, i + 1) for i in range(5)]
+
+
+def test_parallel_cancel_does_not_start_remaining_jobs_and_joins_active(videos, tmp_path, monkeypatch):
+    from app.services import stock_download
+
+    jobs = [job_for(video, tmp_path) for video in videos[:5]]
+    worker = StockDownloadWorker(jobs, parallel=2)
+    barrier = threading.Barrier(2, timeout=5)
+    started, failed = [], []
+
+    def run(job, *args):
+        started.append(job.result.key)
+        barrier.wait()
+        worker.request_stop()
+        assert job.cancel.is_set() and not job.paused.is_set()
+        raise Cancelled()
+
+    monkeypatch.setattr(stock_download, "run_stock_job", run)
+    stock_download.run_stock_queue(jobs, worker.cancel, worker.paused, lambda *args: None,
+                                   lambda *args: pytest.fail("Отменённый файл не завершён"),
+                                   lambda i, text: failed.append(i), parallel=2)
+    assert len(started) == 2 and sorted(failed) == list(range(5))
+    assert all(job.cancel.is_set() for job in jobs)
+
+
+def test_parallel_pause_does_not_start_files_until_resume(videos, tmp_path, monkeypatch):
+    from app.services import stock_download
+
+    worker = StockDownloadWorker([job_for(video, tmp_path) for video in videos[:2]], parallel=2)
+    started = threading.Event()
+    worker.pause()
+    monkeypatch.setattr(stock_download, "run_stock_job",
+                        lambda *args: (started.set() or tmp_path / "video.mp4", ""))
+    thread = threading.Thread(target=worker.run)
+    thread.start()
+    try:
+        assert not started.wait(0.1)
+        worker.resume()
+        assert started.wait(5)
+    finally:
+        worker.request_stop()
+        thread.join(5)
+    assert not thread.is_alive()

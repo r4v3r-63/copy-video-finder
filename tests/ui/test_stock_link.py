@@ -168,3 +168,30 @@ def test_selected_download_also_obeys_quantity_limit(window, tmp_path, monkeypat
     tab.model.select_all()
     tab.start_download()
     assert len(queued) == 2
+
+
+def test_all_found_uses_every_page_and_configured_parallelism(window, tmp_path, monkeypatch):
+    from app.ui.tabs import stock_link_tab
+
+    workers = []
+    monkeypatch.setattr(stock_link_tab.StockDownloadWorker, "start", lambda worker: workers.append(worker))
+    tab = window.stock_link
+    populate(tab)
+    second = [parse_hit(hit) for hit in json.loads(fixture_text("stock_link/pixabay.json"))["hits"]]
+    for video in second:
+        video.source_id = "next-" + video.source_id
+    tab._page(second, 800, 500)
+    tab.folder.setText(str(tmp_path))
+    tab.minimum.setText("10")
+    tab.maximum.setText("30")
+    tab.quantity_mode.setCurrentIndex(tab.quantity_mode.findData("page"))
+    tab.quantity_count.setValue(1)
+    tab.completed.add(tab.model.items[0].key)
+    tab.quantity_mode.setCurrentIndex(tab.quantity_mode.findData("all"))
+    tab.parallel_count.setValue(8)
+    assert tab.source_page.currentData() == 0 and not tab.source_page.isEnabled()
+    assert not tab.quantity_count.isEnabled()
+    tab.start_download(True)
+    assert workers[0].parallel == 8
+    assert {job.result.source_id for job in workers[0].jobs} == {"202", "next-201", "next-202"}
+    assert window.catalog.entries() == []
