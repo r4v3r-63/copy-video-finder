@@ -13,7 +13,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QWidget
 
 from app import paths
-from app.ui.widgets.site_player import allowed_page
+from app.core.web_urls import allowed_page
 
 
 class WindowsSiteView(QWidget):

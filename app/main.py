@@ -34,10 +34,10 @@ def main() -> int:
     if len(sys.argv) == 3 and sys.argv[1] == "--check-updater":
         from pathlib import Path
 
-        from app.services.update_check import install
+        from app.diagnostics.updater import install
         return install(Path(sys.argv[2]))
     if sys.argv[1:] == ["--check-updater-target"]:
-        from app.services.update_check import target
+        from app.diagnostics.updater import target
         return target()
     if len(sys.argv) == 3 and sys.argv[1] == "--download-site":
         from pathlib import Path
@@ -47,19 +47,19 @@ def main() -> int:
     if len(sys.argv) == 3 and sys.argv[1] == "--check-site-download":
         from pathlib import Path
 
-        from app.services.site_download_check import main as check_site_download
+        from app.diagnostics.site_download import main as check_site_download
         return check_site_download(Path(sys.argv[2]))
     if len(sys.argv) == 3 and sys.argv[1] == "--check-stock-link":
         from pathlib import Path
 
-        from app.ui.stock_link_check import main as check_stock_link
+        from app.diagnostics.stock_link import main as check_stock_link
         return check_stock_link(Path(sys.argv[2]))
     if "--check-site-player" in sys.argv:
         logging.getLogger("app").info("Проверка встроенного просмотра: аргументов %s", len(sys.argv))
     if len(sys.argv) == 3 and sys.argv[1] == "--check-site-player":
         from pathlib import Path
 
-        from app.ui.site_player_check import main as check_site_player
+        from app.diagnostics.site_player import main as check_site_player
         return check_site_player(Path(sys.argv[2]))
     QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)

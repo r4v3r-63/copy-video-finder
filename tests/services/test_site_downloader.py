@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from app.core import orientation
+from app.diagnostics.site_download import main as check_download
 from app.services import downloader
 from app.services import site_downloader as site
 from app.services.search import preview_file
-from app.services.site_download_check import main as check_download
 from app.sources.web import parse_page
 from tests.fakes import fixture_text
 

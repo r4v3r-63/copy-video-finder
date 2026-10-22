@@ -5,7 +5,7 @@ from PyQt6.QtNetwork import QNetworkCookie
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
-from app.ui.widgets.site_player import allowed_page
+from app.core.web_urls import allowed_page
 
 
 class SitePage(QWebEnginePage):

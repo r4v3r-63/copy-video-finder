@@ -2,25 +2,13 @@
 
 import sys
 import traceback
-from urllib.parse import urlsplit
 
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from app.core import design
+from app.core.web_urls import allowed_page
 from app.ui import theme
-
-
-def allowed_page(url: str) -> bool:
-    """Во встроенном просмотре открываются только веб-страницы, без внешних протоколов и файлов."""
-    try:
-        parts = urlsplit(url)
-        _port = parts.port
-        return bool(parts.scheme in ("https", "http") and parts.hostname
-                    and parts.username is None and parts.password is None
-                    and not any(c.isspace() or ord(c) < 32 or c == "\\" for c in url))
-    except ValueError:
-        return False
 
 
 class SitePlayer(QWidget):
