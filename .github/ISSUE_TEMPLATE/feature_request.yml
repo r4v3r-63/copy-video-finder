@@ -1,0 +1,17 @@
+name: Предложение
+description: Предложить улучшение программы.
+title: "Улучшение: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу нужно решить
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Как должно работать
+      description: Опишите ожидаемое действие и результат; при необходимости добавьте пример.
+    validations:
+      required: true

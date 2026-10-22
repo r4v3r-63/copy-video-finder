@@ -209,6 +209,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: CopyVideoFinder-windows
+          retention-days: 7
           path: |
             CopyVideoFinder-*.zip
             CopyVideoFinder-*.zip.sha256

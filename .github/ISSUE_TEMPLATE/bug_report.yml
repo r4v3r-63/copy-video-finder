@@ -1,0 +1,29 @@
+name: Ошибка программы
+description: Сообщить о сбое или неправильной работе Copy Video Finder.
+title: "Ошибка: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Версия программы и Windows
+      placeholder: "Например: 0.26.6, Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как повторить
+      description: Укажите вкладку, действия и ссылку на ролик или выдачу, если проблема связана с ними.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Что произошло и что ожидалось
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Сообщение об ошибке, снимок или журнал
+      description: Журналы находятся в папке Данные. Перед публикацией удалите ключи, токены и личные данные; settings.json не прикладывайте.

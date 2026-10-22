@@ -53,7 +53,7 @@ jobs:
         run: python scripts/check_site_player.py
 
   site-player:
-    name: Встроенный просмотр Windows
+    name: Проверка Windows EXE
     runs-on: windows-latest
     timeout-minutes: 15
     env:
